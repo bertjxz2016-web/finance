@@ -2055,7 +2055,8 @@
       const percent = data && data.previous ? (change / data.previous) * 100 : 0;
       const direction = change >= 0 ? "up" : "down";
       const priceLabel = data ? formatMarketPrice(data.price, data.currency) : "...";
-      const changeLabel = data ? `${change >= 0 ? "+" : ""}${change.toFixed(2)} (${percent >= 0 ? "+" : ""}${percent.toFixed(2)}%)` : "Loading";
+      const changeDigits = data && Math.abs(data.price) < 2 ? 6 : 2;
+      const changeLabel = data ? `${change >= 0 ? "+" : ""}${change.toFixed(changeDigits)} (${percent >= 0 ? "+" : ""}${percent.toFixed(2)}%)` : "Loading";
       const updated = data ? new Date(data.updatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" }) : "";
       panel.innerHTML = `
         <div class="market-chart-head">
