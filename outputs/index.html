@@ -2257,7 +2257,8 @@
       }
       const rawSpread = Math.max(max - min, Math.abs(max) * 0.001, 0.000000001);
       const padding = rawSpread * 0.12;
-      const displayMin = Math.max(0, min - padding);
+      const lowerPadding = Math.min(padding, min * 0.12);
+      const displayMin = min - lowerPadding;
       const displayMax = max + padding;
       const spread = displayMax - displayMin;
       const color = direction === "up" ? "#168a58" : "#c04444";
