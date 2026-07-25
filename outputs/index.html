@@ -1983,14 +1983,10 @@
       marketChartState.error = "";
       renderMarketChart();
       const rangeConfig = chartRanges[marketChartState.rangeKey] || chartRanges["1D"];
-      const url = yahooChartApiUrl(asset.symbol, rangeConfig);
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 10000);
+      const urls = yahooChartApiUrls(asset.symbol, rangeConfig);
       try {
-        const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+        const payload = await fetchYahooChartPayload(urls);
         if (requestId !== marketChartRequest) return;
-        if (!response.ok) throw new Error("Yahoo request failed");
-        const payload = await response.json();
         const result = payload.chart && payload.chart.result && payload.chart.result[0];
         const quote = result && result.indicators && result.indicators.quote && result.indicators.quote[0];
         if (!result || !quote || !Array.isArray(result.timestamp)) throw new Error("Missing chart data");
@@ -2019,9 +2015,8 @@
         };
       } catch (error) {
         if (requestId !== marketChartRequest) return;
-        marketChartState.error = "Chart did not load. Use the local app server link, then try the symbol again.";
+        marketChartState.error = "Chart did not load. Check your connection, then refresh the chart.";
       } finally {
-        window.clearTimeout(timeout);
         if (requestId !== marketChartRequest) return;
         marketChartState.loading = false;
         renderMarketChart();
@@ -2272,7 +2267,29 @@
       return `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}`;
     }
 
-    function yahooChartApiUrl(symbol, rangeConfig) {
+    async function fetchYahooChartPayload(urls) {
+      return Promise.any(urls.map(async url => {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 8000);
+        try {
+          const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+          if (!response.ok) throw new Error("Yahoo request failed");
+          const payload = await response.json();
+          const result = payload.chart && payload.chart.result && payload.chart.result[0];
+          const quote = result && result.indicators && result.indicators.quote && result.indicators.quote[0];
+          const closes = quote && Array.isArray(quote.close) ? quote.close : [];
+          const positiveCloses = closes.filter(value => typeof value === "number" && Number.isFinite(value) && value > 0);
+          if (!result || !Array.isArray(result.timestamp) || positiveCloses.length < 2) {
+            throw new Error("Invalid chart data");
+          }
+          return payload;
+        } finally {
+          window.clearTimeout(timeout);
+        }
+      }));
+    }
+
+    function yahooChartApiUrls(symbol, rangeConfig) {
       const params = new URLSearchParams({
         symbol,
         range: rangeConfig.range,
@@ -2282,9 +2299,14 @@
       });
       const isGitHubPages = location.hostname.endsWith(".github.io");
       if ((location.protocol === "http:" || location.protocol === "https:") && !isGitHubPages) {
-        return `/api/chart?${params.toString()}`;
+        return [`/api/chart?${params.toString()}`];
       }
-      return `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${rangeConfig.range}&interval=${rangeConfig.interval}&includePrePost=true&_=${Date.now()}`;
+      const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${rangeConfig.range}&interval=${rangeConfig.interval}&includePrePost=true&_=${Date.now()}`;
+      return [
+        yahooUrl,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`,
+        `https://corsproxy.io/?url=${encodeURIComponent(yahooUrl)}`
+      ];
     }
 
     function escapeHtml(value) {
