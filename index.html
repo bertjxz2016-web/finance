@@ -1883,6 +1883,17 @@
       "ALL": { range: "max", interval: "1mo", title: "all time" }
     };
     const chartPlot = { width: 640, height: 260, left: 92, right: 24, top: 24, bottom: 34 };
+    const MARKET_CHART_CACHE_KEY = "invest-quest-market-chart-cache-v1";
+    const MARKET_CHART_CACHE_LIMIT = 12;
+    const marketChartCacheMaxAge = {
+      "1D": 5 * 60 * 1000,
+      "1W": 30 * 60 * 1000,
+      "1M": 2 * 60 * 60 * 1000,
+      "1Y": 6 * 60 * 60 * 1000,
+      "5Y": 12 * 60 * 60 * 1000,
+      "YTD": 6 * 60 * 60 * 1000,
+      "ALL": 12 * 60 * 60 * 1000
+    };
     const COURSE_VERSION = "ten-lessons-eight-questions-v1";
     const state = loadState();
     let currentStep = 0;
@@ -1963,7 +1974,9 @@
     function openMarketChart(asset) {
       if (!asset || !asset.symbol) return;
       window.clearTimeout(marketChartTimer);
-      marketChartState = { asset, data: null, loading: true, error: "", rangeKey: marketChartState.rangeKey || "1D" };
+      const rangeKey = marketChartState.rangeKey || "1D";
+      const cachedData = readMarketChartCache(asset.symbol, rangeKey);
+      marketChartState = { asset, data: cachedData, loading: true, error: "", rangeKey };
       renderMarketChart();
       fetchMarketChart(asset);
     }
@@ -1971,7 +1984,9 @@
     function setMarketChartRange(rangeKey) {
       if (!chartRanges[rangeKey]) return;
       marketChartState.rangeKey = rangeKey;
-      marketChartState.data = null;
+      marketChartState.data = marketChartState.asset
+        ? readMarketChartCache(marketChartState.asset.symbol, rangeKey)
+        : null;
       if (marketChartState.asset) fetchMarketChart(marketChartState.asset);
       else renderMarketChart();
     }
@@ -1982,45 +1997,104 @@
       marketChartState.loading = true;
       marketChartState.error = "";
       renderMarketChart();
-      const rangeConfig = chartRanges[marketChartState.rangeKey] || chartRanges["1D"];
+      const rangeKey = marketChartState.rangeKey;
+      const rangeConfig = chartRanges[rangeKey] || chartRanges["1D"];
       const urls = yahooChartApiUrls(asset.symbol, rangeConfig);
       try {
         const payload = await fetchYahooChartPayload(urls);
         if (requestId !== marketChartRequest) return;
-        const result = payload.chart && payload.chart.result && payload.chart.result[0];
-        const quote = result && result.indicators && result.indicators.quote && result.indicators.quote[0];
-        if (!result || !quote || !Array.isArray(result.timestamp)) throw new Error("Missing chart data");
-        const closes = quote.close || [];
-        const points = result.timestamp.map((time, index) => {
-          const close = closes[index];
-          return {
-            time: time * 1000,
-            close: typeof close === "number" ? close : NaN
-          };
-        }).filter(point => Number.isFinite(point.close) && point.close > 0);
-        if (points.length < 2) throw new Error("Not enough chart data");
-        const meta = result.meta || {};
-        const lastPoint = points[points.length - 1];
-        const price = Number.isFinite(Number(meta.regularMarketPrice)) ? Number(meta.regularMarketPrice) : lastPoint.close;
-        const previousClose = Number.isFinite(Number(meta.previousClose)) ? Number(meta.previousClose) : points[0].close;
-        const previous = marketChartState.rangeKey === "1D" ? previousClose : points[0].close;
-        marketChartState.data = {
-          points,
-          price,
-          previous,
-          currency: meta.currency || "",
-          exchange: meta.exchangeName || meta.fullExchangeName || "",
-          rangeTitle: rangeConfig.title,
-          updatedAt: Date.now()
-        };
+        marketChartState.data = marketChartDataFromPayload(payload, rangeKey, rangeConfig);
+        writeMarketChartCache(asset.symbol, rangeKey, marketChartState.data);
       } catch (error) {
         if (requestId !== marketChartRequest) return;
-        marketChartState.error = "Chart did not load. Check your connection, then refresh the chart.";
+        marketChartState.error = marketChartState.data
+          ? "Showing a recent chart while live prices reconnect."
+          : "Chart did not load. Check your connection, then refresh the chart.";
       } finally {
         if (requestId !== marketChartRequest) return;
         marketChartState.loading = false;
         renderMarketChart();
         scheduleMarketChartRefresh();
+      }
+    }
+
+    function marketChartDataFromPayload(payload, rangeKey, rangeConfig) {
+      const result = payload.chart && payload.chart.result && payload.chart.result[0];
+      const quote = result && result.indicators && result.indicators.quote && result.indicators.quote[0];
+      if (!result || !quote || !Array.isArray(result.timestamp)) throw new Error("Missing chart data");
+      const closes = quote.close || [];
+      const points = result.timestamp.map((time, index) => {
+        const close = closes[index];
+        return {
+          time: time * 1000,
+          close: typeof close === "number" ? close : NaN
+        };
+      }).filter(point => Number.isFinite(point.close) && point.close > 0);
+      if (points.length < 2) throw new Error("Not enough chart data");
+      const meta = result.meta || {};
+      const lastPoint = points[points.length - 1];
+      const price = Number.isFinite(Number(meta.regularMarketPrice)) ? Number(meta.regularMarketPrice) : lastPoint.close;
+      const previousClose = Number.isFinite(Number(meta.previousClose)) ? Number(meta.previousClose) : points[0].close;
+      const previous = rangeKey === "1D" ? previousClose : points[0].close;
+      return {
+        points,
+        price,
+        previous,
+        currency: meta.currency || "",
+        exchange: meta.exchangeName || meta.fullExchangeName || "",
+        rangeTitle: rangeConfig.title,
+        updatedAt: Date.now()
+      };
+    }
+
+    function validMarketChartData(data) {
+      return Boolean(
+        data &&
+        Array.isArray(data.points) &&
+        data.points.length >= 2 &&
+        Number.isFinite(Number(data.price)) &&
+        Number(data.price) > 0 &&
+        Number.isFinite(Number(data.previous)) &&
+        Number(data.previous) > 0 &&
+        data.points.every(point =>
+          Number.isFinite(Number(point.time)) &&
+          Number.isFinite(Number(point.close)) &&
+          Number(point.close) > 0
+        )
+      );
+    }
+
+    function marketChartCacheId(symbol, rangeKey) {
+      return `${String(symbol).toUpperCase()}|${rangeKey}`;
+    }
+
+    function readMarketChartCache(symbol, rangeKey) {
+      try {
+        const cache = JSON.parse(localStorage.getItem(MARKET_CHART_CACHE_KEY) || "{}");
+        const entry = cache[marketChartCacheId(symbol, rangeKey)];
+        const maxAge = marketChartCacheMaxAge[rangeKey] || marketChartCacheMaxAge["1D"];
+        if (!entry || Date.now() - Number(entry.savedAt) > maxAge || !validMarketChartData(entry.data)) {
+          return null;
+        }
+        return entry.data;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function writeMarketChartCache(symbol, rangeKey, data) {
+      if (!validMarketChartData(data)) return;
+      try {
+        const cache = JSON.parse(localStorage.getItem(MARKET_CHART_CACHE_KEY) || "{}");
+        cache[marketChartCacheId(symbol, rangeKey)] = { savedAt: Date.now(), data };
+        const trimmed = Object.fromEntries(
+          Object.entries(cache)
+            .sort((left, right) => Number(right[1].savedAt) - Number(left[1].savedAt))
+            .slice(0, MARKET_CHART_CACHE_LIMIT)
+        );
+        localStorage.setItem(MARKET_CHART_CACHE_KEY, JSON.stringify(trimmed));
+      } catch (error) {
+        // A full or unavailable browser cache should never block live chart loading.
       }
     }
 
@@ -2276,28 +2350,33 @@
     }
 
     async function fetchYahooChartPayload(urls) {
-      return Promise.any(urls.map(async url => {
-        const controller = new AbortController();
-        const timeout = window.setTimeout(() => controller.abort(), 10000);
-        try {
-          const response = await fetch(url, { cache: "no-store", signal: controller.signal });
-          if (!response.ok) throw new Error("Yahoo request failed");
-          let payload = await response.json();
-          if (payload && typeof payload.contents === "string") {
-            payload = JSON.parse(payload.contents);
+      const controllers = urls.map(() => new AbortController());
+      try {
+        return await Promise.any(urls.map(async (url, index) => {
+          const controller = controllers[index];
+          const timeout = window.setTimeout(() => controller.abort(), 10000);
+          try {
+            const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+            if (!response.ok) throw new Error("Yahoo request failed");
+            let payload = await response.json();
+            if (payload && typeof payload.contents === "string") {
+              payload = JSON.parse(payload.contents);
+            }
+            const result = payload.chart && payload.chart.result && payload.chart.result[0];
+            const quote = result && result.indicators && result.indicators.quote && result.indicators.quote[0];
+            const closes = quote && Array.isArray(quote.close) ? quote.close : [];
+            const positiveCloses = closes.filter(value => typeof value === "number" && Number.isFinite(value) && value > 0);
+            if (!result || !Array.isArray(result.timestamp) || positiveCloses.length < 2) {
+              throw new Error("Invalid chart data");
+            }
+            return payload;
+          } finally {
+            window.clearTimeout(timeout);
           }
-          const result = payload.chart && payload.chart.result && payload.chart.result[0];
-          const quote = result && result.indicators && result.indicators.quote && result.indicators.quote[0];
-          const closes = quote && Array.isArray(quote.close) ? quote.close : [];
-          const positiveCloses = closes.filter(value => typeof value === "number" && Number.isFinite(value) && value > 0);
-          if (!result || !Array.isArray(result.timestamp) || positiveCloses.length < 2) {
-            throw new Error("Invalid chart data");
-          }
-          return payload;
-        } finally {
-          window.clearTimeout(timeout);
-        }
-      }));
+        }));
+      } finally {
+        controllers.forEach(controller => controller.abort());
+      }
     }
 
     function yahooChartApiUrls(symbol, rangeConfig) {
