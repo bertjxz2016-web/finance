@@ -2255,9 +2255,9 @@
       if (!Number.isFinite(min) || !Number.isFinite(max) || min <= 0) {
         return `<div class="chart-empty">Price chart data is missing.</div>`;
       }
-      const rawSpread = Math.max(max - min, Math.abs(max) * 0.001, 0.01);
+      const rawSpread = Math.max(max - min, Math.abs(max) * 0.001, 0.000000001);
       const padding = rawSpread * 0.12;
-      const displayMin = Math.max(0.01, min - padding);
+      const displayMin = Math.max(0, min - padding);
       const displayMax = max + padding;
       const spread = displayMax - displayMin;
       const color = direction === "up" ? "#168a58" : "#c04444";
