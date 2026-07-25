@@ -2223,21 +2223,28 @@
     }
 
     function formatMarketPrice(price, currency) {
-      return `${currency ? currency + " " : ""}${Number(price).toLocaleString(undefined, { maximumFractionDigits: price < 10 ? 4 : 2 })}`;
+      const value = Number(price);
+      const options = Math.abs(value) < 2
+        ? { minimumFractionDigits: 6, maximumFractionDigits: 6 }
+        : { maximumFractionDigits: value < 10 ? 4 : 2 };
+      return `${currency ? currency + " " : ""}${value.toLocaleString(undefined, options)}`;
     }
 
     function formatAxisPrice(price, currency) {
       const value = Number(price);
-      const digits = Math.abs(value) < 10 ? 2 : Math.abs(value) < 100 ? 1 : 0;
-      const label = value.toLocaleString(undefined, { maximumFractionDigits: digits });
+      const digits = Math.abs(value) < 2 ? 6 : Math.abs(value) < 10 ? 2 : Math.abs(value) < 100 ? 1 : 0;
+      const label = value.toLocaleString(undefined, {
+        minimumFractionDigits: Math.abs(value) < 2 ? 6 : 0,
+        maximumFractionDigits: digits
+      });
       return currency === "USD" || !currency ? `$${label}` : `${currency} ${label}`;
     }
 
     function formatHoverPrice(price, currency) {
       const value = Number(price);
       const label = value.toLocaleString(undefined, {
-        minimumFractionDigits: value < 100 ? 2 : 0,
-        maximumFractionDigits: value < 100 ? 2 : 2
+        minimumFractionDigits: Math.abs(value) < 2 ? 6 : value < 100 ? 2 : 0,
+        maximumFractionDigits: Math.abs(value) < 2 ? 6 : 2
       });
       return currency === "USD" || !currency ? `$${label}` : `${currency} ${label}`;
     }
