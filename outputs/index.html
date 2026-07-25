@@ -2277,11 +2277,14 @@
     async function fetchYahooChartPayload(urls) {
       return Promise.any(urls.map(async url => {
         const controller = new AbortController();
-        const timeout = window.setTimeout(() => controller.abort(), 8000);
+        const timeout = window.setTimeout(() => controller.abort(), 10000);
         try {
           const response = await fetch(url, { cache: "no-store", signal: controller.signal });
           if (!response.ok) throw new Error("Yahoo request failed");
-          const payload = await response.json();
+          let payload = await response.json();
+          if (payload && typeof payload.contents === "string") {
+            payload = JSON.parse(payload.contents);
+          }
           const result = payload.chart && payload.chart.result && payload.chart.result[0];
           const quote = result && result.indicators && result.indicators.quote && result.indicators.quote[0];
           const closes = quote && Array.isArray(quote.close) ? quote.close : [];
@@ -2308,12 +2311,17 @@
       if ((location.protocol === "http:" || location.protocol === "https:") && !isGitHubPages) {
         return [`/api/chart?${params.toString()}`];
       }
-      const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${rangeConfig.range}&interval=${rangeConfig.interval}&includePrePost=true&_=${Date.now()}`;
-      return [
+      const query = `range=${rangeConfig.range}&interval=${rangeConfig.interval}&includePrePost=true&_=${Date.now()}`;
+      const yahooUrls = [
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?${query}`,
+        `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?${query}`
+      ];
+      return yahooUrls.flatMap(yahooUrl => [
         yahooUrl,
         `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`,
+        `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`,
         `https://corsproxy.io/?url=${encodeURIComponent(yahooUrl)}`
-      ];
+      ]);
     }
 
     function escapeHtml(value) {
