@@ -139,11 +139,36 @@
     }
 
     #dashboard.lesson-focus .shell {
-      grid-template-columns: 1fr;
+      grid-template-columns: 76px minmax(0, 1fr);
+      gap: 12px;
     }
 
     #dashboard.lesson-focus .side {
+      display: block;
+      padding: 8px;
+    }
+
+    #dashboard.lesson-focus .side .hero-art,
+    #dashboard.lesson-focus .side .legend {
       display: none;
+    }
+
+    #dashboard.lesson-focus .side .tabbar {
+      margin: 0;
+    }
+
+    #dashboard.lesson-focus .side .tab {
+      min-height: 54px;
+      padding: 8px;
+      justify-content: center;
+    }
+
+    #dashboard.lesson-focus .side .tab-label {
+      display: none;
+    }
+
+    #dashboard.lesson-focus .side .tab-icon {
+      font-size: 22px;
     }
 
     .side,
@@ -1026,6 +1051,31 @@
         justify-content: center;
       }
 
+      #dashboard.lesson-focus .shell {
+        grid-template-columns: 1fr;
+      }
+
+      #dashboard.lesson-focus .side {
+        position: static;
+        padding: 6px;
+      }
+
+      #dashboard.lesson-focus .side .tabbar {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      #dashboard.lesson-focus .side .tab {
+        min-height: 44px;
+      }
+
+      #dashboard.lesson-focus .side .tab-label {
+        display: inline;
+      }
+
+      #dashboard.lesson-focus .side .tab-icon {
+        font-size: inherit;
+      }
+
       .onboard-art {
         min-height: 230px;
       }
@@ -1180,9 +1230,9 @@
         <aside class="side">
           <div class="hero-art" aria-hidden="true"><div class="bars"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
           <nav class="tabbar" aria-label="App sections">
-            <button class="tab active" data-tab="markets">📈 Markets</button>
-            <button class="tab" data-tab="learn">📚 Learn</button>
-            <button class="tab" data-tab="tasks">🏆 Tasks</button>
+            <button class="tab active" data-tab="markets" title="Markets" aria-label="Markets"><span class="tab-icon" aria-hidden="true">📈</span><span class="tab-label">Markets</span></button>
+            <button class="tab" data-tab="learn" title="Learn" aria-label="Learn"><span class="tab-icon" aria-hidden="true">📚</span><span class="tab-label">Learn</span></button>
+            <button class="tab" data-tab="tasks" title="Tasks" aria-label="Tasks"><span class="tab-icon" aria-hidden="true">🏆</span><span class="tab-label">Tasks</span></button>
           </nav>
           <div class="legend">
             <div class="legend-item"><span class="stripe red"></span><span>Can’t buy, holding economy</span></div>
