@@ -427,7 +427,8 @@
     }
 
     input[type="text"],
-    input[type="number"] {
+    input[type="number"],
+    select {
       width: 100%;
       min-height: 48px;
       border: 1px solid var(--line);
@@ -469,6 +470,10 @@
       background: var(--green);
     }
 
+    .btn.danger {
+      background: var(--red);
+    }
+
     .section-head {
       display: flex;
       align-items: flex-start;
@@ -480,6 +485,39 @@
     .section-head p {
       margin-top: 6px;
       max-width: 68ch;
+    }
+
+    .settings-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, .55fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .settings-form,
+    .danger-zone {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .settings-form .btn,
+    .danger-zone .btn {
+      justify-self: start;
+    }
+
+    .danger-zone {
+      border-color: rgba(188, 61, 53, .35);
+    }
+
+    .danger-zone p {
+      line-height: 1.55;
     }
 
     .grid {
@@ -1044,7 +1082,7 @@
       }
 
       .tabbar {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
       .tab {
@@ -1061,7 +1099,7 @@
       }
 
       #dashboard.lesson-focus .side .tabbar {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
       #dashboard.lesson-focus .side .tab {
@@ -1106,7 +1144,9 @@
       .market-grid,
       .course-summary,
       .task-grid,
-      .streak-grid {
+      .streak-grid,
+      .settings-layout,
+      .settings-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1233,6 +1273,7 @@
             <button class="tab active" data-tab="markets" title="Markets" aria-label="Markets"><span class="tab-icon" aria-hidden="true">📈</span><span class="tab-label">Markets</span></button>
             <button class="tab" data-tab="learn" title="Learn" aria-label="Learn"><span class="tab-icon" aria-hidden="true">📚</span><span class="tab-label">Learn</span></button>
             <button class="tab" data-tab="tasks" title="Tasks" aria-label="Tasks"><span class="tab-icon" aria-hidden="true">🏆</span><span class="tab-label">Tasks</span></button>
+            <button class="tab" data-tab="settings" title="Settings" aria-label="Settings"><span class="tab-icon" aria-hidden="true">⚙</span><span class="tab-label">Settings</span></button>
           </nav>
           <div class="legend">
             <div class="legend-item"><span class="stripe red"></span><span>Can’t buy, holding economy</span></div>
@@ -1247,7 +1288,6 @@
                 <h2>Stock markets, crypto, and paper choices</h2>
                 <p class="muted">Buy and sell are practice actions for learning the markets.</p>
               </div>
-              <button class="btn secondary" id="resetBtn">Reset app</button>
             </div>
             <div class="market-chart" id="marketChart"></div>
             <div class="market-grid" id="marketGrid"></div>
@@ -1299,6 +1339,44 @@
               <button class="btn secondary" id="randomTasksBtn">Random tasks</button>
             </div>
             <div class="task-grid" id="taskGrid"></div>
+          </section>
+
+          <section data-panel="settings" class="hidden">
+            <div class="section-head">
+              <div>
+                <h2>Settings</h2>
+                <p class="muted">Update your profile or start over with a new account.</p>
+              </div>
+            </div>
+            <div class="settings-layout">
+              <form class="card settings-form" id="settingsForm">
+                <h3>Profile</h3>
+                <div class="settings-grid">
+                  <label class="field">First name
+                    <input id="settingsFirst" type="text" autocomplete="given-name" required>
+                  </label>
+                  <label class="field">Last name
+                    <input id="settingsLast" type="text" autocomplete="family-name" required>
+                  </label>
+                  <label class="field">Age
+                    <input id="settingsAge" type="number" min="1" max="120" required>
+                  </label>
+                  <label class="field">Level
+                    <select id="settingsLevel">
+                      <option value="Beginner">Beginner</option>
+                      <option value="Intermediate">Intermediate</option>
+                      <option value="Expert">Expert</option>
+                    </select>
+                  </label>
+                </div>
+                <button class="btn green" type="submit">Save changes</button>
+              </form>
+              <div class="card danger-zone">
+                <h3>Reset account</h3>
+                <p class="muted">This deletes your profile, XP, streak, course progress, and completed tasks. It cannot be undone.</p>
+                <button class="btn danger" id="resetAccountBtn" type="button">Reset account</button>
+              </div>
+            </div>
           </section>
         </main>
       </div>
@@ -2544,6 +2622,13 @@
       document.getElementById("welcomeLine").textContent = `${last}${first} • ${state.profile.reason || "Learning mode"}`;
     }
 
+    function renderSettings() {
+      document.getElementById("settingsFirst").value = state.profile.first || "";
+      document.getElementById("settingsLast").value = state.profile.last || "";
+      document.getElementById("settingsAge").value = state.profile.age || "";
+      document.getElementById("settingsLevel").value = state.profile.level || "Beginner";
+    }
+
     function renderMarkets() {
       const grid = document.getElementById("marketGrid");
       grid.innerHTML = markets.map(group => `
@@ -3255,6 +3340,7 @@
             renderCourse();
           } else {
             document.getElementById("dashboard").classList.remove("lesson-focus");
+            if (tab.dataset.tab === "settings") renderSettings();
           }
         });
       });
@@ -3278,8 +3364,30 @@
         addXp(-250, "Streak Freeze");
       });
       document.getElementById("randomTasksBtn").addEventListener("click", generateTasks);
-      document.getElementById("resetBtn").addEventListener("click", () => {
+      document.getElementById("settingsForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const first = document.getElementById("settingsFirst").value.trim();
+        const last = document.getElementById("settingsLast").value.trim();
+        const age = Number(document.getElementById("settingsAge").value);
+        const level = document.getElementById("settingsLevel").value;
+        if (!first || !last || !Number.isInteger(age) || age < 1 || age > 120) {
+          showToast("Enter a first name, last name, and age from 1 to 120.");
+          return;
+        }
+        state.profile.first = first;
+        state.profile.last = last;
+        state.profile.age = String(age);
+        state.profile.level = level;
+        saveState();
+        renderStats();
+        renderSettings();
+        showToast("Profile updated.");
+      });
+      document.getElementById("resetAccountBtn").addEventListener("click", () => {
+        const confirmed = window.confirm("Reset your account? This deletes your profile, XP, streak, course progress, and completed tasks.");
+        if (!confirmed) return;
         localStorage.removeItem("investQuestState");
+        localStorage.removeItem(MARKET_CHART_CACHE_KEY);
         location.reload();
       });
     }
@@ -3289,6 +3397,7 @@
       renderMarkets();
       renderCourse();
       renderTasks();
+      renderSettings();
     }
 
     wireOnboarding();
