@@ -938,6 +938,44 @@
       gap: 10px;
     }
 
+    .result-summary {
+      border: 1px solid rgba(22, 138, 88, .35);
+      background: var(--green-soft);
+      border-radius: 8px;
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .result-stat {
+      min-height: 92px;
+      border: 1px solid rgba(22, 138, 88, .25);
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      align-content: center;
+      gap: 4px;
+    }
+
+    .result-stat span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .result-stat strong {
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
     .miss-panel {
       border: 1px solid rgba(188, 61, 53, .45);
       background: var(--red-soft);
@@ -1146,7 +1184,8 @@
       .task-grid,
       .streak-grid,
       .settings-layout,
-      .settings-grid {
+      .settings-grid,
+      .result-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1314,7 +1353,7 @@
               <aside class="grid">
                 <div class="card" style="padding:14px">
                   <h3>Automatic XP</h3>
-                  <p class="muted" style="margin-top:6px">Lessons, quizzes, tests, perfect scores, modules, and course finish bonuses pay out when you complete them.</p>
+                  <p class="muted" style="margin-top:6px">Lesson, quiz, and test XP is based on accuracy. Perfect scores, modules, and course finish bonuses are added automatically.</p>
                 </div>
                 <div class="card" style="padding:14px">
                   <h3>Streak rewards</h3>
@@ -2873,7 +2912,7 @@
               <strong>${item.title}</strong>
               <span class="muted" style="display:block">${courseTypeLabel(item)}${done ? " - done" : unlocked ? " - unlocked" : " - locked"}</span>
             </span>
-            <span class="xp">+${courseXpTotal(item)} XP</span>
+            <span class="xp">Up to +${courseXpTotal(item)} XP</span>
           </button>
         `;
       }).join("");
@@ -2886,6 +2925,9 @@
       });
       panel.querySelectorAll("[data-answer]").forEach(button => {
         button.addEventListener("click", () => answerCourseQuestion(button.dataset.item, Number(button.dataset.answer)));
+      });
+      panel.querySelectorAll("[data-continue-result]").forEach(button => {
+        button.addEventListener("click", () => continueCourseResult(button.dataset.continueResult));
       });
       panel.querySelectorAll("[data-collect-course]").forEach(button => {
         button.addEventListener("click", () => collectCourseBonus());
@@ -2925,7 +2967,30 @@
     }
 
     function getProgress(itemId) {
-      const defaults = { lessonIndex: 0, completedLessons: 0, queueLessonIndex: null, lessonPage: 0, lessonDone: false, lessonQueue: null, lessonRetryQueue: [], lessonCorrect: [], lessonMisses: [], lastMiss: null, quizIndex: 0, quizCorrect: 0, quizAnswered: 0, quizDone: false, testIndex: 0, testCorrect: 0, testAnswered: 0, testDone: false };
+      const defaults = {
+        lessonIndex: 0,
+        completedLessons: 0,
+        queueLessonIndex: null,
+        lessonPage: 0,
+        lessonDone: false,
+        lessonQueue: null,
+        lessonRetryQueue: [],
+        lessonCorrect: [],
+        lessonMisses: [],
+        lessonStartedAt: 0,
+        lastMiss: null,
+        quizIndex: 0,
+        quizCorrect: 0,
+        quizAnswered: 0,
+        quizStartedAt: 0,
+        quizDone: false,
+        testIndex: 0,
+        testCorrect: 0,
+        testAnswered: 0,
+        testStartedAt: 0,
+        testDone: false,
+        activityResult: null
+      };
       state.courseProgress[itemId] = { ...defaults, ...(state.courseProgress[itemId] || {}) };
       return state.courseProgress[itemId];
     }
@@ -2957,6 +3022,7 @@
 
     function modulePanelTemplate(module) {
       const progress = getProgress(module.id);
+      if (progress.activityResult) return activityResultTemplate(module, progress.activityResult);
       if (!progress.lessonDone) return lessonTemplate(module, progress);
       if (!progress.quizDone) return questionSetTemplate(module, module.quizQuestions, progress.quizIndex, progress.quizCorrect, "quiz");
       return `
@@ -2974,6 +3040,7 @@
     }
 
     function lessonTemplate(module, progress) {
+      ensureActivityTimer(progress, "lessonStartedAt");
       const lessonInfo = currentLesson(module, progress);
       const pages = lessonPagesFor(module, progress);
       const queue = getLessonQueue(module, progress);
@@ -2990,7 +3057,7 @@
             <h3>${module.title}</h3>
             <p class="muted">${lessonInfo.lesson.title} - lecture page - page ${stepText}</p>
           </div>
-          <span class="xp">+${module.lessonXp} XP for this lesson</span>
+          <span class="xp">Up to +${module.lessonXp} XP</span>
         </div>
         ${moduleStatusTemplate(module, progress)}
         ${missPanel}
@@ -3036,7 +3103,7 @@
             <h3>${module.title}</h3>
             <p class="muted">${lessonInfo.lesson.title} - ${isRetryRound ? "retry round" : `question ${questionNumber} of ${practiceTotal}`}</p>
           </div>
-          <span class="xp">+${module.lessonXp} XP for this lesson</span>
+          <span class="xp">Up to +${module.lessonXp} XP</span>
         </div>
         ${moduleStatusTemplate(module, progress)}
         ${missPanel}
@@ -3101,6 +3168,7 @@
 
     function testPanelTemplate(test) {
       const progress = getProgress(test.id);
+      if (progress.activityResult) return activityResultTemplate(test, progress.activityResult);
       if (state.completed[test.id]) {
         return `
           <div class="section-head" style="margin-bottom:0">
@@ -3117,6 +3185,8 @@
     }
 
     function questionSetTemplate(item, questions, index, correct, mode) {
+      const progress = getProgress(item.id);
+      ensureActivityTimer(progress, mode === "quiz" ? "quizStartedAt" : "testStartedAt");
       const question = questions[index] || questions[questions.length - 1];
       const label = question.type === "sim" ? "Simulation" : "Multiple choice";
       const progressText = `${Math.min(index + 1, questions.length)}/${questions.length}`;
@@ -3134,7 +3204,7 @@
         <div class="lesson-step">
           <div class="question-meta">
             <strong>${label} ${progressText}</strong>
-            <span class="mini-pill">${mode === "quiz" ? "+60 XP at finish" : "+150 XP at finish"}</span>
+            <span class="mini-pill">${mode === "quiz" ? "Up to +60 XP" : "Up to +150 XP"}</span>
           </div>
           <p class="lesson-body">${question.prompt}</p>
           <div class="quiz-options">
@@ -3144,10 +3214,71 @@
       `;
     }
 
+    function ensureActivityTimer(progress, key) {
+      const learnPanel = document.querySelector('[data-panel="learn"]');
+      if (!learnPanel || learnPanel.classList.contains("hidden") || progress[key]) return;
+      progress[key] = Date.now();
+      saveState();
+    }
+
+    function accuracyReward(maxXp, correct, total) {
+      if (!total) return 0;
+      return Math.round(maxXp * (correct / total));
+    }
+
+    function elapsedTime(startedAt) {
+      const start = Number(startedAt) || Date.now();
+      return Math.max(1000, Date.now() - start);
+    }
+
+    function formatDuration(durationMs) {
+      const totalSeconds = Math.max(1, Math.round(durationMs / 1000));
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      if (!minutes) return `${seconds} sec`;
+      if (!seconds) return `${minutes} min`;
+      return `${minutes} min ${seconds} sec`;
+    }
+
+    function activityResultTemplate(item, result) {
+      return `
+        <div class="section-head" style="margin-bottom:0">
+          <div>
+            <h3>${result.title}</h3>
+            <p class="muted">Finished. Here is your complete result.</p>
+          </div>
+          <span class="xp">+${result.totalXp} XP earned</span>
+        </div>
+        <div class="result-summary">
+          <div class="result-grid">
+            <div class="result-stat">
+              <span>Accuracy</span>
+              <strong>${result.accuracy}%</strong>
+            </div>
+            <div class="result-stat">
+              <span>Correct answers</span>
+              <strong>${result.correct}/${result.total}</strong>
+            </div>
+            <div class="result-stat">
+              <span>Time used</span>
+              <strong>${formatDuration(result.durationMs)}</strong>
+            </div>
+            <div class="result-stat">
+              <span>XP earned</span>
+              <strong>+${result.totalXp}</strong>
+            </div>
+          </div>
+          <p class="lesson-body">${result.xpNote}</p>
+          <button class="btn green" data-continue-result="${item.id}">${result.nextLabel}</button>
+        </div>
+      `;
+    }
+
     function advanceLesson(moduleId) {
       const module = courseModules.find(item => item.id === moduleId);
       if (!module || state.completed[module.id]) return;
       const progress = getProgress(module.id);
+      if (!progress.lessonStartedAt) progress.lessonStartedAt = Date.now();
       const queue = getLessonQueue(module, progress);
       progress.lastMiss = null;
       queue.shift();
@@ -3164,6 +3295,7 @@
       const module = courseModules.find(item => item.id === moduleId);
       if (!module || state.completed[module.id]) return;
       const progress = getProgress(module.id);
+      if (!progress.lessonStartedAt) progress.lessonStartedAt = Date.now();
       const queue = getLessonQueue(module, progress);
       const retryQueue = getLessonRetryQueue(progress);
       const page = lessonPagesFor(module, progress)[pageIndex];
@@ -3195,31 +3327,32 @@
           answer: page.options[page.answer],
           explanation: page.explanation || "Review the idea, then try the question again when it returns."
         };
-        addXp(6, "review try");
         saveState();
         renderCourse();
       }
     }
 
     function finishLesson(module, progress) {
-      if (progress.lessonDone) return;
+      if (progress.lessonDone || progress.activityResult) return;
       const lessonInfo = currentLesson(module, progress);
+      const correct = lessonPracticeTotal(module, progress);
+      const total = correct + progress.lessonMisses.length;
+      const accuracy = Math.round((correct / total) * 100);
+      const earnedXp = accuracyReward(module.lessonXp, correct, total);
       progress.completedLessons = Math.max(progress.completedLessons || 0, lessonInfo.index + 1);
       state.streak += 1;
-      if (lessonInfo.index + 1 < lessonInfo.total) {
-        progress.lessonIndex = lessonInfo.index + 1;
-        progress.queueLessonIndex = null;
-        progress.lessonPage = 0;
-        progress.lessonQueue = null;
-        progress.lessonRetryQueue = [];
-        progress.lessonCorrect = [];
-        progress.lessonMisses = [];
-        progress.lastMiss = null;
-      } else {
-        progress.lessonDone = true;
-        progress.lessonPage = lessonPagesFor(module, progress).length - 1;
-      }
-      addXp(module.lessonXp, `${module.shortTitle} ${lessonInfo.lesson.title}`);
+      progress.activityResult = {
+        kind: "lesson",
+        title: `${lessonInfo.lesson.title} results`,
+        correct,
+        total,
+        accuracy,
+        durationMs: elapsedTime(progress.lessonStartedAt),
+        totalXp: earnedXp,
+        xpNote: `Accuracy earned ${earnedXp} of ${module.lessonXp} possible lesson XP. Missed questions count as extra attempts.`,
+        nextLabel: lessonInfo.index + 1 < lessonInfo.total ? "Continue to next lesson" : "Continue to module quiz"
+      };
+      addXp(earnedXp, `${module.shortTitle} ${lessonInfo.lesson.title}`);
       saveState();
       renderAll();
     }
@@ -3232,6 +3365,8 @@
       const indexKey = item.kind === "module" ? "quizIndex" : "testIndex";
       const correctKey = item.kind === "module" ? "quizCorrect" : "testCorrect";
       const answeredKey = item.kind === "module" ? "quizAnswered" : "testAnswered";
+      const startedKey = item.kind === "module" ? "quizStartedAt" : "testStartedAt";
+      if (!progress[startedKey]) progress[startedKey] = Date.now();
       const question = questions[progress[indexKey]];
       markAnswerButtons(answerIndex, question.answer);
       progress[answeredKey] += 1;
@@ -3247,20 +3382,81 @@
 
     function finishQuestionSet(item, progress) {
       if (item.kind === "module") {
+        const total = item.quizQuestions.length;
+        const accuracy = Math.round((progress.quizCorrect / total) * 100);
+        const accuracyXp = accuracyReward(item.quizXp, progress.quizCorrect, total);
+        const perfectXp = progress.quizCorrect === total ? item.perfectXp : 0;
         progress.quizDone = true;
         state.streak += 1;
-        addXp(item.quizXp, `${item.shortTitle} quiz`);
-        if (progress.quizCorrect === item.quizQuestions.length) addXp(item.perfectXp, `${item.shortTitle} perfect quiz`);
+        addXp(accuracyXp, `${item.shortTitle} quiz accuracy`);
+        if (perfectXp) addXp(perfectXp, `${item.shortTitle} perfect quiz`);
         addXp(item.moduleXp, `${item.shortTitle} module`);
         state.completed[item.id] = true;
+        progress.activityResult = {
+          kind: "quiz",
+          title: `${item.shortTitle} quiz results`,
+          correct: progress.quizCorrect,
+          total,
+          accuracy,
+          durationMs: elapsedTime(progress.quizStartedAt),
+          totalXp: accuracyXp + perfectXp + item.moduleXp,
+          xpNote: `Accuracy earned ${accuracyXp} of ${item.quizXp} possible quiz XP, plus ${item.moduleXp} module XP${perfectXp ? ` and ${perfectXp} perfect-score XP` : ""}.`,
+          nextLabel: "Continue course"
+        };
       } else {
+        const total = item.questions.length;
+        const accuracy = Math.round((progress.testCorrect / total) * 100);
+        const accuracyXp = accuracyReward(item.xp, progress.testCorrect, total);
+        const perfectXp = progress.testCorrect === total ? item.perfectXp : 0;
         progress.testDone = true;
         state.streak += 1;
-        addXp(item.xp, item.title);
-        if (progress.testCorrect === item.questions.length) addXp(item.perfectXp, `${item.title} perfect score`);
+        addXp(accuracyXp, `${item.title} accuracy`);
+        if (perfectXp) addXp(perfectXp, `${item.title} perfect score`);
         state.completed[item.id] = true;
+        progress.activityResult = {
+          kind: "bigTest",
+          title: `${item.title} results`,
+          correct: progress.testCorrect,
+          total,
+          accuracy,
+          durationMs: elapsedTime(progress.testStartedAt),
+          totalXp: accuracyXp + perfectXp,
+          xpNote: `Accuracy earned ${accuracyXp} of ${item.xp} possible test XP${perfectXp ? `, plus ${perfectXp} perfect-score XP` : ""}.`,
+          nextLabel: "Continue course"
+        };
       }
-      state.activeCourseId = getNextCourseId(item.id);
+      saveState();
+      renderAll();
+    }
+
+    function continueCourseResult(itemId) {
+      const item = courseItems.find(entry => entry.id === itemId);
+      if (!item) return;
+      const progress = getProgress(item.id);
+      const result = progress.activityResult;
+      if (!result) return;
+
+      if (result.kind === "lesson") {
+        const lessonInfo = currentLesson(item, progress);
+        progress.activityResult = null;
+        progress.lessonStartedAt = 0;
+        progress.lastMiss = null;
+        if (lessonInfo.index + 1 < lessonInfo.total) {
+          progress.lessonIndex = lessonInfo.index + 1;
+          progress.queueLessonIndex = null;
+          progress.lessonPage = 0;
+          progress.lessonQueue = null;
+          progress.lessonRetryQueue = [];
+          progress.lessonCorrect = [];
+          progress.lessonMisses = [];
+        } else {
+          progress.lessonDone = true;
+          progress.lessonPage = lessonPagesFor(item, progress).length - 1;
+        }
+      } else {
+        progress.activityResult = null;
+        state.activeCourseId = getNextCourseId(item.id);
+      }
       saveState();
       renderAll();
     }
