@@ -622,6 +622,15 @@
       color: var(--red);
     }
 
+    .asset-action.forge {
+      background: #e3f0f2;
+      color: var(--teal);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .market-chart {
       border: 1px solid var(--line);
       background: #fff;
@@ -1450,11 +1459,11 @@
         ["DPLS", "can", "High-risk stock", "DPLS"]
       ]},
       { category: "Private stocks", icon: "P", items: [
-        ["Anthropic", "cant", "Private company"],
-        ["OpenAI", "cant", "Private company"],
-        ["Perplexity", "cant", "Private company"],
-        ["Skild AI", "cant", "Private company"],
-        ["Discord", "cant", "Private company"]
+        ["Anthropic", "cant", "Private company - Forge", "", "https://forgeglobal.com/anthropic_stock/"],
+        ["OpenAI", "cant", "Private company - Forge", "", "https://forgeglobal.com/openai_stock/"],
+        ["Perplexity", "cant", "Private company - Forge", "", "https://forgeglobal.com/perplexity_stock/"],
+        ["Skild AI", "cant", "Private company - Forge", "", "https://forgeglobal.com/skild-ai_stock/"],
+        ["Discord", "cant", "Private company - Forge", "", "https://forgeglobal.com/discord_stock/"]
       ]},
       { category: "International", icon: "🌐", items: [
         ["Nikkei 225", "cant", "Index tracker", "^N225"],
@@ -2676,7 +2685,7 @@
             <h3>${group.icon} ${group.category}</h3>
           </div>
           <div class="asset-list">
-            ${group.items.map(([name, status, note, symbol]) => assetTemplate(name, status, note, symbol)).join("")}
+            ${group.items.map(([name, status, note, symbol, sourceUrl]) => assetTemplate(name, status, note, symbol, sourceUrl)).join("")}
           </div>
         </section>
       `).join("");
@@ -2707,9 +2716,11 @@
       });
     }
 
-    function assetTemplate(name, status, note, symbol) {
+    function assetTemplate(name, status, note, symbol, sourceUrl) {
       const label = status === "can" ? "Buy" : "Hold";
-      const action = `<button class="asset-action ${status === "can" ? "buy" : "hold"}" ${status === "cant" ? "disabled" : ""} data-buy="${escapeAttr(name)}">${label}</button>`;
+      const action = sourceUrl
+        ? `<a class="asset-action forge" href="${escapeAttr(sourceUrl)}" target="_blank" rel="noopener" aria-label="View ${escapeAttr(name)} on Forge">View Forge</a>`
+        : `<button class="asset-action ${status === "can" ? "buy" : "hold"}" ${status === "cant" ? "disabled" : ""} data-buy="${escapeAttr(name)}">${label}</button>`;
       const chartAttrs = symbol ? ` data-chart="${escapeAttr(symbol)}" data-chart-name="${escapeAttr(name)}" role="button" tabindex="0"` : "";
       return `
         <div class="asset ${status}${symbol ? " has-chart" : ""}"${chartAttrs}>
