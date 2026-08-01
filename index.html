@@ -2261,15 +2261,20 @@
         exchange: meta.exchangeName || meta.fullExchangeName || "",
         quoteType: meta.quoteType || "",
         longName: meta.longName || meta.shortName || "",
-        dayHigh: Number(meta.regularMarketDayHigh),
-        dayLow: Number(meta.regularMarketDayLow),
-        volume: Number(meta.regularMarketVolume),
-        marketCap: Number(meta.marketCap),
-        fiftyTwoWeekHigh: Number(meta.fiftyTwoWeekHigh),
-        fiftyTwoWeekLow: Number(meta.fiftyTwoWeekLow),
+        dayHigh: positiveMetaNumber(meta.regularMarketDayHigh),
+        dayLow: positiveMetaNumber(meta.regularMarketDayLow),
+        volume: positiveMetaNumber(meta.regularMarketVolume),
+        marketCap: positiveMetaNumber(meta.marketCap),
+        fiftyTwoWeekHigh: positiveMetaNumber(meta.fiftyTwoWeekHigh),
+        fiftyTwoWeekLow: positiveMetaNumber(meta.fiftyTwoWeekLow),
         rangeTitle: rangeConfig.title,
         updatedAt: Date.now()
       };
+    }
+
+    function positiveMetaNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) && number > 0 ? number : NaN;
     }
 
     function validMarketChartData(data) {
