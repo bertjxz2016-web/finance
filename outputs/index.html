@@ -1185,6 +1185,28 @@
       font-size: 18px;
     }
 
+    .task-work {
+      width: 100%;
+      min-height: 74px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 10px;
+      outline-color: var(--green);
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .task-complete {
+      display: grid;
+      gap: 8px;
+    }
+
+    .task-done {
+      color: var(--green);
+      font-weight: 900;
+    }
+
     .difficulty {
       display: inline-flex;
       width: fit-content;
@@ -1509,9 +1531,8 @@
             <div class="section-head">
               <div>
                 <h2>Bronze, Silver, Gold tasks</h2>
-                <p class="muted">Random tasks change whenever you refresh them. Bronze is easiest, Gold is hardest.</p>
+                <p class="muted">Complete one Bronze, one Silver, and one Gold task each day. Each task requires written work.</p>
               </div>
-              <button class="btn secondary" id="randomTasksBtn">Random tasks</button>
             </div>
             <div class="task-grid" id="taskGrid"></div>
           </section>
@@ -2177,6 +2198,7 @@
     };
 
     const taskXp = { Bronze: 35, Silver: 60, Gold: 110 };
+    const taskMinLength = { Bronze: 20, Silver: 60, Gold: 100 };
     const chartRanges = {
       "1D": { range: "1d", interval: "1m", title: "1 day" },
       "1W": { range: "5d", interval: "15m", title: "1 week" },
@@ -2215,6 +2237,7 @@
         courseVersion: COURSE_VERSION,
         claimed: {},
         portfolio: { holdings: {} },
+        taskDay: "",
         completed: {},
         courseProgress: {},
         activeCourseId: "",
@@ -3849,17 +3872,26 @@
     }
 
     function generateTasks() {
+      const today = new Date().toDateString();
       state.tasks = Object.keys(taskBank).map(level => {
         const pool = taskBank[level];
         const text = pool[Math.floor(Math.random() * pool.length)];
-        return { id: `${level}-${Date.now()}-${Math.random()}`, level, text, xp: taskXp[level] };
+        return {
+          id: `${level}-${today}`,
+          level,
+          text,
+          xp: taskXp[level],
+          minLength: taskMinLength[level],
+          done: false,
+          proof: ""
+        };
       });
+      state.taskDay = today;
       saveState();
-      renderTasks();
     }
 
     function renderTasks() {
-      if (!state.tasks.length) generateTasks();
+      ensureDailyTasks();
       const grid = document.getElementById("taskGrid");
       grid.innerHTML = state.tasks.map(task => `
         <article class="card task ${task.level.toLowerCase()}">
@@ -3867,20 +3899,60 @@
             <span class="difficulty">${task.level} Task</span>
             <h3 style="margin-top:12px">${task.text}</h3>
           </div>
-          <button class="btn green" data-task="${task.id}">Complete +${task.xp} XP</button>
+          ${task.done
+            ? `<div class="task-done">Completed today</div>`
+            : `<div class="task-complete">
+                <textarea class="task-work" data-task-proof="${task.id}" placeholder="Show your work here..." aria-label="Work for ${task.level} task"></textarea>
+                <button class="btn green" data-task="${task.id}">Submit work +${task.xp} XP</button>
+              </div>`}
         </article>
       `).join("");
       grid.querySelectorAll("[data-task]").forEach(button => {
         button.addEventListener("click", () => {
           const task = state.tasks.find(item => item.id === button.dataset.task);
           if (!task) return;
+          const proofInput = [...grid.querySelectorAll("[data-task-proof]")].find(input => input.dataset.taskProof === task.id);
+          const proof = proofInput ? proofInput.value.trim() : "";
+          if (proof.length < task.minLength) {
+            showToast(`${task.level} work needs at least ${task.minLength} characters.`);
+            proofInput?.focus();
+            return;
+          }
+          if (!taskProofIsValid(task, proof)) {
+            showToast("Finish the related lesson, quiz, or trade before submitting this task.");
+            return;
+          }
+          task.done = true;
+          task.proof = proof;
+          task.completedAt = Date.now();
           addXp(task.xp, `${task.level} task`);
-          state.tasks = state.tasks.filter(item => item.id !== task.id);
           saveState();
-          if (!state.tasks.length) generateTasks();
           renderTasks();
         });
       });
+    }
+
+    function ensureDailyTasks() {
+      const today = new Date().toDateString();
+      const valid = Array.isArray(state.tasks) && state.tasks.length === 3 && Object.keys(taskBank).every(level => state.tasks.some(task => task.level === level && Number.isInteger(task.minLength) && typeof task.done === "boolean"));
+      if (state.taskDay !== today || !valid) generateTasks();
+    }
+
+    function taskProofIsValid(task, proof) {
+      const text = task.text.toLowerCase();
+      if (text.includes("crypto coin")) return /bitcoin|ethereum|dogecoin/i.test(proof);
+      if (text.includes("green market")) {
+        const lowerProof = proof.toLowerCase();
+        return markets.some(group => group.items.some(([name, status, note, symbol]) => {
+          if (status !== "can") return false;
+          return lowerProof.includes(String(name).toLowerCase()) || (symbol && lowerProof.includes(String(symbol).toLowerCase()));
+        }));
+      }
+      if (text.includes("paper trade")) return Boolean(state.claimed.trade);
+      if (text.includes("beginner lesson")) return courseItems.some(item => item.kind === "module" && state.completed[item.id]);
+      if (text.includes("quiz")) return courseItems.some(item => item.kind === "quiz" && state.completed[item.id]);
+      if (text.includes("final test")) return courseItems.some(item => item.kind === "bigTest" && state.completed[item.id]);
+      return true;
     }
 
     function wireDashboard() {
@@ -3915,7 +3987,6 @@
         }
         addXp(-250, "Streak Freeze");
       });
-      document.getElementById("randomTasksBtn").addEventListener("click", generateTasks);
       document.getElementById("settingsForm").addEventListener("submit", event => {
         event.preventDefault();
         const first = document.getElementById("settingsFirst").value.trim();
