@@ -771,6 +771,46 @@
       margin-top: 10px;
     }
 
+    .market-info {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .market-info h4 {
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .market-info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .market-info-item {
+      min-width: 0;
+      padding: 9px 10px;
+      border: 1px solid #eef0eb;
+      border-radius: 8px;
+      background: #fafbf8;
+    }
+
+    .market-info-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+      line-height: 1.2;
+    }
+
+    .market-info-item strong {
+      display: block;
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+      font-size: 13px;
+    }
+
     .banner {
       display: flex;
       justify-content: space-between;
@@ -1194,7 +1234,8 @@
       .streak-grid,
       .settings-layout,
       .settings-grid,
-      .result-grid {
+      .result-grid,
+      .market-info-grid {
         grid-template-columns: 1fr;
       }
 
@@ -2218,6 +2259,14 @@
         previous,
         currency: meta.currency || "",
         exchange: meta.exchangeName || meta.fullExchangeName || "",
+        quoteType: meta.quoteType || "",
+        longName: meta.longName || meta.shortName || "",
+        dayHigh: Number(meta.regularMarketDayHigh),
+        dayLow: Number(meta.regularMarketDayLow),
+        volume: Number(meta.regularMarketVolume),
+        marketCap: Number(meta.marketCap),
+        fiftyTwoWeekHigh: Number(meta.fiftyTwoWeekHigh),
+        fiftyTwoWeekLow: Number(meta.fiftyTwoWeekLow),
         rangeTitle: rangeConfig.title,
         updatedAt: Date.now()
       };
@@ -2323,6 +2372,7 @@
         <div class="chart-box">
           ${data ? `${marketChartSvg(data.points, direction, data.currency)}<div class="chart-tooltip" id="chartTooltip"></div>` : `<div class="chart-empty">${loading ? "Loading Yahoo Finance chart..." : "Waiting for chart data."}</div>`}
         </div>
+        ${data ? marketInfoTemplate(asset, data) : ""}
         ${error ? `<p class="muted" style="margin-top:8px">${error}</p>` : ""}
         ${symbolSearchTemplate(asset.symbol)}
         <div class="chart-actions">
@@ -2332,6 +2382,44 @@
       `;
       wireMarketChartControls();
       wireMarketChartHover();
+    }
+
+    function marketInfoTemplate(asset, data) {
+      const dayRange = Number.isFinite(data.dayLow) && Number.isFinite(data.dayHigh)
+        ? `${formatMarketPrice(data.dayLow, data.currency)} - ${formatMarketPrice(data.dayHigh, data.currency)}`
+        : "Unavailable";
+      const weekRange = Number.isFinite(data.fiftyTwoWeekLow) && Number.isFinite(data.fiftyTwoWeekHigh)
+        ? `${formatMarketPrice(data.fiftyTwoWeekLow, data.currency)} - ${formatMarketPrice(data.fiftyTwoWeekHigh, data.currency)}`
+        : "Unavailable";
+      const items = [
+        ["Asset type", data.quoteType || asset.note || "Market asset"],
+        ["Exchange", data.exchange || "Unavailable"],
+        ["Previous close", Number.isFinite(data.previous) ? formatMarketPrice(data.previous, data.currency) : "Unavailable"],
+        ["Day range", dayRange],
+        ["Volume", Number.isFinite(data.volume) ? formatCompactNumber(data.volume) : "Unavailable"],
+        ["Market cap", Number.isFinite(data.marketCap) ? formatCompactNumber(data.marketCap) : "Unavailable"],
+        ["52-week range", weekRange],
+        ["Data source", "Yahoo Finance"]
+      ];
+      return `
+        <section class="market-info" aria-label="${escapeAttr(asset.name)} information">
+          <h4>About this market</h4>
+          <div class="market-info-grid">
+            ${items.map(([label, value]) => `
+              <div class="market-info-item">
+                <span>${escapeHtml(label)}</span>
+                <strong>${escapeHtml(String(value))}</strong>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function formatCompactNumber(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "Unavailable";
+      return number.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 2 });
     }
 
     function marketRangeButtons() {
