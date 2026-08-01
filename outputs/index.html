@@ -3949,24 +3949,67 @@
     function ensureDailyTasks() {
       const today = new Date().toDateString();
       const valid = Array.isArray(state.tasks) && state.tasks.length === 3 && Object.keys(taskBank).every(level => state.tasks.some(task => task.level === level && Number.isInteger(task.minLength) && typeof task.done === "boolean"));
-      if (state.taskDay !== today || !valid) generateTasks();
+      if (state.taskDay !== today || !valid) {
+        generateTasks();
+        return;
+      }
+      let changed = false;
+      state.tasks = state.tasks.map(task => {
+        if (!task.done || taskActivityType(task) || taskProofIsValid(task, String(task.proof || ""))) return task;
+        changed = true;
+        return { ...task, done: false, proof: "", completedAt: null };
+      });
+      if (changed) saveState();
+    }
+
+    function meaningfulTaskProof(proof) {
+      const compact = proof.toLowerCase().replace(/\s+/g, "");
+      const words = proof.toLowerCase().match(/[a-z0-9']+/g) || [];
+      if (words.length < 4 || new Set(words).size < 3) return false;
+      if (/(.)\1{5,}/i.test(compact)) return false;
+      return true;
+    }
+
+    function taskHasTwoNotes(proof) {
+      const notes = proof.split(/\n+|[.!?]+/).map(note => note.trim()).filter(Boolean);
+      return notes.length >= 2 && new Set(notes.map(note => note.toLowerCase())).size >= 2;
+    }
+
+    function taskMarketMentionCount(proof, category, status = "") {
+      const lowerProof = proof.toLowerCase();
+      const group = markets.find(item => item.category === category);
+      if (!group) return 0;
+      return group.items.filter(([name, itemStatus, note, symbol]) => {
+        if (status && itemStatus !== status) return false;
+        return lowerProof.includes(String(name).toLowerCase()) || (symbol && lowerProof.includes(String(symbol).toLowerCase()));
+      }).length;
     }
 
     function taskProofIsValid(task, proof) {
       const text = task.text.toLowerCase();
-      if (text.includes("crypto coin")) return /bitcoin|ethereum|dogecoin/i.test(proof);
-      if (text.includes("green market")) {
-        const lowerProof = proof.toLowerCase();
-        return markets.some(group => group.items.some(([name, status, note, symbol]) => {
-          if (status !== "can") return false;
-          return lowerProof.includes(String(name).toLowerCase()) || (symbol && lowerProof.includes(String(symbol).toLowerCase()));
-        }));
-      }
       if (text.includes("paper trade")) return Boolean(state.claimed.trade);
       if (text.includes("beginner lesson")) return courseItems.some(item => item.kind === "module" && getProgress(item.id).completedLessons > 0);
       if (text.includes("100%")) return courseItems.some(item => item.kind === "module" && getProgress(item.id).quizCorrect === item.quizQuestions.length);
       if (text.includes("quiz")) return courseItems.some(item => item.kind === "module" && getProgress(item.id).quizDone);
       if (text.includes("final test")) return courseItems.some(item => item.kind === "bigTest" && state.completed[item.id]);
+      if (!meaningfulTaskProof(proof)) return false;
+      if (text.includes("crypto coin")) return /bitcoin|ethereum|dogecoin/i.test(proof);
+      if (text.includes("green market")) {
+        const lowerProof = proof.toLowerCase();
+        const hasMarket = markets.some(group => group.items.some(([name, status, note, symbol]) => {
+          if (status !== "can") return false;
+          return lowerProof.includes(String(name).toLowerCase()) || (symbol && lowerProof.includes(String(symbol).toLowerCase()));
+        }));
+        return hasMarket && /because|means|is|market|stock|crypto|company|index|etf/i.test(proof);
+      }
+      if (text.includes("sort bitcoin")) return /bitcoin/i.test(proof) && /qqq/i.test(proof) && /openai/i.test(proof) && /can buy|buy|holding|hold|choose|cant|can't/i.test(proof);
+      if (text.includes("watchlist")) return taskMarketMentionCount(proof, "National", "can") + taskMarketMentionCount(proof, "International", "can") >= 3 && /etf|watchlist/i.test(proof);
+      if (text.includes("compare tesla")) return /tesla/i.test(proof) && /toyota/i.test(proof) && taskHasTwoNotes(proof) && /risk|difference|compare|similar|company|stock/i.test(proof);
+      if (text.includes("penny markets")) return taskMarketMentionCount(proof, "Penny markets", "can") >= 2 && /risk|liquid|hype|volatil|loss|spread/i.test(proof) && taskHasTwoNotes(proof);
+      if (text.includes("international stock")) return taskMarketMentionCount(proof, "International", "can") >= 1 && taskMarketMentionCount(proof, "National", "can") >= 1 && taskHasTwoNotes(proof);
+      if (text.includes("balanced paper portfolio")) return taskMarketMentionCount(proof, "Crypto", "can") >= 1 && taskMarketMentionCount(proof, "National", "can") >= 1 && taskMarketMentionCount(proof, "International", "can") >= 1 && /balance|diversif|risk|role/i.test(proof);
+      if (text.includes("vix and private stocks")) return /vix/i.test(proof) && /private|openai|anthropic|perplexity|skild|discord/i.test(proof) && /holding|hold|cant|can't|not public|watch/i.test(proof);
+      if (text.includes("risk note for every penny")) return taskMarketMentionCount(proof, "Penny markets", "can") >= 2 && /risk|liquid|hype|volatil|loss|spread/i.test(proof) && taskHasTwoNotes(proof);
       return true;
     }
 
