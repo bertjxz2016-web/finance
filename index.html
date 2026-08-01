@@ -3033,9 +3033,9 @@
       state.portfolio.holdings[tradeState.asset.symbol] = holding;
       const label = `${tradeState.side === "buy" ? "Buy" : "Sell"} ${tradeState.asset.name}`;
       state.claimed.trade = true;
-      const earnedXp = Math.max(1, Math.round(dollars * 7));
+      const tradeXp = Math.round(dollars * 7) * (tradeState.side === "buy" ? -1 : 1);
       saveState();
-      addXp(earnedXp, `${label} at ${formatMarketPrice(dollars, "USD")}`);
+      addXp(tradeXp, `${label} at ${formatMarketPrice(dollars, "USD")}`);
       closeTradePage();
     }
 
