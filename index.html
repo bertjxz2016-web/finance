@@ -612,9 +612,20 @@
       white-space: nowrap;
     }
 
+    .asset-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(70px, 1fr));
+      gap: 6px;
+    }
+
     .asset-action.buy {
       background: var(--green-soft);
       color: var(--green);
+    }
+
+    .asset-action.sell {
+      background: var(--red-soft);
+      color: var(--red);
     }
 
     .asset-action.hold {
@@ -809,6 +820,81 @@
       margin-top: 4px;
       overflow-wrap: anywhere;
       font-size: 13px;
+    }
+
+    #dashboard.trade-focus .shell {
+      display: none;
+    }
+
+    .trade-page {
+      min-height: calc(100vh - 92px);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .trade-card {
+      width: min(620px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: clamp(20px, 4vw, 36px);
+      box-shadow: var(--shadow);
+    }
+
+    .trade-card h2 {
+      margin-bottom: 6px;
+      font-size: clamp(24px, 4vw, 34px);
+    }
+
+    .trade-mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin: 22px 0;
+    }
+
+    .trade-mode {
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 900;
+      padding: 8px 10px;
+    }
+
+    .trade-mode.active {
+      border-color: var(--green);
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .trade-amount-label {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .trade-amount {
+      width: 100%;
+      min-height: 48px;
+      margin-top: 8px;
+      border: 0;
+      border-bottom: 2px solid var(--ink);
+      border-radius: 0;
+      outline-color: var(--green);
+      padding: 8px 2px;
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .trade-confirm {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 28px;
     }
 
     .banner {
@@ -1469,6 +1555,7 @@
           </section>
         </main>
       </div>
+      <section id="tradePage" class="trade-page hidden" aria-live="polite"></section>
     </div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2117,6 +2204,7 @@
     let marketChartState = { asset: null, data: null, loading: false, error: "", rangeKey: "1D" };
     let marketChartTimer = 0;
     let marketChartRequest = 0;
+    let tradeState = null;
 
     function defaultState() {
       return {
@@ -2785,7 +2873,7 @@
       renderMarketChart();
       grid.querySelectorAll("[data-chart]").forEach(row => {
         row.addEventListener("click", event => {
-          if (event.target.closest("[data-buy]")) return;
+          if (event.target.closest("[data-trade-side]")) return;
           const asset = findMarketAsset(row.dataset.chartName, row.dataset.chart);
           openMarketChart(asset);
         });
@@ -2796,15 +2884,15 @@
           openMarketChart(asset);
         });
       });
-      grid.querySelectorAll("[data-buy]").forEach(button => {
+      grid.querySelectorAll("[data-trade-side]").forEach(button => {
         button.addEventListener("click", () => {
-          if (!state.claimed.trade) {
-            state.claimed.trade = true;
-            addXp(75, "first paper trade");
-          } else {
-            showToast(`Paper trade placed: ${button.dataset.buy}`);
-          }
-          saveState();
+          openTradePage({
+            name: button.dataset.tradeName,
+            status: "can",
+            note: button.dataset.tradeNote,
+            symbol: button.dataset.tradeSymbol,
+            category: button.dataset.tradeCategory
+          }, button.dataset.tradeSide);
         });
       });
     }
@@ -2813,7 +2901,12 @@
       const label = status === "can" ? "Buy" : "Hold";
       const action = sourceUrl
         ? `<a class="asset-action forge" href="${escapeAttr(sourceUrl)}" target="_blank" rel="noopener" aria-label="View ${escapeAttr(name)} on Forge">View Forge</a>`
-        : `<button class="asset-action ${status === "can" ? "buy" : "hold"}" ${status === "cant" ? "disabled" : ""} data-buy="${escapeAttr(name)}">${label}</button>`;
+        : status === "can"
+          ? `<div class="asset-actions">
+              <button class="asset-action buy" data-trade-side="buy" data-trade-name="${escapeAttr(name)}" data-trade-note="${escapeAttr(note)}" data-trade-symbol="${escapeAttr(symbol || "")}" data-trade-category="${escapeAttr(note)}">Buy</button>
+              <button class="asset-action sell" data-trade-side="sell" data-trade-name="${escapeAttr(name)}" data-trade-note="${escapeAttr(note)}" data-trade-symbol="${escapeAttr(symbol || "")}" data-trade-category="${escapeAttr(note)}">Sell</button>
+            </div>`
+          : `<button class="asset-action hold" disabled>${label}</button>`;
       const chartAttrs = symbol ? ` data-chart="${escapeAttr(symbol)}" data-chart-name="${escapeAttr(name)}" role="button" tabindex="0"` : "";
       return `
         <div class="asset ${status}${symbol ? " has-chart" : ""}"${chartAttrs}>
@@ -2822,6 +2915,83 @@
           ${action}
         </div>
       `;
+    }
+
+    function openTradePage(asset, side = "buy") {
+      tradeState = { asset, side, method: "money", amount: "" };
+      document.getElementById("dashboard").classList.add("trade-focus");
+      renderTradePage();
+    }
+
+    function closeTradePage() {
+      tradeState = null;
+      document.getElementById("dashboard").classList.remove("trade-focus");
+      document.getElementById("tradePage").classList.add("hidden");
+      renderMarkets();
+    }
+
+    function renderTradePage() {
+      const panel = document.getElementById("tradePage");
+      if (!panel || !tradeState) return;
+      panel.classList.remove("hidden");
+      const { asset, side, method, amount } = tradeState;
+      const title = `${side === "buy" ? "Buying" : "Selling"} by ${method}`;
+      const unitLabel = method === "money" ? "dollars" : "units";
+      panel.innerHTML = `
+        <div class="trade-card">
+          <p class="muted">Paper trade</p>
+          <h2>${escapeHtml(title)}</h2>
+          <p class="muted">${escapeHtml(asset.name)} ${asset.symbol ? `â€¢ ${escapeHtml(asset.symbol)}` : ""}</p>
+          <div class="trade-mode-grid" aria-label="Trade type">
+            ${["buy-money", "buy-units", "sell-money", "sell-units"].map(key => {
+              const [modeSide, modeMethod] = key.split("-");
+              const label = `${modeSide === "buy" ? "Buying" : "Selling"} by ${modeMethod}`;
+              return `<button class="trade-mode ${side === modeSide && method === modeMethod ? "active" : ""}" data-trade-mode="${key}" type="button">${label}</button>`;
+            }).join("")}
+          </div>
+          <label class="trade-amount-label" for="tradeAmount">Enter ${unitLabel}</label>
+          <input class="trade-amount" id="tradeAmount" type="number" min="0" step="any" value="${escapeAttr(amount)}" placeholder="0" inputmode="decimal" aria-label="Trade ${unitLabel}">
+          <p class="muted" style="margin-top:12px">This is an XP-only practice trade. No money or holdings will change.</p>
+          <div class="trade-confirm">
+            <button class="btn green" id="confirmTradeBtn" type="button">Yes</button>
+            <button class="btn secondary" id="cancelTradeBtn" type="button">No</button>
+          </div>
+        </div>
+      `;
+      panel.querySelectorAll("[data-trade-mode]").forEach(button => {
+        button.addEventListener("click", () => {
+          const [nextSide, nextMethod] = button.dataset.tradeMode.split("-");
+          tradeState.side = nextSide;
+          tradeState.method = nextMethod;
+          renderTradePage();
+          document.getElementById("tradeAmount")?.focus();
+        });
+      });
+      document.getElementById("tradeAmount").addEventListener("input", event => {
+        tradeState.amount = event.target.value;
+      });
+      document.getElementById("confirmTradeBtn").addEventListener("click", confirmTrade);
+      document.getElementById("cancelTradeBtn").addEventListener("click", closeTradePage);
+      document.getElementById("tradeAmount").focus();
+    }
+
+    function confirmTrade() {
+      if (!tradeState) return;
+      const amount = Number(tradeState.amount);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        showToast("Enter a number before confirming the trade.");
+        document.getElementById("tradeAmount")?.focus();
+        return;
+      }
+      const label = `${tradeState.side === "buy" ? "Buy" : "Sell"} ${tradeState.asset.name}`;
+      if (!state.claimed.trade) {
+        state.claimed.trade = true;
+        addXp(75, "first paper trade");
+      } else {
+        showToast(`Paper trade placed: ${label}`);
+      }
+      saveState();
+      closeTradePage();
     }
 
     function escapeAttr(value) {
