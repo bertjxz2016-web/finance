@@ -3984,23 +3984,23 @@
       if (text.includes("100%")) return taskCheck(courseItems.some(item => item.kind === "module" && getProgress(item.id).quizCorrect === item.quizQuestions.length), "Finish a quiz with every answer correct first.");
       if (text.includes("quiz")) return taskCheck(courseItems.some(item => item.kind === "module" && getProgress(item.id).quizDone), "Finish a quiz first, then check progress again.");
       if (text.includes("final test")) return taskCheck(courseItems.some(item => item.kind === "bigTest" && state.completed[item.id]), "Finish a final test first, then check progress again.");
-      if (text.includes("crypto coin")) return taskCheck(/bitcoin|ethereum|dogecoin/i.test(proof), "Name Bitcoin, Ethereum, or Dogecoin.");
+      if (text.includes("crypto coin")) return taskCheck(/bitcoin|ethereum|dogecoin/i.test(proof), "Please check the crypto list and enter one coin from it.");
       if (text.includes("green market")) {
         const lowerProof = proof.toLowerCase();
         const hasMarket = markets.some(group => group.items.some(([name, status, note, symbol]) => {
           if (status !== "can") return false;
           return lowerProof.includes(String(name).toLowerCase()) || (symbol && lowerProof.includes(String(symbol).toLowerCase()));
         }));
-        return taskCheck(hasMarket && /because|means|is|market|stock|crypto|company|index|etf/i.test(proof), "Name a can-buy market and briefly explain what it is.");
+        return taskCheck(hasMarket && /because|means|is|market|stock|crypto|company|index|etf/i.test(proof), "Please check the market list and explain what your selected market is.");
       }
-      if (text.includes("sort bitcoin")) return taskCheck(/bitcoin/i.test(proof) && /qqq/i.test(proof) && /openai/i.test(proof) && /can buy|buy|holding|hold|choose|cant|can't/i.test(proof), "Include Bitcoin, QQQ, OpenAI, and the color-key choices.");
-      if (text.includes("watchlist")) return taskCheck(taskMarketMentionCount(proof, "National", "can") + taskMarketMentionCount(proof, "International", "can") >= 3 && /etf|watchlist/i.test(proof), "List three can-buy markets, including an ETF.");
-      if (text.includes("compare tesla")) return taskCheck(/tesla/i.test(proof) && /toyota/i.test(proof) && taskHasTwoNotes(proof) && /risk|difference|compare|similar|company|stock|ev|hybrid|both|while|whereas|more|less|unlike/i.test(proof), "Write one note about Tesla and one note about Toyota, with a comparison or risk detail.");
-      if (text.includes("penny markets")) return taskCheck(taskMarketMentionCount(proof, "Penny markets", "can") >= 2 && /risk|liquid|hype|volatil|loss|spread/i.test(proof) && taskHasTwoNotes(proof), "Name at least two penny markets and give a separate risk note for each.");
-      if (text.includes("international stock")) return taskCheck(taskMarketMentionCount(proof, "International", "can") >= 1 && taskMarketMentionCount(proof, "National", "can") >= 1, "Name one can-buy international stock and one can-buy national stock to compare.");
-      if (text.includes("balanced paper portfolio")) return taskCheck(taskMarketMentionCount(proof, "Crypto", "can") >= 1 && taskMarketMentionCount(proof, "National", "can") >= 1 && taskMarketMentionCount(proof, "International", "can") >= 1, "Include at least one crypto, one national market, and one international market.");
-      if (text.includes("vix and private stocks")) return taskCheck(/vix/i.test(proof) && /private|openai|anthropic|perplexity|skild|discord/i.test(proof) && /holding|hold|cant|can't|not public|watch/i.test(proof), "Mention VIX, a private stock, and why they are holding-economy items.");
-      if (text.includes("risk note for every penny")) return taskCheck(taskMarketMentionCount(proof, "Penny markets", "can") >= 2 && /risk|liquid|hype|volatil|loss|spread/i.test(proof) && taskHasTwoNotes(proof), "Name at least two penny-market picks and give a risk note for each.");
+      if (text.includes("sort bitcoin")) return taskCheck(/bitcoin/i.test(proof) && /qqq/i.test(proof) && /openai/i.test(proof) && /can buy|buy|holding|hold|choose|cant|can't/i.test(proof), "Please check the color key and include all three listed items with their categories.");
+      if (text.includes("watchlist")) return taskCheck(taskMarketMentionCount(proof, "National", "can") + taskMarketMentionCount(proof, "International", "can") >= 3 && /etf|watchlist/i.test(proof), "Please check the market list and include three can-buy markets, including an ETF.");
+      if (text.includes("compare tesla")) return taskCheck(/tesla/i.test(proof) && /toyota/i.test(proof) && taskHasTwoNotes(proof) && /risk|difference|compare|similar|company|stock|ev|hybrid|both|while|whereas|more|less|unlike/i.test(proof), "Please check the task wording and write one note for each company plus a comparison or risk detail.");
+      if (text.includes("penny markets")) return taskCheck(taskMarketMentionCount(proof, "Penny markets", "can") >= 2 && /risk|liquid|hype|volatil|loss|spread/i.test(proof) && taskHasTwoNotes(proof), "Please check the penny-market list and add a separate risk note for each selected market.");
+      if (text.includes("international stock")) return taskCheck(taskMarketMentionCount(proof, "International", "can") >= 1 && taskMarketMentionCount(proof, "National", "can") >= 1, "Please check the national and international lists and include one can-buy item from each.");
+      if (text.includes("balanced paper portfolio")) return taskCheck(taskMarketMentionCount(proof, "Crypto", "can") >= 1 && taskMarketMentionCount(proof, "National", "can") >= 1 && taskMarketMentionCount(proof, "International", "can") >= 1, "Please check the market lists and include one item from each required category.");
+      if (text.includes("vix and private stocks")) return taskCheck(/vix/i.test(proof) && /private|openai|anthropic|perplexity|skild|discord/i.test(proof) && /holding|hold|cant|can't|not public|watch/i.test(proof), "Please check the market key and explain why these are holding-economy items.");
+      if (text.includes("risk note for every penny")) return taskCheck(taskMarketMentionCount(proof, "Penny markets", "can") >= 2 && /risk|liquid|hype|volatil|loss|spread/i.test(proof) && taskHasTwoNotes(proof), "Please check the penny-market list and add a risk note for each selected market.");
       return taskCheck(Boolean(proof.trim()), "Add an answer before submitting.");
     }
 
