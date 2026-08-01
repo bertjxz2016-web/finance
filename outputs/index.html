@@ -2264,10 +2264,12 @@
     }
 
     function addXp(amount, label) {
+      const before = state.xp;
       state.xp = Math.max(0, state.xp + amount);
+      const applied = state.xp - before;
       saveState();
       renderStats();
-      showToast(`${amount > 0 ? "+" : ""}${amount} XP ${label ? "for " + label : ""}`);
+      showToast(`${applied > 0 ? "+" : ""}${applied} XP ${label ? "for " + label : ""}`);
     }
 
     function findMarketAsset(name, symbol) {
