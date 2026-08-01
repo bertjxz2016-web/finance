@@ -3901,10 +3901,15 @@
           </div>
           ${task.done
             ? `<div class="task-done">Completed today</div>`
-            : `<div class="task-complete">
-                <textarea class="task-work" data-task-proof="${task.id}" placeholder="Show your work here..." aria-label="Work for ${task.level} task"></textarea>
-                <button class="btn green" data-task="${task.id}">Submit work +${task.xp} XP</button>
-              </div>`}
+            : taskActivityType(task)
+              ? `<div class="task-complete">
+                  <p class="muted">Complete the related activity in the app, then check your progress here.</p>
+                  <button class="btn green" data-task="${task.id}">Check progress +${task.xp} XP</button>
+                </div>`
+              : `<div class="task-complete">
+                  <textarea class="task-work" data-task-proof="${task.id}" placeholder="Show your work here..." aria-label="Work for ${task.level} task"></textarea>
+                  <button class="btn green" data-task="${task.id}">Submit work +${task.xp} XP</button>
+                </div>`}
         </article>
       `).join("");
       grid.querySelectorAll("[data-task]").forEach(button => {
@@ -3913,7 +3918,7 @@
           if (!task) return;
           const proofInput = [...grid.querySelectorAll("[data-task-proof]")].find(input => input.dataset.taskProof === task.id);
           const proof = proofInput ? proofInput.value.trim() : "";
-          if (proof.length < task.minLength) {
+          if (!taskActivityType(task) && proof.length < task.minLength) {
             showToast(`${task.level} work needs at least ${task.minLength} characters.`);
             proofInput?.focus();
             return;
@@ -3930,6 +3935,15 @@
           renderTasks();
         });
       });
+    }
+
+    function taskActivityType(task) {
+      const text = task.text.toLowerCase();
+      if (text.includes("paper trade")) return "trade";
+      if (text.includes("beginner lesson")) return "lesson";
+      if (text.includes("final test")) return "test";
+      if (text.includes("quiz")) return "quiz";
+      return "";
     }
 
     function ensureDailyTasks() {
@@ -3949,8 +3963,9 @@
         }));
       }
       if (text.includes("paper trade")) return Boolean(state.claimed.trade);
-      if (text.includes("beginner lesson")) return courseItems.some(item => item.kind === "module" && state.completed[item.id]);
-      if (text.includes("quiz")) return courseItems.some(item => item.kind === "quiz" && state.completed[item.id]);
+      if (text.includes("beginner lesson")) return courseItems.some(item => item.kind === "module" && getProgress(item.id).completedLessons > 0);
+      if (text.includes("100%")) return courseItems.some(item => item.kind === "module" && getProgress(item.id).quizCorrect === item.quizQuestions.length);
+      if (text.includes("quiz")) return courseItems.some(item => item.kind === "module" && getProgress(item.id).quizDone);
       if (text.includes("final test")) return courseItems.some(item => item.kind === "bigTest" && state.completed[item.id]);
       return true;
     }
