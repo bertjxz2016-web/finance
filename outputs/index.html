@@ -2214,6 +2214,7 @@
         streak: 0,
         courseVersion: COURSE_VERSION,
         claimed: {},
+        portfolio: { holdings: {} },
         completed: {},
         courseProgress: {},
         activeCourseId: "",
@@ -2230,6 +2231,11 @@
           ...saved,
           profile: { ...base.profile, ...(saved.profile || {}) },
           claimed: { ...base.claimed, ...(saved.claimed || {}) },
+          portfolio: {
+            ...base.portfolio,
+            ...(saved.portfolio || {}),
+            holdings: { ...base.portfolio.holdings, ...((saved.portfolio || {}).holdings || {}) }
+          },
           completed: { ...base.completed, ...(saved.completed || {}) },
           courseProgress: { ...base.courseProgress, ...(saved.courseProgress || {}) }
         };
@@ -2466,6 +2472,7 @@
           ${data ? `${marketChartSvg(data.points, direction, data.currency)}<div class="chart-tooltip" id="chartTooltip"></div>` : `<div class="chart-empty">${loading ? "Loading Yahoo Finance chart..." : "Waiting for chart data."}</div>`}
         </div>
         ${data ? marketInfoTemplate(asset, data) : ""}
+        ${portfolioInfoTemplate(asset, data)}
         ${error ? `<p class="muted" style="margin-top:8px">${error}</p>` : ""}
         ${symbolSearchTemplate(asset.symbol)}
         <div class="chart-actions">
@@ -2513,6 +2520,33 @@
       const number = Number(value);
       if (!Number.isFinite(number)) return "Unavailable";
       return number.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 2 });
+    }
+
+    function portfolioInfoTemplate(asset, data) {
+      const holding = getPortfolioHolding(asset.symbol);
+      const price = data && Number.isFinite(Number(data.price)) ? Number(data.price) : getTradePrice(asset);
+      const positionValue = price > 0 ? holding.units * price : NaN;
+      const positionLabel = Number.isFinite(positionValue) ? formatSignedMoney(positionValue, data?.currency || "USD") : "Unavailable";
+      const netDollarsLabel = formatSignedMoney(holding.netDollars, "USD");
+      const unitsLabel = holding.units.toLocaleString(undefined, { maximumFractionDigits: 8 });
+      return `
+        <section class="market-info" aria-label="Your ${escapeAttr(asset.name)} paper position">
+          <h4>Your paper position</h4>
+          <div class="market-info-grid">
+            <div class="market-info-item"><span>Position value</span><strong>${escapeHtml(positionLabel)}</strong></div>
+            <div class="market-info-item"><span>Units</span><strong>${escapeHtml(unitsLabel)}</strong></div>
+            <div class="market-info-item"><span>Net trade dollars</span><strong>${escapeHtml(netDollarsLabel)}</strong></div>
+            <div class="market-info-item"><span>Trade mode</span><strong>Paper only</strong></div>
+          </div>
+        </section>
+      `;
+    }
+
+    function formatSignedMoney(value, currency = "USD") {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "Unavailable";
+      const sign = number < 0 ? "-" : number > 0 ? "+" : "";
+      return `${sign}${formatMarketPrice(Math.abs(number), currency)}`;
     }
 
     function marketRangeButtons() {
@@ -2919,6 +2953,7 @@
 
     function openTradePage(asset, side = "buy") {
       tradeState = { asset, side, method: "money", amount: "" };
+      openMarketChart(asset);
       document.getElementById("dashboard").classList.add("trade-focus");
       renderTradePage();
     }
@@ -2937,6 +2972,7 @@
       const { asset, side, method, amount } = tradeState;
       const title = `${side === "buy" ? "Buying" : "Selling"} by ${method}`;
       const unitLabel = method === "money" ? "dollars" : "units";
+      const tradePrice = getTradePrice(asset);
       panel.innerHTML = `
         <div class="trade-card">
           <p class="muted">Paper trade</p>
@@ -2951,7 +2987,8 @@
           </div>
           <label class="trade-amount-label" for="tradeAmount">Enter ${unitLabel}</label>
           <input class="trade-amount" id="tradeAmount" type="number" min="0" step="any" value="${escapeAttr(amount)}" placeholder="0" inputmode="decimal" aria-label="Trade ${unitLabel}">
-          <p class="muted" style="margin-top:12px">This is an XP-only practice trade. No money or holdings will change.</p>
+          <p class="muted" style="margin-top:10px">${tradePrice ? `Current price: ${escapeHtml(formatMarketPrice(tradePrice, "USD"))}` : "Loading the current price for this trade..."}</p>
+          <p class="muted" style="margin-top:12px">This is a paper trade. It changes your practice position and XP only; no real money is used.</p>
           <div class="trade-confirm">
             <button class="btn green" id="confirmTradeBtn" type="button">Yes</button>
             <button class="btn secondary" id="cancelTradeBtn" type="button">No</button>
@@ -2983,15 +3020,42 @@
         document.getElementById("tradeAmount")?.focus();
         return;
       }
-      const label = `${tradeState.side === "buy" ? "Buy" : "Sell"} ${tradeState.asset.name}`;
-      if (!state.claimed.trade) {
-        state.claimed.trade = true;
-        addXp(75, "first paper trade");
-      } else {
-        showToast(`Paper trade placed: ${label}`);
+      const price = getTradePrice(tradeState.asset);
+      if (!price) {
+        showToast("Wait for the current market price, then try again.");
+        return;
       }
+      const units = tradeState.method === "money" ? amount / price : amount;
+      const dollars = tradeState.method === "money" ? amount : amount * price;
+      const holding = getPortfolioHolding(tradeState.asset.symbol);
+      holding.units += tradeState.side === "buy" ? units : -units;
+      holding.netDollars += tradeState.side === "buy" ? dollars : -dollars;
+      state.portfolio.holdings[tradeState.asset.symbol] = holding;
+      const label = `${tradeState.side === "buy" ? "Buy" : "Sell"} ${tradeState.asset.name}`;
+      state.claimed.trade = true;
+      const earnedXp = Math.max(1, Math.round(dollars * 7));
       saveState();
+      addXp(earnedXp, `${label} at ${formatMarketPrice(dollars, "USD")}`);
       closeTradePage();
+    }
+
+    function getTradePrice(asset) {
+      if (!asset || !asset.symbol) return 0;
+      if (marketChartState.asset && marketChartState.asset.symbol === asset.symbol && marketChartState.data) {
+        const livePrice = Number(marketChartState.data.price);
+        if (Number.isFinite(livePrice) && livePrice > 0) return livePrice;
+      }
+      const cached = readMarketChartCache(asset.symbol, "1D");
+      const cachedPrice = cached ? Number(cached.price) : 0;
+      return Number.isFinite(cachedPrice) && cachedPrice > 0 ? cachedPrice : 0;
+    }
+
+    function getPortfolioHolding(symbol) {
+      const current = state.portfolio?.holdings?.[symbol];
+      return {
+        units: Number.isFinite(Number(current?.units)) ? Number(current.units) : 0,
+        netDollars: Number.isFinite(Number(current?.netDollars)) ? Number(current.netDollars) : 0
+      };
     }
 
     function escapeAttr(value) {
