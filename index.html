@@ -1531,7 +1531,7 @@
             <div class="section-head">
               <div>
                 <h2>Bronze, Silver, Gold tasks</h2>
-                <p class="muted">Complete one Bronze, one Silver, and one Gold task each day. Each task requires written work.</p>
+                <p class="muted" id="taskGuide">Your daily task board adapts to your return time and streak.</p>
               </div>
             </div>
             <div class="task-grid" id="taskGrid"></div>
@@ -2173,28 +2173,47 @@
       [300, 1150]
     ];
 
+    const TASK_VERSION = "adaptive-task-board-v1";
     const taskBank = {
       Bronze: [
-        "Name one crypto coin from the list.",
-        "Name one green market and explain what it is.",
-        "Finish one beginner lesson without skipping.",
-        "Sort Bitcoin, QQQ, and OpenAI into the right color key.",
-        "Make one paper trade using a can-buy asset."
+        { id: "crypto-coin", rule: "crypto-coin", rank: 1, text: "Name one crypto coin from the list." },
+        { id: "green-market", rule: "green-market", rank: 1, text: "Name one green market and explain what it is." },
+        { id: "beginner-lesson", rule: "lesson-one", rank: 1, text: "Finish one beginner lesson without skipping." },
+        { id: "market-pair", rule: "market-pair", rank: 1, text: "Name one can-buy national market and one can-buy international market." },
+        { id: "etf-note", rule: "etf-note", rank: 2, text: "Name one can-buy ETF and say what it tracks." },
+        { id: "color-key", rule: "color-key", rank: 2, text: "Sort Bitcoin, QQQ, and OpenAI into the right color key." },
+        { id: "paper-trade", rule: "paper-trade", rank: 2, text: "Make one paper trade using a can-buy asset." },
+        { id: "two-lessons", rule: "lesson-two", rank: 3, text: "Finish two lessons in the learning course." }
       ],
       Silver: [
-        "Build a 3-item paper watchlist with at least one ETF.",
-        "Compare Tesla and Toyota in two short notes.",
-        "Pass a quiz after reviewing national indexes.",
-        "Pick penny markets and write one risk note for each choice.",
-        "Find one international stock and one national stock to compare."
+        { id: "watchlist", rule: "watchlist", rank: 1, text: "Build a 3-item paper watchlist with at least one ETF." },
+        { id: "tesla-toyota", rule: "tesla-toyota", rank: 1, text: "Compare Tesla and Toyota in two short notes." },
+        { id: "penny-risk", rule: "penny-risk", rank: 1, text: "Pick penny markets and write one risk note for each choice." },
+        { id: "market-pair-compare", rule: "market-pair", rank: 1, text: "Find one international stock and one national stock to compare." },
+        { id: "quiz", rule: "quiz-one", rank: 2, text: "Pass a quiz after reviewing national indexes." },
+        { id: "crypto-compare", rule: "crypto-compare", rank: 2, text: "Compare two crypto coins in two short notes." },
+        { id: "two-lessons", rule: "lesson-two", rank: 2, text: "Finish two lessons before submitting this task." },
+        { id: "two-holdings", rule: "holdings-two", rank: 2, text: "Build paper positions in two different can-buy markets." },
+        { id: "two-quizzes", rule: "quiz-two", rank: 3, text: "Finish two module quizzes." }
       ],
       Gold: [
-        "Create a balanced paper portfolio using national, international, and crypto.",
-        "Explain why VIX and private stocks are marked as holding economy.",
-        "Score 100% on a quiz after finishing a 10-lesson module.",
-        "Write a risk note for every penny-market pick.",
-        "Complete a final test and correct every missed answer."
+        { id: "balanced-portfolio", rule: "portfolio-balanced", rank: 2, text: "Create a paper portfolio with crypto, national, and international markets." },
+        { id: "holding-economy", rule: "holding-economy", rank: 2, text: "Explain why VIX and private stocks are marked as holding economy." },
+        { id: "perfect-quiz", rule: "perfect-quiz-one", rank: 2, text: "Score 100% on a quiz after finishing a 10-lesson module." },
+        { id: "penny-risk-plan", rule: "penny-risk", rank: 3, text: "Write a risk note for every penny-market pick." },
+        { id: "final-test", rule: "final-test-one", rank: 3, text: "Complete a final test and correct every missed answer." },
+        { id: "two-quizzes", rule: "quiz-two", rank: 3, text: "Finish two quizzes in different modules." },
+        { id: "two-holdings", rule: "holdings-two", rank: 3, text: "Build paper positions in two different markets and review them." },
+        { id: "four-holdings", rule: "holdings-four", rank: 4, text: "Build paper positions in four different markets." },
+        { id: "two-perfect-quizzes", rule: "perfect-quiz-two", rank: 4, text: "Earn 100% on quizzes in two different modules." },
+        { id: "two-final-tests", rule: "final-test-two", rank: 4, text: "Finish two final tests in the course." }
       ]
+    };
+    const taskProfiles = {
+      return: { id: "return", maxRank: 1, counts: { Bronze: 4, Silver: 2, Gold: 0 }, guide: "Welcome back. You were away for a while, so today has 6 easier restart tasks." },
+      standard: { id: "standard", maxRank: 2, counts: { Bronze: 3, Silver: 3, Gold: 3 }, guide: "You have 9 mixed daily tasks across Bronze, Silver, and Gold." },
+      streak: { id: "streak", maxRank: 3, counts: { Bronze: 2, Silver: 3, Gold: 5 }, guide: "Your streak unlocked a tougher 10-task board with more Gold challenges." },
+      mastery: { id: "mastery", maxRank: 4, counts: { Bronze: 2, Silver: 3, Gold: 6 }, guide: "Your long streak unlocked an 11-task mastery board with extra Gold challenges." }
     };
 
     const taskXp = { Bronze: 35, Silver: 60, Gold: 110 };
@@ -2237,6 +2256,9 @@
         claimed: {},
         portfolio: { holdings: {} },
         taskDay: "",
+        taskLastSeenDay: "",
+        taskProfile: "",
+        taskVersion: TASK_VERSION,
         completed: {},
         courseProgress: {},
         activeCourseId: "",
@@ -3870,27 +3892,67 @@
       });
     }
 
+    function taskDaysAway(day) {
+      if (!day) return 0;
+      const then = new Date(day);
+      if (!Number.isFinite(then.getTime())) return 0;
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const thenStart = new Date(then.getFullYear(), then.getMonth(), then.getDate()).getTime();
+      return Math.max(0, Math.floor((todayStart - thenStart) / 86400000));
+    }
+
+    function currentTaskProfile() {
+      const daysAway = taskDaysAway(state.taskLastSeenDay || state.taskDay || state.claimed.daily);
+      if (daysAway >= 7) return taskProfiles.return;
+      if (state.streak >= 28) return taskProfiles.mastery;
+      if (state.streak >= 14) return taskProfiles.streak;
+      return taskProfiles.standard;
+    }
+
+    function taskProfileFromState() {
+      return Object.values(taskProfiles).find(profile => profile.id === state.taskProfile) || currentTaskProfile();
+    }
+
+    function shuffleTasks(items) {
+      const copy = [...items];
+      for (let index = copy.length - 1; index > 0; index -= 1) {
+        const swap = Math.floor(Math.random() * (index + 1));
+        [copy[index], copy[swap]] = [copy[swap], copy[index]];
+      }
+      return copy;
+    }
+
+    function taskTemplatesFor(level, count, maxRank) {
+      const pool = taskBank[level].filter(task => task.rank <= maxRank);
+      return shuffleTasks(pool).slice(0, count);
+    }
+
     function generateTasks() {
       const today = new Date().toDateString();
-      state.tasks = Object.keys(taskBank).map(level => {
-        const pool = taskBank[level];
-        const text = pool[Math.floor(Math.random() * pool.length)];
-        return {
-          id: `${level}-${today}`,
-          level,
-          text,
-          xp: taskXp[level],
-          done: false,
-          proof: ""
-        };
-      });
+      const profile = currentTaskProfile();
+      state.tasks = Object.entries(profile.counts).flatMap(([level, count]) => taskTemplatesFor(level, count, profile.maxRank).map(template => ({
+        id: `${template.id}-${level}-${today}`,
+        level,
+        text: template.text,
+        rule: template.rule,
+        xp: taskXp[level],
+        done: false,
+        proof: ""
+      })));
       state.taskDay = today;
+      state.taskLastSeenDay = today;
+      state.taskProfile = profile.id;
+      state.taskVersion = TASK_VERSION;
       saveState();
     }
 
     function renderTasks() {
       ensureDailyTasks();
       const grid = document.getElementById("taskGrid");
+      const profile = taskProfileFromState();
+      const completed = state.tasks.filter(task => task.done).length;
+      document.getElementById("taskGuide").textContent = `${profile.guide} ${completed}/${state.tasks.length} complete today.`;
       grid.innerHTML = state.tasks.map(task => `
         <article class="card task ${task.level.toLowerCase()}">
           <div>
@@ -3933,17 +3995,17 @@
     }
 
     function taskActivityType(task) {
-      const text = task.text.toLowerCase();
-      if (text.includes("paper trade")) return "trade";
-      if (text.includes("beginner lesson")) return "lesson";
-      if (text.includes("final test")) return "test";
-      if (text.includes("quiz")) return "quiz";
-      return "";
+      const activityRules = new Set([
+        "lesson-one", "lesson-two", "paper-trade", "quiz-one", "quiz-two",
+        "perfect-quiz-one", "perfect-quiz-two", "final-test-one", "final-test-two",
+        "holdings-two", "holdings-four", "portfolio-balanced"
+      ]);
+      return activityRules.has(task.rule) ? task.rule : "";
     }
 
     function ensureDailyTasks() {
       const today = new Date().toDateString();
-      const valid = Array.isArray(state.tasks) && state.tasks.length === 3 && Object.keys(taskBank).every(level => state.tasks.some(task => task.level === level && typeof task.done === "boolean"));
+      const valid = state.taskVersion === TASK_VERSION && Array.isArray(state.tasks) && state.tasks.length >= 6 && state.tasks.every(task => task.rule && task.level && typeof task.done === "boolean");
       if (state.taskDay !== today || !valid) {
         generateTasks();
         return;
@@ -3954,6 +4016,10 @@
         changed = true;
         return { ...task, done: false, proof: "", completedAt: null };
       });
+      if (state.taskLastSeenDay !== today) {
+        state.taskLastSeenDay = today;
+        changed = true;
+      }
       if (changed) saveState();
     }
 
@@ -3977,15 +4043,58 @@
       }).length;
     }
 
+    function taskCryptoMentionCount(proof) {
+      const lowerProof = proof.toLowerCase();
+      return ["bitcoin", "ethereum", "dogecoin"].filter(name => lowerProof.includes(name)).length;
+    }
+
+    function taskCompletedLessons() {
+      return courseItems.filter(item => item.kind === "module").reduce((total, item) => total + (getProgress(item.id).completedLessons || 0), 0);
+    }
+
+    function taskCompletedQuizzes() {
+      return courseItems.filter(item => item.kind === "module" && getProgress(item.id).quizDone).length;
+    }
+
+    function taskPerfectQuizzes() {
+      return courseItems.filter(item => item.kind === "module").filter(item => {
+        const progress = getProgress(item.id);
+        return progress.quizDone && progress.quizCorrect === item.quizQuestions.length;
+      }).length;
+    }
+
+    function taskCompletedFinalTests() {
+      return courseItems.filter(item => item.kind === "bigTest" && getProgress(item.id).testDone).length;
+    }
+
+    function taskHeldCategories() {
+      const positiveSymbols = new Set(Object.entries(state.portfolio.holdings || {}).filter(([, holding]) => Number(holding.units) > 0).map(([symbol]) => symbol));
+      return new Set(markets.filter(group => group.items.some(([, , , symbol]) => positiveSymbols.has(symbol))).map(group => group.category));
+    }
+
+    function taskHoldingCount() {
+      return Object.values(state.portfolio.holdings || {}).filter(holding => Number(holding.units) > 0).length;
+    }
+
     function taskProofIsValid(task, proof) {
-      const text = task.text.toLowerCase();
-      if (text.includes("paper trade")) return taskCheck(Boolean(state.claimed.trade), "Make a paper trade first, then check progress again.");
-      if (text.includes("beginner lesson")) return taskCheck(courseItems.some(item => item.kind === "module" && getProgress(item.id).completedLessons > 0), "Finish one beginner lesson first, then check progress again.");
-      if (text.includes("100%")) return taskCheck(courseItems.some(item => item.kind === "module" && getProgress(item.id).quizCorrect === item.quizQuestions.length), "Finish a quiz with every answer correct first.");
-      if (text.includes("quiz")) return taskCheck(courseItems.some(item => item.kind === "module" && getProgress(item.id).quizDone), "Finish a quiz first, then check progress again.");
-      if (text.includes("final test")) return taskCheck(courseItems.some(item => item.kind === "bigTest" && state.completed[item.id]), "Finish a final test first, then check progress again.");
-      if (text.includes("crypto coin")) return taskCheck(/bitcoin|ethereum|dogecoin/i.test(proof), "Please check the crypto list and enter one coin from it.");
-      if (text.includes("green market")) {
+      const rule = task.rule;
+      if (rule === "paper-trade") return taskCheck(Boolean(state.claimed.trade), "Make a paper trade first, then check progress again.");
+      if (rule === "lesson-one") return taskCheck(taskCompletedLessons() >= 1, "Finish one lesson first, then check progress again.");
+      if (rule === "lesson-two") return taskCheck(taskCompletedLessons() >= 2, "Finish two lessons first, then check progress again.");
+      if (rule === "quiz-one") return taskCheck(taskCompletedQuizzes() >= 1, "Finish one quiz first, then check progress again.");
+      if (rule === "quiz-two") return taskCheck(taskCompletedQuizzes() >= 2, "Finish two quizzes first, then check progress again.");
+      if (rule === "perfect-quiz-one") return taskCheck(taskPerfectQuizzes() >= 1, "Finish a quiz with every answer correct first.");
+      if (rule === "perfect-quiz-two") return taskCheck(taskPerfectQuizzes() >= 2, "Finish two perfect quizzes first, then check progress again.");
+      if (rule === "final-test-one") return taskCheck(taskCompletedFinalTests() >= 1, "Finish one final test first, then check progress again.");
+      if (rule === "final-test-two") return taskCheck(taskCompletedFinalTests() >= 2, "Finish two final tests first, then check progress again.");
+      if (rule === "holdings-two") return taskCheck(taskHoldingCount() >= 2, "Build paper positions in two markets first, then check progress again.");
+      if (rule === "holdings-four") return taskCheck(taskHoldingCount() >= 4, "Build paper positions in four markets first, then check progress again.");
+      if (rule === "portfolio-balanced") {
+        const categories = taskHeldCategories();
+        return taskCheck(categories.has("Crypto") && categories.has("National") && categories.has("International"), "Build positive paper positions in crypto, national, and international markets first.");
+      }
+      if (rule === "crypto-coin") return taskCheck(taskCryptoMentionCount(proof) >= 1, "Please check the crypto list and enter one coin from it.");
+      if (rule === "green-market") {
         const lowerProof = proof.toLowerCase();
         const hasMarket = markets.some(group => group.items.some(([name, status, note, symbol]) => {
           if (status !== "can") return false;
@@ -3993,14 +4102,14 @@
         }));
         return taskCheck(hasMarket && /because|means|is|market|stock|crypto|company|index|etf/i.test(proof), "Please check the market list and explain what your selected market is.");
       }
-      if (text.includes("sort bitcoin")) return taskCheck(/bitcoin/i.test(proof) && /qqq/i.test(proof) && /openai/i.test(proof) && /can buy|buy|holding|hold|choose|cant|can't/i.test(proof), "Please check the color key and include all three listed items with their categories.");
-      if (text.includes("watchlist")) return taskCheck(taskMarketMentionCount(proof, "National", "can") + taskMarketMentionCount(proof, "International", "can") >= 3 && /etf|watchlist/i.test(proof), "Please check the market list and include three can-buy markets, including an ETF.");
-      if (text.includes("compare tesla")) return taskCheck(/tesla/i.test(proof) && /toyota/i.test(proof) && taskHasTwoNotes(proof) && /risk|difference|compare|similar|company|stock|ev|hybrid|both|while|whereas|more|less|unlike/i.test(proof), "Please check the task wording and write one note for each company plus a comparison or risk detail.");
-      if (text.includes("penny markets")) return taskCheck(taskMarketMentionCount(proof, "Penny markets", "can") >= 2 && /risk|liquid|hype|volatil|loss|spread/i.test(proof) && taskHasTwoNotes(proof), "Please check the penny-market list and add a separate risk note for each selected market.");
-      if (text.includes("international stock")) return taskCheck(taskMarketMentionCount(proof, "International", "can") >= 1 && taskMarketMentionCount(proof, "National", "can") >= 1, "Please check the national and international lists and include one can-buy item from each.");
-      if (text.includes("balanced paper portfolio")) return taskCheck(taskMarketMentionCount(proof, "Crypto", "can") >= 1 && taskMarketMentionCount(proof, "National", "can") >= 1 && taskMarketMentionCount(proof, "International", "can") >= 1, "Please check the market lists and include one item from each required category.");
-      if (text.includes("vix and private stocks")) return taskCheck(/vix/i.test(proof) && /private|openai|anthropic|perplexity|skild|discord/i.test(proof) && /holding|hold|cant|can't|not public|watch/i.test(proof), "Please check the market key and explain why these are holding-economy items.");
-      if (text.includes("risk note for every penny")) return taskCheck(taskMarketMentionCount(proof, "Penny markets", "can") >= 2 && /risk|liquid|hype|volatil|loss|spread/i.test(proof) && taskHasTwoNotes(proof), "Please check the penny-market list and add a risk note for each selected market.");
+      if (rule === "color-key") return taskCheck(/bitcoin/i.test(proof) && /qqq/i.test(proof) && /openai/i.test(proof) && /can buy|buy|holding|hold|choose|cant|can't/i.test(proof), "Please check the color key and include all three listed items with their categories.");
+      if (rule === "market-pair") return taskCheck(taskMarketMentionCount(proof, "International", "can") >= 1 && taskMarketMentionCount(proof, "National", "can") >= 1, "Please check the national and international lists and include one can-buy item from each.");
+      if (rule === "etf-note") return taskCheck(/qqq|gold/i.test(proof) && /etf|fund|basket|track/i.test(proof), "Please check the market list and name a can-buy ETF with a short description.");
+      if (rule === "watchlist") return taskCheck(taskMarketMentionCount(proof, "National", "can") + taskMarketMentionCount(proof, "International", "can") >= 3 && /etf|watchlist/i.test(proof), "Please check the market list and include three can-buy markets, including an ETF.");
+      if (rule === "tesla-toyota") return taskCheck(/tesla/i.test(proof) && /toyota/i.test(proof) && taskHasTwoNotes(proof) && /risk|difference|compare|similar|company|stock|ev|hybrid|both|while|whereas|more|less|unlike/i.test(proof), "Please check the task wording and write one note for each company plus a comparison or risk detail.");
+      if (rule === "crypto-compare") return taskCheck(taskCryptoMentionCount(proof) >= 2 && taskHasTwoNotes(proof) && /risk|difference|compare|similar|both|while|whereas|more|less|unlike/i.test(proof), "Please check the crypto list and compare two coins in separate notes.");
+      if (rule === "penny-risk") return taskCheck(taskMarketMentionCount(proof, "Penny markets", "can") >= 2 && /risk|liquid|hype|volatil|loss|spread/i.test(proof) && taskHasTwoNotes(proof), "Please check the penny-market list and add a separate risk note for each selected market.");
+      if (rule === "holding-economy") return taskCheck(/vix/i.test(proof) && /private|openai|anthropic|perplexity|skild|discord/i.test(proof) && /holding|hold|cant|can't|not public|watch/i.test(proof), "Please check the market key and explain why these are holding-economy items.");
       return taskCheck(Boolean(proof.trim()), "Add an answer before submitting.");
     }
 
