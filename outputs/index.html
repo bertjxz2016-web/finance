@@ -1872,9 +1872,26 @@
       return knowledge[number - 1] || knowledge[0];
     }
 
+    function lessonQuestionContext(lessonNumber) {
+      const contexts = [
+        { title: "Core ideas", focus: "state the key term in plain language", scenario: "A learner wants to act because a price is green but cannot explain the market term in the lesson.", move: "Define the term in plain words and connect it to one clear example.", mistake: "Using a word as proof without knowing what it means.", journal: "Write the term, one example, and one open question.", source: "A post uses a market word but gives no example or definition." },
+        { title: "Reading price moves", focus: "describe a price change without inventing its cause", scenario: "An asset rises 4 percent after the market opens, but no explanation is known yet.", move: "Record the price move as a fact and keep the cause unknown until evidence appears.", mistake: "Treating the first price move as proof of its cause.", journal: "Write the percentage move, time, and any known catalyst.", source: "A headline claims to know the reason for a move but names no source." },
+        { title: "Evidence and sources", focus: "tell useful evidence from an unsupported claim", scenario: "A creator says a company will surge but gives no filing, data, or source.", move: "Mark it as an unproven claim and look for a source with facts.", mistake: "Treating confidence as the same as evidence.", journal: "State the claim, the source, the evidence, and what is missing.", source: "A post makes a strong prediction without a primary source." },
+        { title: "Downside risk", focus: "name a specific downside before taking a position", scenario: "A learner likes the possible upside but cannot say what loss would change the plan.", move: "Set a loss limit and name the condition that would end the idea.", mistake: "Calling something risky without describing the actual risk.", journal: "Write the possible loss, trigger, and planned position size.", source: "A post lists rewards but hides the possible losses." },
+        { title: "Comparing choices", focus: "choose based on the role each option plays", scenario: "Two assets look reasonable, but one adds the same risk the learner already owns.", move: "Choose based on the role and overlap in the portfolio plan.", mistake: "Picking the faster chart without considering the portfolio role.", journal: "Write what each option adds and what it overlaps.", source: "A post ranks assets by recent price alone." },
+        { title: "News and reactions", focus: "separate a news event from a permanent business change", scenario: "A headline creates excitement before the full report is released.", move: "Wait for the full report and note which fact would make the news matter.", mistake: "Treating a headline as the final explanation.", journal: "Record the date, source, claimed effect, and missing facts.", source: "A post repeats a headline but links to nothing." },
+        { title: "Planning a trade", focus: "turn an idea into a usable paper-trade plan", scenario: "A learner has an asset name but no entry, size, or reason.", move: "Write the entry reason, amount, risk limit, and review point.", mistake: "Calling an asset name a complete plan.", journal: "Keep the entry reason, amount, risk limit, and review rule.", source: "A post says to buy now with no time horizon." },
+        { title: "Keeping a journal", focus: "record decisions so they can be reviewed", scenario: "A learner remembers a trade as smart but did not write why at the time.", move: "Record the original reason before the outcome changes memory.", mistake: "Writing a new explanation after the result is known.", journal: "Write the pre-trade reason, risk, result, and update.", source: "A post shares only a successful result with no original plan." },
+        { title: "Portfolio fit", focus: "look at how positions work together", scenario: "A learner owns several technology companies and calls the portfolio diversified.", move: "Identify shared exposure and add a different source of risk if needed.", mistake: "Counting names instead of sources of risk.", journal: "List each holding's role and any shared exposure.", source: "A post says ten tickers automatically make a safe portfolio." },
+        { title: "Reviewing the thesis", focus: "update an idea when facts change", scenario: "New evidence contradicts the reason a learner wrote before trading.", move: "Revise or close the idea based on the new fact.", mistake: "Protecting the old story after its reason disappears.", journal: "Record what changed and why the next step changed.", source: "A post keeps the same recommendation after key facts change." }
+      ];
+      return contexts[lessonNumber - 1] || contexts[0];
+    }
+
     function buildPracticePages(number, title, shortName, focus, lessonNumber = 1, lessonTitle = "Core ideas") {
       const profile = moduleProfile(number, title, shortName, focus);
       const knowledge = moduleKnowledge(number);
+      const context = lessonQuestionContext(lessonNumber);
       const units = 2 + (lessonNumber % 4);
       const unitPrice = 7 + (number * 3) + lessonNumber;
       const positionValue = units * unitPrice;
@@ -1882,66 +1899,66 @@
         {
           type: "practice",
           style: "Concept",
-          prompt: `In ${title}, what does "${knowledge.term}" mean?`,
-          options: [knowledge.definition, `A label for any asset with a rising chart.`, `A guarantee that a trade will earn XP.`, `A signal that removes all possible downside.`],
+          prompt: `Lesson ${lessonNumber}: What is the main skill in "${context.title}"?`,
+          options: [context.focus, `Memorize one asset name without using it.`, `Follow a chart without writing a reason.`, `Choose the most popular answer as quickly as possible.`],
           answer: 0,
-          explanation: `The lesson definition is: ${knowledge.definition}.`
+          explanation: `The main skill for this lesson is to ${context.focus}.`
         },
         {
           type: "practice",
           style: "Quick math",
-          prompt: `A paper position has ${units} units of ${profile.asset} at $${unitPrice} each. What is its value before fees?`,
+          prompt: `During ${context.title}, a paper position has ${units} units of ${profile.asset} at $${unitPrice} each. What is its value before fees?`,
           options: [`$${positionValue}`, `$${positionValue + unitPrice}`, `$${positionValue + (units * 3)}`, `$${Math.max(1, unitPrice - 2) * units}`],
           answer: 0,
           explanation: `Multiply ${units} units by $${unitPrice}: the position value is $${positionValue}.`
         },
         {
           type: "practice",
-          style: "Example",
-          prompt: `Which situation is the clearest example of ${knowledge.term}?`,
-          options: [knowledge.example, `A learner chooses an asset only because it is familiar.`, `A learner ignores the lesson and follows a popular post.`, `A learner assumes every price move has one simple cause.`],
+          style: "Scenario",
+          prompt: `Scenario for ${context.title}: ${context.scenario} What should happen next?`,
+          options: [context.move, `Follow the strongest recent price move right away.`, `Treat the first opinion as the final answer.`, `Wait for someone else to make the decision.`],
           answer: 0,
-          explanation: `This is a direct example of ${knowledge.term}: ${knowledge.example}.`
+          explanation: `This lesson calls for the learner to ${context.move.toLowerCase()}`
         },
         {
           type: "practice",
           style: "Reasoning",
-          prompt: `Which statement about ${knowledge.term} is least reliable?`,
-          options: [knowledge.falseIdea, `The idea can be useful without guaranteeing an outcome.`, `The topic can involve risk as well as possible reward.`, `The lesson gives a reason to record a decision clearly.`],
+          prompt: `Which mistake would most weaken a decision in ${context.title}?`,
+          options: [context.mistake, `Writing down the reason before acting.`, `Naming a risk that could change the plan.`, `Using a lesson idea in a paper trade.`],
           answer: 0,
-          explanation: `The unreliable statement is: ${knowledge.falseIdea}.`
+          explanation: `The key mistake is: ${context.mistake}`
         },
         {
           type: "practice",
           style: "Risk",
-          prompt: `Which risk belongs most closely to ${knowledge.term}?`,
+          prompt: `In ${context.title}, which risk is especially relevant to ${knowledge.term}?`,
           options: [knowledge.risk, `The learner may forget the exact module number.`, `The task could take longer than a quick scroll.`, `The app may show more than one market category.`],
           answer: 0,
           explanation: `The important risk here is: ${knowledge.risk}.`
         },
         {
           type: "practice",
-          style: "Planning",
-          prompt: `Before a paper trade in ${profile.asset}, which step uses this lesson best?`,
-          options: [knowledge.action, `Follow the latest price move without writing a reason.`, `Use the asset name as the whole plan.`, `Wait for a friend to choose the trade first.`],
+          style: "Journal",
+          prompt: `Which note best belongs in a ${context.title} journal entry?`,
+          options: [context.journal, `Only the final price, with no original reason.`, `A new explanation written after seeing the result.`, `The asset name with no note about the decision.`],
           answer: 0,
-          explanation: `The useful step is: ${knowledge.action}.`
+          explanation: `A useful entry for this lesson is: ${context.journal}`
         },
         {
           type: "practice",
           style: "Source",
-          prompt: `A post says, "${knowledge.falseIdea}." Why is that a weak reason to act?`,
-          options: [`It treats a simple label as proof and leaves out the important conditions.`, `It is weak only when the price falls on the same day.`, `It becomes strong after enough people repeat it online.`, `It is enough for a paper trade because no money is involved.`],
+          prompt: `Which source warning matters most in ${context.title}?`,
+          options: [context.source, `A post includes the asset name in its headline.`, `A post has a short introduction before the claim.`, `A post uses a chart that is one day old.`],
           answer: 0,
-          explanation: `The claim skips the real conditions behind ${knowledge.term}.`
+          explanation: `The warning to notice is: ${context.source}`
         },
         {
           type: "practice",
-          style: "Reflection",
-          prompt: `A paper trade finishes differently from expected. What should the learner record?`,
-          options: [`The original reason, the result, and whether the named risk appeared.`, `Only the final value, because the original plan no longer matters.`, `A new reason that makes the result look obvious afterward.`, `Nothing until the same result happens a second time.`],
+          style: "Application",
+          prompt: `Which action shows that a learner used the ${context.title} lesson?`,
+          options: [context.move, `Follow a popular opinion without a written reason.`, `Ignore the lesson once a price starts moving.`, `Replace the plan with the latest headline.`],
           answer: 0,
-          explanation: `A useful record connects the original idea with what actually happened.`
+          explanation: `Using this lesson means to ${context.move.toLowerCase()}`
         }
       ];
     }
@@ -1953,9 +1970,7 @@
         body: lessonTextForPage(lessonNumber - 1, title, shortName, focus)
       };
       const practicePages = buildPracticePages(number, title, shortName, focus, lessonNumber, lessonTitle);
-      const offset = (lessonNumber - 1) % practicePages.length;
-      const rotatedPracticePages = practicePages.map((_, index) => practicePages[(index + offset) % practicePages.length]);
-      const scrambledPracticePages = rotatedPracticePages.map((page, index) => scrambleQuestion(page, `practice-${number}-${lessonNumber}-${index}`));
+      const scrambledPracticePages = practicePages.map((page, index) => scrambleQuestion(page, `practice-${number}-${lessonNumber}-${index}`));
       return [lecturePage, ...scrambledPracticePages];
     }
 
