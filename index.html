@@ -1672,6 +1672,7 @@
         moduleXp: 150,
         lessons,
         lessonPages: lessons[0].pages,
+        skipQuestions: buildModuleSkipQuestions(number, lessons),
         quizQuestions: [
           ...buildMultipleChoiceQuestions(number, title, shortName, focus, 10),
           ...buildSimulationQuestions(number, title, shortName, focus, 5)
@@ -1698,6 +1699,23 @@
         title: `Lesson ${index + 1}: ${lessonTitle}`,
         pages: buildLessonPages(number, title, shortName, focus, index + 1, lessonTitle)
       }));
+    }
+
+    function buildModuleSkipQuestions(number, lessons) {
+      const selected = lessons.flatMap((lesson, lessonIndex) => {
+        const practice = lesson.pages.filter(page => page.type === "practice");
+        const start = (number + lessonIndex) % practice.length;
+        return [0, 3, 6].map(offset => {
+          const page = practice[(start + offset) % practice.length];
+          return {
+            ...page,
+            sourceLesson: lesson.title
+          };
+        });
+      });
+      return selected
+        .map((question, index) => scrambleQuestion(question, `skip-${number}-${index}`))
+        .sort((a, b) => hashString(`skip-order-${number}-${a.prompt}`) - hashString(`skip-order-${number}-${b.prompt}`));
     }
 
     function hashString(value) {
@@ -2289,12 +2307,17 @@
       "ALL": 12 * 60 * 60 * 1000
     };
     const COURSE_VERSION = "ten-lessons-eight-questions-v1";
+    const SKIP_QUESTION_COUNT = 30;
+    const SKIP_MISS_LIMIT = 3;
+    const SKIP_TIME_LIMIT_MS = 5 * 60 * 1000;
+    const SKIP_REWARD_XP = 300;
     const state = loadState();
     let currentStep = 0;
     let marketChartState = { asset: null, data: null, loading: false, error: "", rangeKey: "1D" };
     let marketChartTimer = 0;
     let marketChartRequest = 0;
     let tradeState = null;
+    let skipChallengeTimer = 0;
 
     function defaultState() {
       return {
@@ -3355,6 +3378,12 @@
       panel.querySelectorAll("[data-next-lesson]").forEach(button => {
         button.addEventListener("click", () => advanceLesson(button.dataset.nextLesson));
       });
+      panel.querySelectorAll("[data-start-module-skip]").forEach(button => {
+        button.addEventListener("click", () => startModuleSkip(button.dataset.startModuleSkip));
+      });
+      panel.querySelectorAll("[data-skip-answer]").forEach(button => {
+        button.addEventListener("click", () => answerModuleSkip(button.dataset.module, Number(button.dataset.skipAnswer)));
+      });
       panel.querySelectorAll("[data-lesson-answer]").forEach(button => {
         button.addEventListener("click", () => answerLessonQuestion(button.dataset.module, Number(button.dataset.lessonAnswer), Number(button.dataset.page)));
       });
@@ -3374,6 +3403,7 @@
           renderCourse();
         });
       });
+      syncSkipChallengeTimer(activeItem);
       renderStreaks();
     }
 
@@ -3424,6 +3454,12 @@
         testAnswered: 0,
         testStartedAt: 0,
         testDone: false,
+        skipActive: false,
+        skipped: false,
+        skipIndex: 0,
+        skipCorrect: 0,
+        skipMisses: 0,
+        skipStartedAt: 0,
         activityResult: null
       };
       state.courseProgress[itemId] = { ...defaults, ...(state.courseProgress[itemId] || {}) };
@@ -3458,18 +3494,18 @@
     function modulePanelTemplate(module) {
       const progress = getProgress(module.id);
       if (progress.activityResult) return activityResultTemplate(module, progress.activityResult);
+      if (progress.skipActive) return moduleSkipTemplate(module, progress);
       if (!progress.lessonDone) return lessonTemplate(module, progress);
       if (!progress.quizDone) return questionSetTemplate(module, module.quizQuestions, progress.quizIndex, progress.quizCorrect, "quiz");
       return `
         <div class="section-head" style="margin-bottom:0">
           <div>
             <h3>${module.title}</h3>
-            <p class="muted">All 10 lessons complete. Quiz complete. Module bonus collected.</p>
+            <p class="muted">${progress.skipped ? "Module skip challenge passed." : "All 10 lessons complete. Quiz complete. Module bonus collected."}</p>
           </div>
           <span class="xp">Done</span>
         </div>
-        ${moduleStatusTemplate(module, progress)}
-        <p class="lesson-body">Great work. The next module or big test is unlocked.</p>
+        ${progress.skipped ? `<p class="lesson-body">You passed the 30-question skip challenge. The next module or big test is unlocked.</p>` : `${moduleStatusTemplate(module, progress)}<p class="lesson-body">Great work. The next module or big test is unlocked.</p>`}
         <button class="btn secondary" disabled>Module complete</button>
       `;
     }
@@ -3499,7 +3535,10 @@
           <strong>${page.title}</strong>
           <p class="lesson-body">${page.body}</p>
         </div>
-        <button class="btn green" data-next-lesson="${module.id}">Start 8 questions</button>
+        <div class="actions">
+          <button class="btn green" data-next-lesson="${module.id}">Start 8 questions</button>
+          <button class="btn secondary" data-start-module-skip="${module.id}">Skip module: 30-question challenge</button>
+        </div>
       `;
     }
 
@@ -3551,6 +3590,38 @@
           <p class="lesson-body">${practice.prompt}</p>
           <div class="quiz-options">
             ${practice.options.map((option, index) => `<button class="quiz-option" data-module="${module.id}" data-page="${pageIndex}" data-lesson-answer="${index}">${option}</button>`).join("")}
+          </div>
+        </div>
+        <button class="btn secondary" data-start-module-skip="${module.id}">Skip module: 30-question challenge</button>
+      `;
+    }
+
+    function moduleSkipTemplate(module, progress) {
+      const question = module.skipQuestions[progress.skipIndex];
+      if (!question) return "";
+      const remaining = skipTimeRemaining(progress);
+      return `
+        <div class="section-head" style="margin-bottom:0">
+          <div>
+            <h3>${module.title} skip challenge</h3>
+            <p class="muted">30 mixed questions from this module's 10 lessons. Wrong answers do not return.</p>
+          </div>
+          <span class="xp">+${SKIP_REWARD_XP} XP</span>
+        </div>
+        <div class="module-status">
+          <span class="mini-pill">Question ${progress.skipIndex + 1}/${SKIP_QUESTION_COUNT}</span>
+          <span class="mini-pill">Correct ${progress.skipCorrect}</span>
+          <span class="mini-pill ${progress.skipMisses ? "" : "done"}">Misses ${progress.skipMisses}/${SKIP_MISS_LIMIT}</span>
+          <span class="mini-pill" data-skip-time>${formatCountdown(remaining)}</span>
+        </div>
+        <div class="lesson-step">
+          <div class="question-meta">
+            <strong>${question.sourceLesson}</strong>
+            <span class="mini-pill">${question.style}</span>
+          </div>
+          <p class="lesson-body">${question.prompt}</p>
+          <div class="quiz-options">
+            ${question.options.map((option, optionIndex) => `<button class="quiz-option" data-module="${module.id}" data-skip-answer="${optionIndex}">${option}</button>`).join("")}
           </div>
         </div>
       `;
@@ -3687,14 +3758,48 @@
       return `${minutes} min ${seconds} sec`;
     }
 
+    function formatCountdown(durationMs) {
+      const totalSeconds = Math.max(0, Math.ceil(durationMs / 1000));
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes}:${String(seconds).padStart(2, "0")} left`;
+    }
+
+    function skipTimeRemaining(progress) {
+      const startedAt = Number(progress.skipStartedAt) || Date.now();
+      return Math.max(0, SKIP_TIME_LIMIT_MS - (Date.now() - startedAt));
+    }
+
+    function syncSkipChallengeTimer(activeItem) {
+      window.clearInterval(skipChallengeTimer);
+      skipChallengeTimer = 0;
+      if (!activeItem || activeItem.kind !== "module") return;
+      const progress = getProgress(activeItem.id);
+      if (!progress.skipActive) return;
+      const update = () => {
+        const current = getProgress(activeItem.id);
+        if (!current.skipActive) {
+          window.clearInterval(skipChallengeTimer);
+          skipChallengeTimer = 0;
+          return;
+        }
+        const remaining = skipTimeRemaining(current);
+        const timer = document.querySelector("[data-skip-time]");
+        if (timer) timer.textContent = formatCountdown(remaining);
+        if (remaining <= 0) finishModuleSkip(activeItem, current, "time");
+      };
+      update();
+      if (progress.skipActive) skipChallengeTimer = window.setInterval(update, 250);
+    }
+
     function activityResultTemplate(item, result) {
       return `
         <div class="section-head" style="margin-bottom:0">
           <div>
             <h3>${result.title}</h3>
-            <p class="muted">Finished. Here is your complete result.</p>
+            <p class="muted">${result.failed ? "The module was not skipped. You can return to its lessons or try the challenge again." : "Finished. Here is your complete result."}</p>
           </div>
-          <span class="xp">+${result.totalXp} XP earned</span>
+          <span class="xp">${result.totalXp ? `+${result.totalXp}` : "0"} XP earned</span>
         </div>
         <div class="result-summary">
           <div class="result-grid">
@@ -3738,6 +3843,104 @@
         saveState();
         renderCourse();
       }
+    }
+
+    function startModuleSkip(moduleId) {
+      const module = courseModules.find(item => item.id === moduleId);
+      if (!module || state.completed[module.id]) return;
+      const progress = getProgress(module.id);
+      progress.skipActive = true;
+      progress.skipIndex = 0;
+      progress.skipCorrect = 0;
+      progress.skipMisses = 0;
+      progress.skipStartedAt = Date.now();
+      progress.activityResult = null;
+      saveState();
+      renderCourse();
+    }
+
+    function markSkipAnswerButtons(answerIndex, correctIndex) {
+      const panel = document.getElementById("lessonPanel");
+      panel.querySelectorAll("[data-skip-answer]").forEach(button => {
+        const isCorrect = Number(button.dataset.skipAnswer) === correctIndex;
+        button.classList.toggle("correct", isCorrect);
+        button.classList.toggle("wrong", Number(button.dataset.skipAnswer) === answerIndex && !isCorrect);
+        button.disabled = true;
+      });
+    }
+
+    function answerModuleSkip(moduleId, answerIndex) {
+      const module = courseModules.find(item => item.id === moduleId);
+      if (!module || state.completed[module.id]) return;
+      const progress = getProgress(module.id);
+      if (!progress.skipActive) return;
+      if (skipTimeRemaining(progress) <= 0) {
+        finishModuleSkip(module, progress, "time");
+        return;
+      }
+      const question = module.skipQuestions[progress.skipIndex];
+      if (!question) return;
+      markSkipAnswerButtons(answerIndex, question.answer);
+      const correct = answerIndex === question.answer;
+      progress.skipIndex += 1;
+      if (correct) progress.skipCorrect += 1;
+      else progress.skipMisses += 1;
+      saveState();
+      window.setTimeout(() => {
+        if (progress.skipMisses >= SKIP_MISS_LIMIT) {
+          finishModuleSkip(module, progress, "misses");
+        } else if (progress.skipIndex >= module.skipQuestions.length) {
+          finishModuleSkip(module, progress, "passed");
+        } else {
+          renderCourse();
+        }
+      }, 450);
+    }
+
+    function finishModuleSkip(module, progress, outcome) {
+      if (!progress.skipActive) return;
+      window.clearInterval(skipChallengeTimer);
+      skipChallengeTimer = 0;
+      const answered = Math.min(progress.skipIndex, module.skipQuestions.length);
+      const accuracy = answered ? Math.round((progress.skipCorrect / answered) * 100) : 0;
+      const durationMs = elapsedTime(progress.skipStartedAt);
+      progress.skipActive = false;
+      if (outcome === "passed") {
+        progress.skipped = true;
+        progress.lessonDone = true;
+        progress.quizDone = true;
+        progress.completedLessons = 0;
+        state.completed[module.id] = true;
+        state.streak += 1;
+        addXp(SKIP_REWARD_XP, `${module.shortTitle} skip challenge`);
+        progress.activityResult = {
+          kind: "moduleSkip",
+          title: `${module.shortTitle} skip challenge passed`,
+          correct: progress.skipCorrect,
+          total: SKIP_QUESTION_COUNT,
+          accuracy,
+          durationMs,
+          totalXp: SKIP_REWARD_XP,
+          xpNote: `You finished all ${SKIP_QUESTION_COUNT} mixed questions with ${progress.skipMisses}/${SKIP_MISS_LIMIT} misses. This module is now marked as skipped.`,
+          nextLabel: "Continue course"
+        };
+      } else {
+        const reason = outcome === "time" ? "The five-minute timer ended." : `You reached ${SKIP_MISS_LIMIT} misses.`;
+        progress.activityResult = {
+          kind: "skipFailed",
+          title: `${module.shortTitle} skip challenge ended`,
+          correct: progress.skipCorrect,
+          total: answered,
+          accuracy,
+          durationMs,
+          totalXp: 0,
+          failed: true,
+          xpNote: `${reason} Wrong questions do not return, and no XP was awarded.`,
+          nextLabel: "Back to module"
+        };
+      }
+      saveState();
+      renderAll();
     }
 
     function answerLessonQuestion(moduleId, answerIndex, pageIndex) {
@@ -3905,6 +4108,17 @@
           progress.lessonDone = true;
           progress.lessonPage = lessonPagesFor(item, progress).length - 1;
         }
+      } else if (result.kind === "skipFailed") {
+        progress.activityResult = null;
+        progress.skipIndex = 0;
+        progress.skipCorrect = 0;
+        progress.skipMisses = 0;
+        progress.skipStartedAt = 0;
+        state.activeCourseId = item.id;
+      } else if (result.kind === "moduleSkip") {
+        progress.activityResult = null;
+        progress.skipStartedAt = 0;
+        state.activeCourseId = getNextCourseId(item.id);
       } else {
         progress.activityResult = null;
         state.activeCourseId = getNextCourseId(item.id);
@@ -4113,17 +4327,23 @@
     }
 
     function taskCompletedLessons() {
-      return courseItems.filter(item => item.kind === "module").reduce((total, item) => total + (getProgress(item.id).completedLessons || 0), 0);
+      return courseItems.filter(item => item.kind === "module").reduce((total, item) => {
+        const progress = getProgress(item.id);
+        return total + (progress.skipped ? 0 : (progress.completedLessons || 0));
+      }, 0);
     }
 
     function taskCompletedQuizzes() {
-      return courseItems.filter(item => item.kind === "module" && getProgress(item.id).quizDone).length;
+      return courseItems.filter(item => {
+        const progress = getProgress(item.id);
+        return item.kind === "module" && progress.quizDone && !progress.skipped;
+      }).length;
     }
 
     function taskPerfectQuizzes() {
       return courseItems.filter(item => item.kind === "module").filter(item => {
         const progress = getProgress(item.id);
-        return progress.quizDone && progress.quizCorrect === item.quizQuestions.length;
+        return !progress.skipped && progress.quizDone && progress.quizCorrect === item.quizQuestions.length;
       }).length;
     }
 
