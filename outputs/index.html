@@ -1718,15 +1718,15 @@
     function balanceOptionLengths(question, seed) {
       const targetLength = Math.max(...question.options.map(option => option.length));
       const correctAddOns = [
-        "with review noted.",
-        "after comparing risk.",
-        "before updating later."
+        "with a clear reason.",
+        "using the stated facts.",
+        "as the lesson explains."
       ];
       const distractorAddOns = [
-        "but skips one check.",
-        "with weak comparison.",
-        "before risk is clear.",
-        "using one clue only."
+        "but leaves out a detail.",
+        "with incomplete logic.",
+        "without enough support.",
+        "using an unrelated reason."
       ];
       return question.options.map((option, index) => {
         let balanced = option;
@@ -1854,73 +1854,94 @@
       return { title, shortName, focus, ...profiles[number - 1] };
     }
 
+    function moduleKnowledge(number) {
+      const knowledge = [
+        { term: "market price", definition: "the current amount where buyers and sellers agree to trade", example: "a burst of buyers can lift a price when fewer sellers are available", risk: "a fast move can reverse when the news fades", action: "record the price, catalyst, and reason before practicing", falseIdea: "a green price always means the asset is a good buy" },
+        { term: "share of stock", definition: "a small ownership piece of a public company", example: "earnings can change demand for a company's shares", risk: "a strong brand does not remove business risk", action: "connect the price to the company business, not only its name", falseIdea: "one share gives control over every company decision" },
+        { term: "ETF", definition: "a fund that holds a basket of assets and trades like a stock", example: "QQQ gives exposure to many large Nasdaq companies in one trade", risk: "a basket can still fall when many holdings share the same sector", action: "identify what the fund holds before adding it to a portfolio", falseIdea: "an ETF cannot lose value because it owns many companies" },
+        { term: "crypto asset", definition: "a digital asset that can move quickly with demand, news, and regulation", example: "regulation news can change crypto prices within hours", risk: "sharp moves can happen even when the project itself is unchanged", action: "keep position size small enough to handle a large move", falseIdea: "a low-priced coin is automatically less risky than Bitcoin" },
+        { term: "risk-reward tradeoff", definition: "the relationship between a possible gain and a possible loss", example: "a large upside can still be a poor trade when the downside is too large", risk: "focusing only on upside can hide a loss that is hard to recover", action: "decide the maximum acceptable loss before entering a paper trade", falseIdea: "the largest possible return is always the best choice" },
+        { term: "market index", definition: "a number that tracks a group of stocks in one part of the market", example: "the S&P 500 can move when many large US companies react to the same news", risk: "an index move does not explain every individual stock", action: "separate broad-market news from company-specific news", falseIdea: "every stock in an index moves by the same percentage" },
+        { term: "international market", definition: "a market outside the learner's home country, often affected by local rules and currencies", example: "a currency change can affect a US investor's return on a foreign stock", risk: "news in another country can arrive when local markets are closed", action: "note the country, currency, and business exposure before practicing", falseIdea: "foreign stocks always move the same way as US stocks" },
+        { term: "penny market", definition: "a low-priced, high-risk stock that can be thinly traded", example: "social-media attention can make a thinly traded stock jump", risk: "wide spreads can make buying and selling cost more than expected", action: "treat a low share price as a risk question, not a bargain label", falseIdea: "a cheap share price means there is little money at risk" },
+        { term: "private company", definition: "a company whose shares are not normally bought on a public stock exchange", example: "a private company can be studied even when the standard Buy button is unavailable", risk: "a private-market value may be hard for most investors to access or sell", action: "use public competitors for practice when the company itself is watch-only", falseIdea: "a famous private company can be bought like any listed stock" },
+        { term: "paper trade", definition: "a simulated buy or sell used to practice without real cash", example: "a paper trade can reveal whether a plan was clear before money is at risk", risk: "a lucky paper result can hide a weak process", action: "record the entry reason, amount, risk, and later result", falseIdea: "paper trading makes risk management unnecessary" },
+        { term: "diversification", definition: "spreading a portfolio across different sources of risk", example: "a broad index and a bond fund can reduce reliance on one company", risk: "several tech holdings can still move together despite different names", action: "look for what each holding adds rather than counting tickers", falseIdea: "owning more tickers always creates diversification" },
+        { term: "investment thesis", definition: "a clear reason for an idea plus the facts that could prove it wrong", example: "a thesis can be updated when new evidence changes the original reason", risk: "changing the story only after a loss prevents learning", action: "write the reason, risk trigger, and review date before acting", falseIdea: "a thesis should never change once it is written" }
+      ];
+      return knowledge[number - 1] || knowledge[0];
+    }
+
     function buildPracticePages(number, title, shortName, focus, lessonNumber = 1, lessonTitle = "Core ideas") {
       const profile = moduleProfile(number, title, shortName, focus);
-      const lessonAngle = `${lessonTitle.toLowerCase()} in ${profile.shortName}`;
+      const knowledge = moduleKnowledge(number);
+      const units = 2 + (lessonNumber % 4);
+      const unitPrice = 7 + (number * 3) + lessonNumber;
+      const positionValue = units * unitPrice;
       return [
         {
           type: "practice",
-          style: "Multiple choice",
-          prompt: `While studying ${lessonAngle}, a learner reviews ${profile.asset}. Which note best separates a real signal from noise?`,
-          options: [`The note checks ${profile.signal} before making the paper trade.`, `The note trusts ${profile.event} and treats the move as enough proof.`, `The note waits for popularity to confirm that risk is now lower.`, `The note focuses on the exciting part and reviews risk afterward.`],
+          style: "Concept",
+          prompt: `In ${title}, what does "${knowledge.term}" mean?`,
+          options: [knowledge.definition, `A label for any asset with a rising chart.`, `A guarantee that a trade will earn XP.`, `A signal that removes all possible downside.`],
           answer: 0,
-          explanation: `The strongest note checks ${profile.signal}. The weaker choices lean too hard on one clue.`
+          explanation: `The lesson definition is: ${knowledge.definition}.`
         },
         {
           type: "practice",
-          style: "Simulation",
-          prompt: `Simulation for Lesson ${lessonNumber}: ${profile.event}. What should happen before choosing ${profile.asset}?`,
-          options: [`Compare the event with ${profile.metric}, then decide if the trade fits.`, `Use the event as the main reason and write the risk after entering.`, `Wait for the chart to confirm the story, then skip the comparison.`, `Choose quickly because the event may already be priced in by others.`],
+          style: "Quick math",
+          prompt: `A paper position has ${units} units of ${profile.asset} at $${unitPrice} each. What is its value before fees?`,
+          options: [`$${positionValue}`, `$${positionValue + unitPrice}`, `$${positionValue + (units * 3)}`, `$${Math.max(1, unitPrice - 2) * units}`],
           answer: 0,
-          explanation: `The careful move compares the event with ${profile.metric} before acting.`
+          explanation: `Multiply ${units} units by $${unitPrice}: the position value is $${positionValue}.`
         },
         {
           type: "practice",
-          style: "Multiple choice",
-          prompt: `For the ${lessonTitle.toLowerCase()} lesson, which risk note is strongest for ${profile.asset}?`,
-          options: [`The note says ${profile.risk} and names what would change the thesis.`, `The note says the trade is risky, but does not explain the actual risk.`, `The note says the asset is familiar, so the downside should be smaller.`, `The note says the learner will review only if the result is surprising.`],
+          style: "Example",
+          prompt: `Which situation is the clearest example of ${knowledge.term}?`,
+          options: [knowledge.example, `A learner chooses an asset only because it is familiar.`, `A learner ignores the lesson and follows a popular post.`, `A learner assumes every price move has one simple cause.`],
           answer: 0,
-          explanation: `A strong risk note is specific. Here, the key risk is that ${profile.risk}.`
+          explanation: `This is a direct example of ${knowledge.term}: ${knowledge.example}.`
         },
         {
           type: "practice",
-          style: "Simulation",
-          prompt: `Simulation: During ${lessonAngle}, ${profile.asset} looks better than ${profile.secondAsset}, but both have tradeoffs. What comparison is best?`,
-          options: [`Compare ${profile.metric} for both choices before picking either one.`, `Pick ${profile.asset} first because it currently has the stronger story.`, `Pick ${profile.secondAsset} first because a comparison can slow the trade.`, `Compare only recent price movement because the rest is too uncertain.`],
+          style: "Reasoning",
+          prompt: `Which statement about ${knowledge.term} is least reliable?`,
+          options: [knowledge.falseIdea, `The idea can be useful without guaranteeing an outcome.`, `The topic can involve risk as well as possible reward.`, `The lesson gives a reason to record a decision clearly.`],
           answer: 0,
-          explanation: `The best comparison uses ${profile.metric}, not only story or recent movement.`
+          explanation: `The unreliable statement is: ${knowledge.falseIdea}.`
         },
         {
           type: "practice",
-          style: "Multiple choice",
-          prompt: `Which mistake would most weaken a paper-trade journal after Lesson ${lessonNumber} on ${profile.shortName}?`,
-          options: [`The journal falls into ${profile.trap} instead of checking evidence.`, `The journal includes the thesis, but also writes a possible downside.`, `The journal compares two choices before choosing the paper trade.`, `The journal reviews the result even when the trade happens to win.`],
+          style: "Risk",
+          prompt: `Which risk belongs most closely to ${knowledge.term}?`,
+          options: [knowledge.risk, `The learner may forget the exact module number.`, `The task could take longer than a quick scroll.`, `The app may show more than one market category.`],
           answer: 0,
-          explanation: `The trap is dangerous because it replaces analysis with a shortcut.`
+          explanation: `The important risk here is: ${knowledge.risk}.`
         },
         {
           type: "practice",
-          style: "Simulation",
-          prompt: `Simulation for ${lessonAngle}: The result goes against your first idea about ${profile.asset}. What is the strongest update?`,
-          options: [`Review whether ${profile.risk}, then update the thesis if needed.`, `Keep the thesis unchanged because one paper result cannot matter.`, `Replace the thesis with the latest price move and move on quickly.`, `Only record the result if it helps the original idea look correct.`],
+          style: "Planning",
+          prompt: `Before a paper trade in ${profile.asset}, which step uses this lesson best?`,
+          options: [knowledge.action, `Follow the latest price move without writing a reason.`, `Use the asset name as the whole plan.`, `Wait for a friend to choose the trade first.`],
           answer: 0,
-          explanation: `A result should be compared with the original risk and thesis, not ignored or rewritten to fit.`
+          explanation: `The useful step is: ${knowledge.action}.`
         },
         {
           type: "practice",
-          style: "Multiple choice",
-          prompt: `Which checkpoint matters most before finishing the ${lessonTitle.toLowerCase()} lesson in ${profile.title}?`,
-          options: [`The learner can explain ${profile.metric} without copying the answer.`, `The learner knows which choice had the most exciting recent movement.`, `The learner can name a popular asset connected to the module topic.`, `The learner can finish quickly and return later if the score is low.`],
+          style: "Source",
+          prompt: `A post says, "${knowledge.falseIdea}." Why is that a weak reason to act?`,
+          options: [`It treats a simple label as proof and leaves out the important conditions.`, `It is weak only when the price falls on the same day.`, `It becomes strong after enough people repeat it online.`, `It is enough for a paper trade because no money is involved.`],
           answer: 0,
-          explanation: `The checkpoint should prove understanding of ${profile.metric}, not just speed or familiarity.`
+          explanation: `The claim skips the real conditions behind ${knowledge.term}.`
         },
         {
           type: "practice",
-          style: "Simulation",
-          prompt: `Final simulation for Lesson ${lessonNumber}: A friend says ${profile.trap}. How should the learner respond?`,
-          options: [`Ask for the thesis, evidence, risk, and review rule before agreeing.`, `Agree if the friend sounds confident and the price recently moved up.`, `Ask only whether the asset is famous enough to be worth watching.`, `Agree for paper trading, because practice results do not need review.`],
+          style: "Reflection",
+          prompt: `A paper trade finishes differently from expected. What should the learner record?`,
+          options: [`The original reason, the result, and whether the named risk appeared.`, `Only the final value, because the original plan no longer matters.`, `A new reason that makes the result look obvious afterward.`, `Nothing until the same result happens a second time.`],
           answer: 0,
-          explanation: `The learner should ask for thesis, evidence, risk, and review rule instead of accepting the trap.`
+          explanation: `A useful record connects the original idea with what actually happened.`
         }
       ];
     }
@@ -1958,56 +1979,60 @@
 
     function buildMultipleChoiceQuestions(number, title, shortName, focus, count) {
       const profile = moduleProfile(number, title, shortName, focus);
+      const knowledge = moduleKnowledge(number);
+      const units = 3 + (number % 3);
+      const unitPrice = 8 + (number * 4);
+      const positionValue = units * unitPrice;
       const questions = [
         {
-          prompt: `Which clue would most support a paper trade in ${profile.asset}?`,
-          correct: `${profile.signal} and the learner can explain why it matters.`,
-          near: [`${profile.signal}, but without checking whether the risk changed.`, `A recent move that looks similar to past winners in the watchlist.`, `A popular story that makes the trade easier to explain quickly.`]
+          prompt: `Which sentence best defines ${knowledge.term}?`,
+          correct: knowledge.definition,
+          near: [`A name for every asset with a strong chart.`, `A reward for making a profitable practice trade.`, `A rule that removes uncertainty from an investment.`]
         },
         {
-          prompt: `What is the biggest weakness in the shortcut: "${profile.trap}"?`,
-          correct: `It replaces a specific thesis with a shortcut that ignores evidence.`,
-          near: [`It may still work sometimes, so the journal should skip the warning.`, `It is only weak if the paper trade loses immediately afterward.`, `It works for familiar assets but not for unfamiliar market choices.`]
+          prompt: `A paper position has ${units} units at $${unitPrice} each. What is the position value before fees?`,
+          correct: `$${positionValue}`,
+          near: [`$${positionValue + unitPrice}`, `$${positionValue - unitPrice}`, `$${unitPrice + units}`]
         },
         {
-          prompt: `Which note best handles the risk: "${profile.risk}"?`,
-          correct: `It names the risk directly and says what evidence would change the plan.`,
-          near: [`It names the risk but waits until the result before judging it.`, `It mentions uncertainty without deciding what would change the plan.`, `It treats the risk as acceptable because the asset is interesting.`]
+          prompt: `Which situation is the clearest example of ${knowledge.term}?`,
+          correct: knowledge.example,
+          near: [`A learner follows a headline without reading the details.`, `A learner picks the most familiar name in a list.`, `A learner assumes one outcome will happen every time.`]
         },
         {
-          prompt: `What should be compared between ${profile.asset} and ${profile.secondAsset}?`,
-          correct: `${profile.metric}, plus how each choice fits the learner's plan.`,
-          near: [`Recent price direction, then ${profile.metric} only if both moved.`, `Which one has the stronger story and cleaner explanation today.`, `Which one feels easier to watch during a short practice session.`]
+          prompt: `Which statement about ${knowledge.term} is false?`,
+          correct: knowledge.falseIdea,
+          near: [`The topic can involve a reason and a possible downside.`, `The topic can be used in a paper-trade plan.`, `The topic can matter even when a price is moving up.`]
         },
         {
-          prompt: `Why might ${profile.event} be misleading?`,
-          correct: `The event may be real but still not strong enough to change the thesis.`,
-          near: [`The event matters only if every other asset moves the same way.`, `The event should be trusted first and reviewed after the paper trade.`, `The event becomes safer when more learners are talking about it.`]
+          prompt: `Which risk belongs most closely to ${knowledge.term}?`,
+          correct: knowledge.risk,
+          near: [`The module title may be hard to remember later.`, `The chart may use a different line color tomorrow.`, `The learner may have more than one unlocked lesson.`]
         },
         {
-          prompt: `Which journal sentence would be most useful after this module?`,
-          correct: `I checked ${profile.metric} and updated the thesis from the result.`,
-          near: [`I picked the better-looking choice and will explain it if needed.`, `I waited for a strong move, then used that move as my main proof.`, `I watched the asset because it matched the module topic today.`]
+          prompt: `Which action best applies ${knowledge.term} before practicing ${profile.asset}?`,
+          correct: knowledge.action,
+          near: [`Treat the asset name as the entire reason to act.`, `Wait for popularity to choose the next step.`, `Skip the plan because the trade is only simulated.`]
         },
         {
-          prompt: `What does a good review trigger look like for ${profile.shortName}?`,
-          correct: `A clear condition tied to ${profile.risk} or a change in evidence.`,
-          near: [`A feeling that the trade is no longer exciting enough to follow.`, `A rule to review only if the paper trade finishes with a loss.`, `A price move that confirms the learner was probably right.`]
+          prompt: `Which result would be most relevant to the ${title} lesson?`,
+          correct: `A learner can state what ${knowledge.term} means and apply it to a new case.`,
+          near: [`A learner can name the asset with the fastest chart today.`, `A learner can finish without writing down any reason.`, `A learner can repeat a popular opinion from memory.`]
         },
         {
-          prompt: `Which answer best shows topic mastery for ${profile.title}?`,
-          correct: `The learner can explain ${profile.signal}, ${profile.risk}, and the tradeoff.`,
-          near: [`The learner can name the asset and describe why it is interesting.`, `The learner can pick the stronger chart without writing a risk note.`, `The learner can finish the lesson quickly and still pass the quiz.`]
+          prompt: `A post claims, "${knowledge.falseIdea}." What makes that claim unreliable?`,
+          correct: `It skips the conditions and risks that the lesson says still matter.`,
+          near: [`It uses too many words for a short market note.`, `It may be true only when every asset is green.`, `It is fine after the learner completes one quiz.`]
         },
         {
-          prompt: `How should the learner treat a winning paper trade in ${profile.shortName}?`,
-          correct: `Review whether the win came from the thesis or from a lucky move.`,
-          near: [`Use the win as proof and make the next practice trade larger.`, `Keep only the result because the risk note matters less after a win.`, `Assume the thesis was right unless the asset drops the next day.`]
+          prompt: `A paper trade using ${profile.asset} finishes with a gain. What is the most useful journal entry?`,
+          correct: `The original reason, the result, and whether the expected risk appeared.`,
+          near: [`Only the gain, because a winning result explains itself.`, `A new reason invented after seeing the gain.`, `The asset name with no note about the decision.`]
         },
         {
-          prompt: `What is the best final check before advancing from ${profile.title}?`,
-          correct: `Explain the asset, the evidence, the risk, and the next review step.`,
-          near: [`Explain which answer felt most familiar and why the chart looked strong.`, `Explain the biggest possible reward and decide later what could go wrong.`, `Explain why the asset belongs in the module and skip the comparison.`]
+          prompt: `Which sentence best connects ${focus} to a real decision?`,
+          correct: `Use the lesson idea to set a reason, a limit, and a next step.`,
+          near: [`Use the lesson idea only after a trade is already finished.`, `Use the lesson idea to follow the loudest online opinion.`, `Use the lesson idea to ignore a result that feels inconvenient.`]
         }
       ];
       return questions.slice(0, count).map((question, index) => {
@@ -2027,31 +2052,35 @@
 
     function buildSimulationQuestions(number, title, shortName, focus, count) {
       const profile = moduleProfile(number, title, shortName, focus);
+      const knowledge = moduleKnowledge(number);
+      const units = 2 + (number % 4);
+      const unitPrice = 10 + (number * 2);
+      const positionValue = units * unitPrice;
       const simulations = [
         {
-          prompt: `Simulation: ${profile.event}. You have room for one paper trade. What do you do first?`,
-          correct: `Check ${profile.metric}, then enter only if the thesis still fits.`,
-          near: [`Enter now, then use ${profile.metric} to review the trade later.`, `Wait for another price move to confirm the event before writing notes.`, `Choose the asset if its story sounds clearer than the comparison.`]
+          prompt: `Simulation: ${knowledge.example}. What is the best first response?`,
+          correct: knowledge.action,
+          near: [`Act immediately because the event already tells the whole story.`, `Ignore the event until the price returns to its old level.`, `Choose the asset that has the most comments online.`]
         },
         {
-          prompt: `Simulation: ${profile.asset} and ${profile.secondAsset} both look reasonable. What decides it?`,
-          correct: `Pick the one with the clearer evidence, risk, and role in the plan.`,
-          near: [`Pick the one with better recent momentum and review risk afterward.`, `Pick the one that feels easier to explain to another learner.`, `Pick neither until both have the same kind of price movement.`]
+          prompt: `Simulation: You buy ${units} paper units of ${profile.asset} at $${unitPrice} each. What amount is used for the buy?`,
+          correct: `$${positionValue}`,
+          near: [`$${positionValue + unitPrice}`, `$${unitPrice}`, `$${units}`]
         },
         {
-          prompt: `Simulation: Someone argues that ${profile.trap}. How should you respond?`,
-          correct: `Ask what evidence supports the claim and what risk could break it.`,
-          near: [`Agree if the claim matches the latest chart and sounds reasonable.`, `Ask whether the asset is popular enough for a short paper trade.`, `Accept the claim for practice and review only if the result is wrong.`]
+          prompt: `Simulation: A friend says, "${knowledge.falseIdea}." What is the strongest reply?`,
+          correct: `That skips the conditions and risks that still affect the decision.`,
+          near: [`That is enough evidence when the chart is currently green.`, `That becomes true after a profitable paper trade.`, `That matters only when the asset is unfamiliar.`]
         },
         {
-          prompt: `Simulation: Your paper trade is winning, but ${profile.risk}. What should change?`,
-          correct: `Keep the win in context and update the risk note before continuing.`,
-          near: [`Let the win prove the risk was smaller than expected this time.`, `Ignore the risk until it creates an actual paper-trade loss.`, `Move the trade to the completed list and skip the review note.`]
+          prompt: `Simulation: Your ${profile.asset} paper trade is gaining value, but ${knowledge.risk}. What should happen next?`,
+          correct: `Keep the stated limit and record whether the original reason still applies.`,
+          near: [`Remove the limit because the gain proves the risk is gone.`, `Add more units immediately so the gain becomes larger.`, `Delete the original note because the result is positive.`]
         },
         {
-          prompt: `Simulation: The result surprises you after studying ${profile.title}. What is the best review?`,
-          correct: `Compare the surprise with the thesis, evidence, and missed risk.`,
-          near: [`Rewrite the thesis so it matches the result and feels consistent.`, `Mark the result as random because market practice is always uncertain.`, `Repeat the same trade to see whether the surprise happens again.`]
+          prompt: `Simulation: The result surprises you after studying ${title}. What should go in the next journal note?`,
+          correct: `The original reason, the actual result, and a clear update for the next step.`,
+          near: [`A new story that makes the original choice look perfect.`, `Only the final price, because the reason is no longer useful.`, `Nothing until the same surprise happens again.`]
         }
       ];
       return simulations.slice(0, count).map((simulation, index) => {
@@ -2091,22 +2120,36 @@
       for (let i = 0; i < 21; i += 1) {
         const module = modules[i % modules.length];
         const profile = moduleProfile(module.number, module.shortTitle, module.shortTitle.toLowerCase(), module.focus);
+        const knowledge = moduleKnowledge(module.number);
         const id = `big-${testNumber}-mc-${i + 1}`;
+        const units = 2 + (i % 4);
+        const unitPrice = 9 + (module.number * 3);
+        const positionValue = units * unitPrice;
         const variants = [
           {
-            prompt: `Big Test ${testNumber}: Which clue best supports ${profile.asset}?`,
-            correct: `${profile.signal}, checked against ${profile.metric}, supports the idea.`,
-            near: [`${profile.event} supports the idea if the price keeps moving today.`, `The asset name fits the module, so a short paper trade is enough.`, `The story is easier to explain than ${profile.secondAsset}, so it is stronger.`]
+            prompt: `Big Test ${testNumber}: What does "${knowledge.term}" mean?`,
+            correct: knowledge.definition,
+            near: [`A guarantee that an asset will rise after a lesson.`, `A name for any popular market headline.`, `A shortcut that removes the need for a plan.`]
           },
           {
-            prompt: `Big Test ${testNumber}: What is the best warning about ${profile.shortName}?`,
-            correct: `${profile.risk}, especially if the learner cannot explain the review trigger.`,
-            near: [`The asset might be boring if the price does not move after the lesson.`, `The trade might need more XP before the learner can trust the plan.`, `The comparison might take too long when the chart already looks useful.`]
+            prompt: `Big Test ${testNumber}: ${units} paper units of ${profile.asset} cost $${unitPrice} each. What is the total cost?`,
+            correct: `$${positionValue}`,
+            near: [`$${positionValue + unitPrice}`, `$${positionValue - unitPrice}`, `$${unitPrice + units}`]
           },
           {
-            prompt: `Big Test ${testNumber}: Which journal update is strongest after ${profile.event}?`,
-            correct: `The update connects the event, thesis, risk, and what changed afterward.`,
-            near: [`The update records the result first and adds the reason if it wins.`, `The update uses the event as proof and moves to the next module quickly.`, `The update compares excitement and price but leaves out the risk trigger.`]
+            prompt: `Big Test ${testNumber}: Which risk belongs most closely to ${knowledge.term}?`,
+            correct: knowledge.risk,
+            near: [`The lesson card may have a short title.`, `The user may need to scroll to another panel.`, `A chart may have more than one visible range.`]
+          },
+          {
+            prompt: `Big Test ${testNumber}: Which statement about ${knowledge.term} is false?`,
+            correct: knowledge.falseIdea,
+            near: [`The concept can guide a paper-trade decision.`, `The concept can include a possible downside.`, `The concept can be written in a short journal note.`]
+          },
+          {
+            prompt: `Big Test ${testNumber}: Which action applies ${knowledge.term} most directly?`,
+            correct: knowledge.action,
+            near: [`Follow the first popular claim without a reason.`, `Use the asset name as the complete plan.`, `Ignore the lesson after the first price move.`]
           }
         ];
         const variant = variants[i % variants.length];
@@ -2124,22 +2167,28 @@
       for (let i = 0; i < 9; i += 1) {
         const module = modules[i % modules.length];
         const profile = moduleProfile(module.number, module.shortTitle, module.shortTitle.toLowerCase(), module.focus);
+        const knowledge = moduleKnowledge(module.number);
         const id = `big-${testNumber}-sim-${i + 1}`;
         const variants = [
           {
-            prompt: `Simulation ${i + 1}: ${profile.asset} looks exciting, but ${profile.risk}. What is the careful move?`,
-            correct: `Name the risk, compare the evidence, and paper trade only if it still fits.`,
-            near: [`Paper trade first, because the risk can be reviewed after the result.`, `Avoid the trade automatically, because any named risk is too much.`, `Choose it if the possible reward is bigger than the risk sounds.`]
+            prompt: `Simulation ${i + 1}: ${knowledge.example}. What is the best first move?`,
+            correct: knowledge.action,
+            near: [`Act immediately because the event already explains everything.`, `Ignore the event until the chart returns to its old price.`, `Choose the asset with the loudest online discussion.`]
           },
           {
-            prompt: `Simulation ${i + 1}: You must choose between ${profile.asset} and ${profile.secondAsset}. What matters most?`,
-            correct: `Which choice has clearer evidence, risk control, and role in the plan.`,
-            near: [`Which choice has the cleaner story and more recent movement today.`, `Which choice seems easier to explain without writing a full note.`, `Which choice gives more possible reward if everything goes right.`]
+            prompt: `Simulation ${i + 1}: ${profile.asset} is moving up, but ${knowledge.risk}. What should the learner do?`,
+            correct: `Keep the stated limit and record whether the original reason still applies.`,
+            near: [`Remove the limit because the move is positive.`, `Add the largest possible position immediately.`, `Delete the risk note because it feels pessimistic.`]
           },
           {
-            prompt: `Simulation ${i + 1}: New information challenges ${profile.asset}. What should the learner do?`,
-            correct: `Update the thesis if the new fact changes the evidence or risk trigger.`,
-            near: [`Keep the thesis unless the paper trade is already losing points.`, `Change the story only enough to make the original choice look right.`, `Ignore the new fact until another learner confirms it matters.`]
+            prompt: `Simulation ${i + 1}: A friend says, "${knowledge.falseIdea}." What is the best response?`,
+            correct: `That skips the real conditions and risks behind the topic.`,
+            near: [`That is enough proof when the price is rising.`, `That becomes correct after a winning trade.`, `That matters only for unfamiliar assets.`]
+          },
+          {
+            prompt: `Simulation ${i + 1}: A paper trade ends differently from expected. What should be written down?`,
+            correct: `The original reason, the result, and a clear update for the next step.`,
+            near: [`Only the final price, because the plan is now irrelevant.`, `A new reason that makes the outcome look obvious.`, `Nothing until the same result happens again.`]
           }
         ];
         const variant = variants[i % variants.length];
