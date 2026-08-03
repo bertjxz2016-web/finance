@@ -1531,7 +1531,7 @@
             <div class="section-head">
               <div>
                 <h2>Bronze, Silver, Gold tasks</h2>
-                <p class="muted" id="taskGuide">Your daily task board adapts to your return time and streak.</p>
+                <p class="muted" id="taskGuide">Three daily goals: one Bronze, one Silver, and one Gold.</p>
               </div>
             </div>
             <div class="task-grid" id="taskGrid"></div>
@@ -2173,47 +2173,33 @@
       [300, 1150]
     ];
 
-    const TASK_VERSION = "adaptive-task-board-v1";
+    const TASK_VERSION = "three-task-streak-board-v1";
     const taskBank = {
       Bronze: [
-        { id: "crypto-coin", rule: "crypto-coin", rank: 1, text: "Name one crypto coin from the list." },
-        { id: "green-market", rule: "green-market", rank: 1, text: "Name one green market and explain what it is." },
-        { id: "beginner-lesson", rule: "lesson-one", rank: 1, text: "Finish one beginner lesson without skipping." },
-        { id: "market-pair", rule: "market-pair", rank: 1, text: "Name one can-buy national market and one can-buy international market." },
-        { id: "etf-note", rule: "etf-note", rank: 2, text: "Name one can-buy ETF and say what it tracks." },
-        { id: "color-key", rule: "color-key", rank: 2, text: "Sort Bitcoin, QQQ, and OpenAI into the right color key." },
-        { id: "paper-trade", rule: "paper-trade", rank: 2, text: "Make one paper trade using a can-buy asset." },
-        { id: "two-lessons", rule: "lesson-two", rank: 3, text: "Finish two lessons in the learning course." }
+        { id: "lesson-one", metric: "lessons", amount: 1, rank: 1, text: "Complete 1 lesson in the learning course." },
+        { id: "lesson-two", metric: "lessons", amount: 2, rank: 2, text: "Complete 2 lessons in the learning course." },
+        { id: "lesson-three", metric: "lessons", amount: 3, rank: 3, text: "Complete 3 lessons in the learning course." },
+        { id: "lesson-four", metric: "lessons", amount: 4, rank: 4, text: "Complete 4 lessons in the learning course." }
       ],
       Silver: [
-        { id: "watchlist", rule: "watchlist", rank: 1, text: "Build a 3-item paper watchlist with at least one ETF." },
-        { id: "tesla-toyota", rule: "tesla-toyota", rank: 1, text: "Compare Tesla and Toyota in two short notes." },
-        { id: "penny-risk", rule: "penny-risk", rank: 1, text: "Pick penny markets and write one risk note for each choice." },
-        { id: "market-pair-compare", rule: "market-pair", rank: 1, text: "Find one international stock and one national stock to compare." },
-        { id: "quiz", rule: "quiz-one", rank: 2, text: "Pass a quiz after reviewing national indexes." },
-        { id: "crypto-compare", rule: "crypto-compare", rank: 2, text: "Compare two crypto coins in two short notes." },
-        { id: "two-lessons", rule: "lesson-two", rank: 2, text: "Finish two lessons before submitting this task." },
-        { id: "two-holdings", rule: "holdings-two", rank: 2, text: "Build paper positions in two different can-buy markets." },
-        { id: "two-quizzes", rule: "quiz-two", rank: 3, text: "Finish two module quizzes." }
+        { id: "lesson-two", metric: "lessons", amount: 2, rank: 1, text: "Complete 2 lessons, including every practice question." },
+        { id: "lesson-three", metric: "lessons", amount: 3, rank: 2, text: "Complete 3 lessons, including every practice question." },
+        { id: "lesson-five", metric: "lessons", amount: 5, rank: 3, text: "Complete 5 lessons in the learning course." },
+        { id: "perfect-quiz", metric: "perfectQuizzes", amount: 1, rank: 4, text: "Earn 100% on 1 module quiz." }
       ],
       Gold: [
-        { id: "balanced-portfolio", rule: "portfolio-balanced", rank: 2, text: "Create a paper portfolio with crypto, national, and international markets." },
-        { id: "holding-economy", rule: "holding-economy", rank: 2, text: "Explain why VIX and private stocks are marked as holding economy." },
-        { id: "perfect-quiz", rule: "perfect-quiz-one", rank: 2, text: "Score 100% on a quiz after finishing a 10-lesson module." },
-        { id: "penny-risk-plan", rule: "penny-risk", rank: 3, text: "Write a risk note for every penny-market pick." },
-        { id: "final-test", rule: "final-test-one", rank: 3, text: "Complete a final test and correct every missed answer." },
-        { id: "two-quizzes", rule: "quiz-two", rank: 3, text: "Finish two quizzes in different modules." },
-        { id: "two-holdings", rule: "holdings-two", rank: 3, text: "Build paper positions in two different markets and review them." },
-        { id: "four-holdings", rule: "holdings-four", rank: 4, text: "Build paper positions in four different markets." },
-        { id: "two-perfect-quizzes", rule: "perfect-quiz-two", rank: 4, text: "Earn 100% on quizzes in two different modules." },
-        { id: "two-final-tests", rule: "final-test-two", rank: 4, text: "Finish two final tests in the course." }
+        { id: "lesson-three", metric: "lessons", amount: 3, rank: 1, text: "Complete 3 lessons in the learning course." },
+        { id: "lesson-four", metric: "lessons", amount: 4, rank: 2, text: "Complete 4 lessons in the learning course." },
+        { id: "module-quiz", metric: "quizzes", amount: 1, rank: 3, text: "Complete 1 module quiz." },
+        { id: "final-test", metric: "finalTests", amount: 1, rank: 4, text: "Complete 1 final test." }
       ]
     };
     const taskProfiles = {
-      return: { id: "return", maxRank: 1, counts: { Bronze: 4, Silver: 2, Gold: 0 }, guide: "Welcome back. You were away for a while, so today has 6 easier restart tasks." },
-      standard: { id: "standard", maxRank: 2, counts: { Bronze: 3, Silver: 3, Gold: 3 }, guide: "You have 9 mixed daily tasks across Bronze, Silver, and Gold." },
-      streak: { id: "streak", maxRank: 3, counts: { Bronze: 2, Silver: 3, Gold: 5 }, guide: "Your streak unlocked a tougher 10-task board with more Gold challenges." },
-      mastery: { id: "mastery", maxRank: 4, counts: { Bronze: 2, Silver: 3, Gold: 6 }, guide: "Your long streak unlocked an 11-task mastery board with extra Gold challenges." }
+      returning: { id: "returning", rank: 1, guide: "Welcome back. Your three daily goals are in the easier restart range." },
+      starter: { id: "starter", rank: 1, guide: "Starter range: complete one Bronze, one Silver, and one Gold goal." },
+      building: { id: "building", rank: 2, guide: "Building range: today's three goals need more course progress." },
+      advanced: { id: "advanced", rank: 3, guide: "Advanced range: today's goals include a module quiz challenge." },
+      mastery: { id: "mastery", rank: 4, guide: "Mastery range: today's Gold goal is a final test challenge." }
     };
 
     const taskXp = { Bronze: 35, Silver: 60, Gold: 110 };
@@ -2257,6 +2243,7 @@
         portfolio: { holdings: {} },
         taskDay: "",
         taskLastSeenDay: "",
+        taskStreak: 0,
         taskProfile: "",
         taskVersion: TASK_VERSION,
         completed: {},
@@ -3902,12 +3889,19 @@
       return Math.max(0, Math.floor((todayStart - thenStart) / 86400000));
     }
 
-    function currentTaskProfile() {
-      const daysAway = taskDaysAway(state.taskLastSeenDay || state.taskDay || state.claimed.daily);
-      if (daysAway >= 7) return taskProfiles.return;
-      if (state.streak >= 28) return taskProfiles.mastery;
-      if (state.streak >= 14) return taskProfiles.streak;
-      return taskProfiles.standard;
+    function nextTaskStreak(daysAway) {
+      const savedStreak = Math.max(0, Number(state.taskStreak) || 0);
+      if (daysAway === 1) return savedStreak + 1;
+      if (daysAway > 1) return 1;
+      return Math.max(savedStreak, 1);
+    }
+
+    function currentTaskProfile(daysAway = taskDaysAway(state.taskLastSeenDay || state.taskDay || state.claimed.daily), taskStreak = nextTaskStreak(daysAway)) {
+      if (daysAway >= 7) return taskProfiles.returning;
+      if (taskStreak >= 28) return taskProfiles.mastery;
+      if (taskStreak >= 14) return taskProfiles.advanced;
+      if (taskStreak >= 7) return taskProfiles.building;
+      return taskProfiles.starter;
     }
 
     function taskProfileFromState() {
@@ -3923,25 +3917,34 @@
       return copy;
     }
 
-    function taskTemplatesFor(level, count, maxRank) {
-      const pool = taskBank[level].filter(task => task.rank <= maxRank);
-      return shuffleTasks(pool).slice(0, count);
+    function taskTemplateFor(level, rank) {
+      const exactRank = taskBank[level].filter(task => task.rank === rank);
+      const fallback = taskBank[level].filter(task => task.rank <= rank);
+      return shuffleTasks(exactRank.length ? exactRank : fallback)[0];
     }
 
     function generateTasks() {
       const today = new Date().toDateString();
-      const profile = currentTaskProfile();
-      state.tasks = Object.entries(profile.counts).flatMap(([level, count]) => taskTemplatesFor(level, count, profile.maxRank).map(template => ({
-        id: `${template.id}-${level}-${today}`,
-        level,
-        text: template.text,
-        rule: template.rule,
-        xp: taskXp[level],
-        done: false,
-        proof: ""
-      })));
+      const daysAway = taskDaysAway(state.taskLastSeenDay || state.taskDay || state.claimed.daily);
+      const taskStreak = nextTaskStreak(daysAway);
+      const profile = currentTaskProfile(daysAway, taskStreak);
+      state.tasks = Object.keys(taskXp).map(level => {
+        const template = taskTemplateFor(level, profile.rank);
+        const start = taskMetricValue(template.metric);
+        return {
+          id: `${template.id}-${level}-${today}`,
+          level,
+          text: template.text,
+          metric: template.metric,
+          target: start + template.amount,
+          xp: taskXp[level],
+          done: false,
+          proof: ""
+        };
+      });
       state.taskDay = today;
       state.taskLastSeenDay = today;
+      state.taskStreak = taskStreak;
       state.taskProfile = profile.id;
       state.taskVersion = TASK_VERSION;
       saveState();
@@ -3952,7 +3955,8 @@
       const grid = document.getElementById("taskGrid");
       const profile = taskProfileFromState();
       const completed = state.tasks.filter(task => task.done).length;
-      document.getElementById("taskGuide").textContent = `${profile.guide} ${completed}/${state.tasks.length} complete today.`;
+      const streakLabel = `${state.taskStreak || 1}-day daily task streak`;
+      document.getElementById("taskGuide").textContent = `${profile.guide} ${streakLabel}. ${completed}/3 complete today.`;
       grid.innerHTML = state.tasks.map(task => `
         <article class="card task ${task.level.toLowerCase()}">
           <div>
@@ -3995,17 +3999,12 @@
     }
 
     function taskActivityType(task) {
-      const activityRules = new Set([
-        "lesson-one", "lesson-two", "paper-trade", "quiz-one", "quiz-two",
-        "perfect-quiz-one", "perfect-quiz-two", "final-test-one", "final-test-two",
-        "holdings-two", "holdings-four", "portfolio-balanced"
-      ]);
-      return activityRules.has(task.rule) ? task.rule : "";
+      return task.metric || "";
     }
 
     function ensureDailyTasks() {
       const today = new Date().toDateString();
-      const valid = state.taskVersion === TASK_VERSION && Array.isArray(state.tasks) && state.tasks.length >= 6 && state.tasks.every(task => task.rule && task.level && typeof task.done === "boolean");
+      const valid = state.taskVersion === TASK_VERSION && Array.isArray(state.tasks) && state.tasks.length === 3 && state.tasks.every(task => task.metric && Number.isFinite(Number(task.target)) && task.level && typeof task.done === "boolean");
       if (state.taskDay !== today || !valid) {
         generateTasks();
         return;
@@ -4067,6 +4066,14 @@
       return courseItems.filter(item => item.kind === "bigTest" && getProgress(item.id).testDone).length;
     }
 
+    function taskMetricValue(metric) {
+      if (metric === "lessons") return taskCompletedLessons();
+      if (metric === "quizzes") return taskCompletedQuizzes();
+      if (metric === "perfectQuizzes") return taskPerfectQuizzes();
+      if (metric === "finalTests") return taskCompletedFinalTests();
+      return 0;
+    }
+
     function taskHeldCategories() {
       const positiveSymbols = new Set(Object.entries(state.portfolio.holdings || {}).filter(([, holding]) => Number(holding.units) > 0).map(([symbol]) => symbol));
       return new Set(markets.filter(group => group.items.some(([, , , symbol]) => positiveSymbols.has(symbol))).map(group => group.category));
@@ -4077,6 +4084,9 @@
     }
 
     function taskProofIsValid(task, proof) {
+      if (task.metric) {
+        return taskCheck(taskMetricValue(task.metric) >= Number(task.target), "Finish the listed learning activity after today's task board opened, then check progress again.");
+      }
       const rule = task.rule;
       if (rule === "paper-trade") return taskCheck(Boolean(state.claimed.trade), "Make a paper trade first, then check progress again.");
       if (rule === "lesson-one") return taskCheck(taskCompletedLessons() >= 1, "Finish one lesson first, then check progress again.");
