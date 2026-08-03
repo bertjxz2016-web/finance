@@ -3411,7 +3411,6 @@
     }
 
     function lessonTemplate(module, progress) {
-      ensureActivityTimer(progress, "lessonStartedAt");
       const lessonInfo = currentLesson(module, progress);
       const pages = lessonPagesFor(module, progress);
       const queue = getLessonQueue(module, progress);
@@ -3662,8 +3661,10 @@
       const module = courseModules.find(item => item.id === moduleId);
       if (!module || state.completed[module.id]) return;
       const progress = getProgress(module.id);
-      if (!progress.lessonStartedAt) progress.lessonStartedAt = Date.now();
+      const pages = lessonPagesFor(module, progress);
       const queue = getLessonQueue(module, progress);
+      const firstQuestionClick = progress.lessonPage === 0 && queue.length === pages.length;
+      if (firstQuestionClick || !progress.lessonStartedAt) progress.lessonStartedAt = Date.now();
       progress.lastMiss = null;
       queue.shift();
       progress.lessonPage += 1;
