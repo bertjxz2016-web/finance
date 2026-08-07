@@ -2318,6 +2318,7 @@
     let marketChartRequest = 0;
     let tradeState = null;
     let skipChallengeTimer = 0;
+    let courseOverviewMode = false;
 
     function defaultState() {
       return {
@@ -3349,7 +3350,8 @@
       const nextItem = courseItems.find(item => !state.completed[item.id]) || courseItems[courseItems.length - 1];
       const activeItem = getActiveCourseItem(nextItem);
       const learnPanel = document.querySelector('[data-panel="learn"]');
-      const lessonMode = !learnPanel.classList.contains("hidden") && activeItem.kind === "module" && !getProgress(activeItem.id).lessonDone;
+      const activeProgress = activeItem.kind === "module" ? getProgress(activeItem.id) : null;
+      const lessonMode = !learnPanel.classList.contains("hidden") && activeItem.kind === "module" && !activeProgress.lessonDone && !activeProgress.activityResult && !courseOverviewMode;
       document.querySelector('[data-panel="learn"]').classList.toggle("lesson-mode", lessonMode);
       document.getElementById("dashboard").classList.toggle("lesson-focus", lessonMode);
 
@@ -3378,6 +3380,9 @@
       panel.querySelectorAll("[data-next-lesson]").forEach(button => {
         button.addEventListener("click", () => advanceLesson(button.dataset.nextLesson));
       });
+      panel.querySelectorAll("[data-quit-lesson]").forEach(button => {
+        button.addEventListener("click", () => quitCurrentLesson(button.dataset.quitLesson));
+      });
       panel.querySelectorAll("[data-start-module-skip]").forEach(button => {
         button.addEventListener("click", () => startModuleSkip(button.dataset.startModuleSkip));
       });
@@ -3399,6 +3404,7 @@
       path.querySelectorAll("[data-course]").forEach(button => {
         button.addEventListener("click", () => {
           state.activeCourseId = button.dataset.course;
+          courseOverviewMode = false;
           saveState();
           renderCourse();
         });
@@ -3537,7 +3543,8 @@
         </div>
         <div class="actions">
           <button class="btn green" data-next-lesson="${module.id}">Start 8 questions</button>
-          <button class="btn secondary" data-start-module-skip="${module.id}">Skip module: 30-question challenge</button>
+          ${canSkipModule(progress) ? `<button class="btn secondary" data-start-module-skip="${module.id}">Skip module: 30-question challenge</button>` : ""}
+          <button class="btn secondary" data-quit-lesson="${module.id}">Quit lesson</button>
         </div>
       `;
     }
@@ -3592,8 +3599,15 @@
             ${practice.options.map((option, index) => `<button class="quiz-option" data-module="${module.id}" data-page="${pageIndex}" data-lesson-answer="${index}">${option}</button>`).join("")}
           </div>
         </div>
-        <button class="btn secondary" data-start-module-skip="${module.id}">Skip module: 30-question challenge</button>
+        <div class="actions">
+          ${canSkipModule(progress) ? `<button class="btn secondary" data-start-module-skip="${module.id}">Skip module: 30-question challenge</button>` : ""}
+          <button class="btn secondary" data-quit-lesson="${module.id}">Quit lesson</button>
+        </div>
       `;
+    }
+
+    function canSkipModule(progress) {
+      return !progress.skipped && !progress.lessonDone && Number(progress.completedLessons || 0) > 0;
     }
 
     function moduleSkipTemplate(module, progress) {
@@ -3829,6 +3843,7 @@
     function advanceLesson(moduleId) {
       const module = courseModules.find(item => item.id === moduleId);
       if (!module || state.completed[module.id]) return;
+      courseOverviewMode = false;
       const progress = getProgress(module.id);
       const pages = lessonPagesFor(module, progress);
       const queue = getLessonQueue(module, progress);
@@ -3849,6 +3864,11 @@
       const module = courseModules.find(item => item.id === moduleId);
       if (!module || state.completed[module.id]) return;
       const progress = getProgress(module.id);
+      if (!canSkipModule(progress)) {
+        showToast("Finish one lesson in this module before starting its skip challenge.");
+        return;
+      }
+      courseOverviewMode = false;
       progress.skipActive = true;
       progress.skipIndex = 0;
       progress.skipCorrect = 0;
@@ -3857,6 +3877,24 @@
       progress.activityResult = null;
       saveState();
       renderCourse();
+    }
+
+    function quitCurrentLesson(moduleId) {
+      const module = courseModules.find(item => item.id === moduleId);
+      if (!module || state.completed[module.id]) return;
+      const progress = getProgress(module.id);
+      progress.queueLessonIndex = null;
+      progress.lessonPage = 0;
+      progress.lessonQueue = null;
+      progress.lessonRetryQueue = [];
+      progress.lessonCorrect = [];
+      progress.lessonMisses = [];
+      progress.lessonStartedAt = 0;
+      progress.lastMiss = null;
+      courseOverviewMode = true;
+      saveState();
+      renderCourse();
+      showToast("Lesson quit. No XP was awarded.");
     }
 
     function markSkipAnswerButtons(answerIndex, correctIndex) {
@@ -4108,6 +4146,7 @@
           progress.lessonDone = true;
           progress.lessonPage = lessonPagesFor(item, progress).length - 1;
         }
+        courseOverviewMode = false;
       } else if (result.kind === "skipFailed") {
         progress.activityResult = null;
         progress.skipIndex = 0;
@@ -4115,13 +4154,16 @@
         progress.skipMisses = 0;
         progress.skipStartedAt = 0;
         state.activeCourseId = item.id;
+        courseOverviewMode = true;
       } else if (result.kind === "moduleSkip") {
         progress.activityResult = null;
         progress.skipStartedAt = 0;
         state.activeCourseId = getNextCourseId(item.id);
+        courseOverviewMode = false;
       } else {
         progress.activityResult = null;
         state.activeCourseId = getNextCourseId(item.id);
+        courseOverviewMode = false;
       }
       saveState();
       renderAll();
