@@ -3466,6 +3466,7 @@
         skipCorrect: 0,
         skipMisses: 0,
         skipStartedAt: 0,
+        skipEligible: false,
         activityResult: null
       };
       state.courseProgress[itemId] = { ...defaults, ...(state.courseProgress[itemId] || {}) };
@@ -3543,7 +3544,6 @@
         </div>
         <div class="actions">
           <button class="btn green" data-next-lesson="${module.id}">Start 8 questions</button>
-          ${canSkipModule(progress) ? `<button class="btn secondary" data-start-module-skip="${module.id}">Skip module: 30-question challenge</button>` : ""}
           <button class="btn secondary" data-quit-lesson="${module.id}">Quit lesson</button>
         </div>
       `;
@@ -3600,14 +3600,13 @@
           </div>
         </div>
         <div class="actions">
-          ${canSkipModule(progress) ? `<button class="btn secondary" data-start-module-skip="${module.id}">Skip module: 30-question challenge</button>` : ""}
           <button class="btn secondary" data-quit-lesson="${module.id}">Quit lesson</button>
         </div>
       `;
     }
 
     function canSkipModule(progress) {
-      return !progress.skipped && !progress.lessonDone && Number(progress.completedLessons || 0) > 0;
+      return !progress.skipped && !progress.lessonDone && progress.skipEligible === true && progress.activityResult?.kind === "lesson";
     }
 
     function moduleSkipTemplate(module, progress) {
@@ -3807,6 +3806,9 @@
     }
 
     function activityResultTemplate(item, result) {
+      const skipAction = item.kind === "module" && canSkipModule(getProgress(item.id))
+        ? `<button class="btn secondary" data-start-module-skip="${item.id}">Skip module: 30-question challenge</button>`
+        : "";
       return `
         <div class="section-head" style="margin-bottom:0">
           <div>
@@ -3835,7 +3837,10 @@
             </div>
           </div>
           <p class="lesson-body">${result.xpNote}</p>
-          <button class="btn green" data-continue-result="${item.id}">${result.nextLabel}</button>
+          <div class="actions">
+            <button class="btn green" data-continue-result="${item.id}">${result.nextLabel}</button>
+            ${skipAction}
+          </div>
         </div>
       `;
     }
@@ -3865,10 +3870,11 @@
       if (!module || state.completed[module.id]) return;
       const progress = getProgress(module.id);
       if (!canSkipModule(progress)) {
-        showToast("Finish one lesson in this module before starting its skip challenge.");
+        showToast("Finish a lesson, then choose the skip challenge from its results screen.");
         return;
       }
       courseOverviewMode = false;
+      progress.skipEligible = false;
       progress.skipActive = true;
       progress.skipIndex = 0;
       progress.skipCorrect = 0;
@@ -4043,6 +4049,7 @@
         xpNote: `${formatXpPart(reward.accuracyXp)} accuracy XP + ${formatXpPart(reward.speedXp)} speed XP. ${reward.overtimeSeconds ? `${reward.overtimeSeconds} XP was removed for time after 2 minutes.` : "Finished within 2 minutes, so no speed XP was removed."} Missed questions count as extra attempts.`,
         nextLabel: lessonInfo.index + 1 < lessonInfo.total ? "Continue to next lesson" : "Continue to module quiz"
       };
+      progress.skipEligible = true;
       addXp(reward.totalXp, `${module.shortTitle} ${lessonInfo.lesson.title}`);
       saveState();
       renderAll();
@@ -4132,6 +4139,7 @@
       if (result.kind === "lesson") {
         const lessonInfo = currentLesson(item, progress);
         progress.activityResult = null;
+        progress.skipEligible = false;
         progress.lessonStartedAt = 0;
         progress.lastMiss = null;
         if (lessonInfo.index + 1 < lessonInfo.total) {
