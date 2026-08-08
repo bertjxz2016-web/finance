@@ -2713,7 +2713,8 @@
             showToast("Type a Yahoo symbol first.");
             return;
           }
-          openMarketChart({ name: symbol, status: "can", note: "Custom Yahoo symbol", symbol });
+          const knownAsset = markets.flatMap(group => group.items).find(([, , , ticker]) => ticker === symbol);
+          openMarketChart({ name: symbol, status: "can", note: knownAsset ? knownAsset[2] : "Stock", symbol });
         });
       }
     }
