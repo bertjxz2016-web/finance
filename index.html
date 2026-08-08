@@ -2750,7 +2750,8 @@
             return;
           }
           const exactNameAsset = findMarketAssetBySearch(query, false);
-          const exactTickerAsset = query === query.toUpperCase() ? findMarketAssetBySearch(query, true) : null;
+          const ticker = query.toUpperCase();
+          const exactTickerAsset = findMarketAssetBySearch(ticker, true);
           const knownAsset = exactNameAsset || exactTickerAsset;
           if (knownAsset?.sourceUrl) {
             openPrivateMarketResult(knownAsset);
@@ -2760,8 +2761,8 @@
             openMarketChart(knownAsset);
             return;
           }
-          if (/^[A-Z^][A-Z0-9.^-]{0,9}$/.test(query)) {
-            openMarketChart({ name: query, status: "can", note: "Stock", symbol: query });
+          if (/^[A-Z^][A-Z0-9.^-]{0,9}$/.test(ticker)) {
+            openMarketChart({ name: ticker, status: "can", note: "Stock", symbol: ticker });
             return;
           }
           showToast("No exact match. Enter the complete company name or exact ticker.");
