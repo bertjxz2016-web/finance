@@ -3493,7 +3493,19 @@
     }
 
     function lessonPagesFor(module, progress) {
-      return currentLesson(module, progress).lesson.pages;
+      const pages = currentLesson(module, progress).lesson.pages;
+      const level = state.profile.level || "Beginner";
+      return pages.map(page => {
+        if (page.type === "text" || level === "Beginner") return page;
+        const prefix = level === "Expert"
+          ? "Expert challenge: compare the evidence, tradeoff, and risk. "
+          : "Intermediate challenge: explain the reason and the risk. ";
+        return {
+          ...page,
+          prompt: `${prefix}${page.prompt}`,
+          explanation: `${prefix}${page.explanation || "Review the lesson idea and connect it to the decision."}`
+        };
+      });
     }
 
     function coursePanelTemplate(item) {
@@ -4528,6 +4540,7 @@
         saveState();
         generateTasks();
         renderTasks();
+        renderCourse();
         renderStats();
         renderSettings();
         showToast("Profile updated.");
