@@ -1589,13 +1589,13 @@
         ["Dogecoin", "can", "Crypto", "DOGE-USD"]
       ]},
       { category: "National", icon: "US", items: [
-        ["S&P 500", "cant", "ETF chart", "SPY"],
-        ["Dow 30", "cant", "ETF chart", "DIA"],
-        ["Russell 2000", "cant", "ETF chart", "IWM"],
-        ["Nasdaq", "cant", "ETF chart", "QQQ"],
+        ["S&P 500", "cant", "Market index", "SPY"],
+        ["Dow 30", "cant", "Market index", "DIA"],
+        ["Russell 2000", "cant", "Market index", "IWM"],
+        ["Nasdaq", "cant", "Market index", "QQQ"],
         ["Berkshire Hathaway", "can", "Stock", "BRK-B"],
         ["QQQ", "can", "ETF", "QQQ"],
-        ["Gold", "can", "ETF chart", "GLD"],
+        ["Gold", "can", "ETF", "GLD"],
         ["VIX", "cant", "Volatility index", "^VIX"],
         ["SpaceX", "can", "Stock", "SPCX"],
         ["Tesla, Inc.", "can", "Stock", "TSLA"]
@@ -1626,15 +1626,15 @@
         ["Toyota Motor Corporation", "can", "Stock", "TM"],
         ["Alibaba Group Holding", "can", "Stock", "BABA"],
         ["Tencent Holdings", "can", "Stock", "TCEHY"],
-        ["Nestlé", "can", "Stock"],
+        ["Nestlé", "can", "Stock", "NSRGY"],
         ["Taiwan Semiconductor Manufacturing Company", "can", "Stock", "TSM"],
         ["Samsung Electronics", "can", "Stock", "005930.KS"],
         ["Nintendo", "can", "Stock", "NTDOY"],
         ["Sony Group Corporation", "can", "Stock", "SONY"],
         ["Baidu", "can", "Stock", "BIDU"],
         ["NetEase", "can", "Stock", "NTES"],
-        ["Hermès", "can", "Stock"],
-        ["L'Oréal", "can", "Stock"],
+        ["Hermès", "can", "Stock", "HESAY"],
+        ["L'Oréal", "can", "Stock", "LRLCY"],
         ["Novo Nordisk", "can", "Stock", "NVO"]
       ]}
     ];
@@ -3053,10 +3053,12 @@
     }
 
     function assetTemplate(name, status, note, symbol, sourceUrl) {
-      const label = status === "can" ? "Buy" : "Hold";
+      const canTrade = !sourceUrl && !/index/i.test(note);
+      const displayStatus = canTrade ? "can" : "cant";
+      const label = canTrade ? "Buy" : "Hold";
       const action = sourceUrl
         ? `<a class="asset-action forge" href="${escapeAttr(sourceUrl)}" target="_blank" rel="noopener" aria-label="View ${escapeAttr(name)} on Forge">View Forge</a>`
-        : status === "can"
+        : canTrade
           ? `<div class="asset-actions">
               <button class="asset-action buy" data-trade-side="buy" data-trade-name="${escapeAttr(name)}" data-trade-note="${escapeAttr(note)}" data-trade-symbol="${escapeAttr(symbol || "")}" data-trade-category="${escapeAttr(note)}">Buy</button>
               <button class="asset-action sell" data-trade-side="sell" data-trade-name="${escapeAttr(name)}" data-trade-note="${escapeAttr(note)}" data-trade-symbol="${escapeAttr(symbol || "")}" data-trade-category="${escapeAttr(note)}">Sell</button>
@@ -3064,7 +3066,7 @@
           : `<button class="asset-action hold" disabled>${label}</button>`;
       const chartAttrs = symbol ? ` data-chart="${escapeAttr(symbol)}" data-chart-name="${escapeAttr(name)}" role="button" tabindex="0"` : "";
       return `
-        <div class="asset ${status}${symbol ? " has-chart" : ""}"${chartAttrs}>
+        <div class="asset ${displayStatus}${symbol ? " has-chart" : ""}"${chartAttrs}>
           <span class="marker"></span>
           <div><strong>${name}</strong><small>${note}</small></div>
           ${action}
