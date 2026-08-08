@@ -4257,6 +4257,13 @@
       return Math.max(savedStreak, 1);
     }
 
+    function learnerAgeProfile() {
+      const age = Number(state.profile.age);
+      if (age > 0 && age < 13) return { id: "youth", scale: 0.5, guide: "Shorter practice goals with clear examples" };
+      if (age > 0 && age < 18) return { id: "teen", scale: 1, guide: "Practical practice goals with real-world examples" };
+      return { id: "adult", scale: 1.25, guide: "Full practice goals with deeper applications" };
+    }
+
     function currentTaskProfile(daysAway = taskDaysAway(state.taskLastSeenDay || state.taskDay || state.claimed.daily), taskStreak = nextTaskStreak(daysAway)) {
       let profile = taskProfiles.starter;
       if (daysAway >= 7) profile = taskProfiles.returning;
@@ -4266,8 +4273,9 @@
       const levelRank = { Beginner: 1, Intermediate: 2, Expert: 4 }[state.profile.level] || 1;
       const age = Number(state.profile.age);
       const rank = Math.max(profile.rank, levelRank);
-      const learnerLabel = `${state.profile.level || "Beginner"} path${age ? ` for age ${age}` : ""}`;
-      return { ...profile, rank, guide: `${profile.guide} ${learnerLabel}.` };
+      const ageProfile = learnerAgeProfile();
+      const learnerLabel = `${state.profile.level || "Beginner"} reasoning for age ${age || "learner"}`;
+      return { ...profile, rank, guide: `${profile.guide} ${ageProfile.guide}. ${learnerLabel}.` };
     }
 
     function taskProfileFromState() {
@@ -4297,15 +4305,17 @@
       const daysAway = taskDaysAway(state.taskLastSeenDay || state.taskDay || state.claimed.daily);
       const taskStreak = nextTaskStreak(daysAway);
       const profile = currentTaskProfile(daysAway, taskStreak);
+      const ageProfile = learnerAgeProfile();
       state.tasks = Object.keys(taskXp).map(level => {
         const template = taskTemplateFor(level, profile.rank);
         const start = taskMetricValue(template.metric);
+        const targetAmount = Math.max(1, Math.ceil(template.amount * ageProfile.scale));
         return {
           id: `${template.id}-${level}-${today}`,
           level,
-          text: template.text,
+          text: `${ageProfile.guide}: ${template.text}`,
           metric: template.metric,
-          target: start + template.amount,
+          target: start + targetAmount,
           xp: taskXp[level],
           done: false,
           proof: ""
