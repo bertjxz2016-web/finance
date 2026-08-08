@@ -3470,7 +3470,11 @@
         activityResult: null
       };
       state.courseProgress[itemId] = { ...defaults, ...(state.courseProgress[itemId] || {}) };
-      return state.courseProgress[itemId];
+      const progress = state.courseProgress[itemId];
+      if (Number(progress.completedLessons || 0) > 0 && !progress.lessonDone && !progress.skipped) {
+        progress.skipEligible = true;
+      }
+      return progress;
     }
 
     function currentLesson(module, progress) {
@@ -3544,6 +3548,7 @@
         </div>
         <div class="actions">
           <button class="btn green" data-next-lesson="${module.id}">Start 8 questions</button>
+          ${canSkipModule(progress) ? `<button class="btn secondary" data-start-module-skip="${module.id}">Skip module: 30-question challenge</button>` : ""}
           <button class="btn secondary" data-quit-lesson="${module.id}">Quit lesson</button>
         </div>
       `;
@@ -3600,13 +3605,14 @@
           </div>
         </div>
         <div class="actions">
+          ${canSkipModule(progress) ? `<button class="btn secondary" data-start-module-skip="${module.id}">Skip module: 30-question challenge</button>` : ""}
           <button class="btn secondary" data-quit-lesson="${module.id}">Quit lesson</button>
         </div>
       `;
     }
 
     function canSkipModule(progress) {
-      return !progress.skipped && !progress.lessonDone && progress.skipEligible === true && progress.activityResult?.kind === "lesson";
+      return !progress.skipped && !progress.lessonDone && progress.skipEligible === true;
     }
 
     function moduleSkipTemplate(module, progress) {
@@ -3874,7 +3880,6 @@
         return;
       }
       courseOverviewMode = false;
-      progress.skipEligible = false;
       progress.skipActive = true;
       progress.skipIndex = 0;
       progress.skipCorrect = 0;
@@ -4139,7 +4144,6 @@
       if (result.kind === "lesson") {
         const lessonInfo = currentLesson(item, progress);
         progress.activityResult = null;
-        progress.skipEligible = false;
         progress.lessonStartedAt = 0;
         progress.lastMiss = null;
         if (lessonInfo.index + 1 < lessonInfo.total) {
