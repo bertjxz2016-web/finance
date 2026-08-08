@@ -2598,6 +2598,8 @@
         ${error ? `<p class="muted" style="margin-top:8px">${error}</p>` : ""}
         ${symbolSearchTemplate(asset.symbol)}
         <div class="chart-actions">
+          <button class="btn green" data-chart-trade="buy" type="button">Buy</button>
+          <button class="btn secondary" data-chart-trade="sell" type="button">Sell</button>
           <a class="btn secondary" href="${yahooQuoteUrl(asset.symbol)}" target="_blank" rel="noopener">Open Yahoo</a>
           <button class="btn secondary" id="refreshChartBtn">Refresh chart</button>
         </div>
@@ -2698,6 +2700,9 @@
       });
       const refresh = panel.querySelector("#refreshChartBtn");
       if (refresh) refresh.addEventListener("click", () => fetchMarketChart(marketChartState.asset));
+      panel.querySelectorAll("[data-chart-trade]").forEach(button => {
+        button.addEventListener("click", () => openTradePage(marketChartState.asset, button.dataset.chartTrade));
+      });
       const search = panel.querySelector("#symbolSearch");
       if (search) {
         search.addEventListener("submit", event => {
