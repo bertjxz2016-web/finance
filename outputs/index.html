@@ -4246,7 +4246,7 @@
       const levelRank = { Beginner: 1, Intermediate: 2, Expert: 4 }[state.profile.level] || 1;
       const age = Number(state.profile.age);
       const ageRank = age > 0 && age < 13 ? 1 : age > 0 && age < 18 ? 2 : 4;
-      const rank = Math.min(profile.rank, levelRank, ageRank);
+      const rank = Math.min(Math.max(profile.rank, levelRank), ageRank);
       const learnerLabel = `${state.profile.level || "Beginner"} path${age ? ` for age ${age}` : ""}`;
       return { ...profile, rank, guide: `${profile.guide} ${learnerLabel}.` };
     }
