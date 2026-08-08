@@ -4238,15 +4238,24 @@
     }
 
     function currentTaskProfile(daysAway = taskDaysAway(state.taskLastSeenDay || state.taskDay || state.claimed.daily), taskStreak = nextTaskStreak(daysAway)) {
-      if (daysAway >= 7) return taskProfiles.returning;
-      if (taskStreak >= 28) return taskProfiles.mastery;
-      if (taskStreak >= 14) return taskProfiles.advanced;
-      if (taskStreak >= 7) return taskProfiles.building;
-      return taskProfiles.starter;
+      let profile = taskProfiles.starter;
+      if (daysAway >= 7) profile = taskProfiles.returning;
+      else if (taskStreak >= 28) profile = taskProfiles.mastery;
+      else if (taskStreak >= 14) profile = taskProfiles.advanced;
+      else if (taskStreak >= 7) profile = taskProfiles.building;
+      const levelRank = { Beginner: 1, Intermediate: 2, Expert: 4 }[state.profile.level] || 1;
+      const age = Number(state.profile.age);
+      const ageRank = age > 0 && age < 13 ? 1 : age > 0 && age < 18 ? 2 : 4;
+      const rank = Math.min(profile.rank, levelRank, ageRank);
+      const learnerLabel = `${state.profile.level || "Beginner"} path${age ? ` for age ${age}` : ""}`;
+      return { ...profile, rank, guide: `${profile.guide} ${learnerLabel}.` };
     }
 
     function taskProfileFromState() {
-      return Object.values(taskProfiles).find(profile => profile.id === state.taskProfile) || currentTaskProfile();
+      return currentTaskProfile(
+        taskDaysAway(state.taskLastSeenDay || state.taskDay || state.claimed.daily),
+        Math.max(1, Number(state.taskStreak) || 1)
+      );
     }
 
     function shuffleTasks(items) {
@@ -4517,6 +4526,7 @@
         state.profile.age = String(age);
         state.profile.level = level;
         saveState();
+        renderTasks();
         renderStats();
         renderSettings();
         showToast("Profile updated.");
