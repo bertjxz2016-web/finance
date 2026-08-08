@@ -3209,8 +3209,13 @@
       const units = tradeState.method === "money" ? amount / price : amount;
       const dollars = tradeState.method === "money" ? amount : amount * price;
       const holding = getPortfolioHolding(tradeState.asset.symbol);
-      holding.units += tradeState.side === "buy" ? units : -units;
-      holding.netDollars += tradeState.side === "buy" ? dollars : -dollars;
+      if (tradeState.side === "sell" && units > holding.units + 1e-10) {
+        const availableValue = holding.units * price;
+        showToast(`You only own ${holding.units.toLocaleString(undefined, { maximumFractionDigits: 8 })} units (${formatMarketPrice(availableValue, "USD")}).`);
+        return;
+      }
+      holding.units = Math.max(0, holding.units + (tradeState.side === "buy" ? units : -units));
+      holding.netDollars = Math.max(0, holding.netDollars + (tradeState.side === "buy" ? dollars : -dollars));
       state.portfolio.holdings[tradeState.asset.symbol] = holding;
       const label = `${tradeState.side === "buy" ? "Buy" : "Sell"} ${tradeState.asset.name}`;
       state.claimed.trade = true;
@@ -3234,8 +3239,8 @@
     function getPortfolioHolding(symbol) {
       const current = state.portfolio?.holdings?.[symbol];
       return {
-        units: Number.isFinite(Number(current?.units)) ? Number(current.units) : 0,
-        netDollars: Number.isFinite(Number(current?.netDollars)) ? Number(current.netDollars) : 0
+        units: Number.isFinite(Number(current?.units)) ? Math.max(0, Number(current.units)) : 0,
+        netDollars: Number.isFinite(Number(current?.netDollars)) ? Math.max(0, Number(current.netDollars)) : 0
       };
     }
 
