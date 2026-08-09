@@ -2787,59 +2787,75 @@
     function buildMultipleChoiceQuestions(number, title, shortName, focus, count) {
       const profile = moduleProfile(number, title, shortName, focus);
       const knowledge = moduleKnowledge(number);
-      const units = 3 + (number % 3);
-      const unitPrice = 8 + (number * 4);
+      const units = 3 + (number % 4);
+      const unitPrice = 9 + (number * 3);
+      const fee = 2 + (number % 3);
       const positionValue = units * unitPrice;
+      const totalCost = positionValue + fee;
+      const startCash = 260 + (number * 35);
+      const remainingCash = startCash - totalCost;
+      const startPrice = 42 + (number * 4);
+      const endPrice = startPrice + 5 + (number % 4);
+      const returnPercent = roundedLessonNumber(((endPrice - startPrice) / startPrice) * 100);
+      const independentSources = 2 + (number % 3);
+      const riskBudget = 55 + (number * 12);
+      const riskPerUnit = 4 + (number % 4);
+      const maxUnits = Math.floor(riskBudget / riskPerUnit);
+      const gainChance = 0.6;
+      const gain = 18 + (number * 2);
+      const lossChance = 0.4;
+      const loss = 11 + number;
+      const expectedValue = roundedLessonNumber((gainChance * gain) - (lossChance * loss));
       const questions = [
         {
-          prompt: `Which sentence best defines ${knowledge.term}?`,
-          correct: knowledge.definition,
-          near: [`A name for every asset with a strong chart.`, `A reward for making a profitable practice trade.`, `A rule that removes uncertainty from an investment.`]
+          prompt: `Which statement uses ${knowledge.term} accurately when analyzing ${profile.asset}?`,
+          correct: `${knowledge.definition}; it informs a decision but cannot guarantee an outcome.`,
+          near: [`It proves ${profile.asset} will rise whenever the chart turns green.`, `It replaces a risk limit once the learner has chosen a familiar asset.`, `It makes the latest price more important than the evidence behind the move.`]
         },
         {
-          prompt: `A paper position has ${units} units at $${unitPrice} each. What is the position value before fees?`,
-          correct: `$${positionValue}`,
-          near: [`$${positionValue + unitPrice}`, `$${positionValue - unitPrice}`, `$${unitPrice + units}`]
+          prompt: `A paper order buys ${units} units of ${profile.asset} at $${unitPrice} each and charges a $${fee} fee. What total leaves the practice account?`,
+          correct: `$${totalCost}`,
+          near: [`$${positionValue}`, `$${totalCost + fee}`, `$${units + unitPrice + fee}`]
         },
         {
-          prompt: `Which situation is the clearest example of ${knowledge.term}?`,
-          correct: knowledge.example,
-          near: [`A learner follows a headline without reading the details.`, `A learner picks the most familiar name in a list.`, `A learner assumes one outcome will happen every time.`]
+          prompt: `${profile.asset} moves from $${startPrice} to $${endPrice}. What is the percentage return, rounded to one decimal place?`,
+          correct: `${returnPercent}% gain`,
+          near: [`${roundedLessonNumber(((endPrice - startPrice) / endPrice) * 100)}% gain`, `${roundedLessonNumber((endPrice - startPrice) / startPrice * 100 + 2)}% gain`, `${returnPercent}% loss`]
         },
         {
-          prompt: `Which statement about ${knowledge.term} is false?`,
-          correct: knowledge.falseIdea,
-          near: [`The topic can involve a reason and a possible downside.`, `The topic can be used in a paper-trade plan.`, `The topic can matter even when a price is moving up.`]
+          prompt: `Five posts discuss ${profile.asset}, but several copy one dated release. Only ${independentSources} posts trace to separate original sources. How many independent sources should count?`,
+          correct: `${independentSources} independent sources`,
+          near: [`${independentSources + 1} independent sources`, `All five posts because each uses a different headline`, `One source because every market claim is unreliable`]
         },
         {
-          prompt: `Which risk belongs most closely to ${knowledge.term}?`,
-          correct: knowledge.risk,
-          near: [`The module title may be hard to remember later.`, `The chart may use a different line color tomorrow.`, `The learner may have more than one unlocked lesson.`]
+          prompt: `A plan allows $${riskBudget} of risk on ${profile.asset}; each unit could lose $${riskPerUnit}. What is the largest whole-unit position that stays within the limit?`,
+          correct: `${maxUnits} units`,
+          near: [`${maxUnits + 1} units`, `${Math.floor(riskBudget / (riskPerUnit + 1))} units because entry price is the risk`, `${Math.ceil(riskBudget / riskPerUnit)} units after rounding up`]
         },
         {
-          prompt: `Which action best applies ${knowledge.term} before practicing ${profile.asset}?`,
-          correct: knowledge.action,
-          near: [`Treat the asset name as the entire reason to act.`, `Wait for popularity to choose the next step.`, `Skip the plan because the trade is only simulated.`]
+          prompt: `A plan for ${profile.asset} has a ${gainChance * 100}% chance to gain $${gain} and a ${lossChance * 100}% chance to lose $${loss}. What is the simple expected value per trial?`,
+          correct: `$${expectedValue} per trial`,
+          near: [`$${gain - loss} per trial`, `$${roundedLessonNumber(gainChance * gain)} per trial`, `-$${roundedLessonNumber(lossChance * loss)} per trial`]
         },
         {
-          prompt: `Which result would be most relevant to the ${title} lesson?`,
-          correct: `A learner can state what ${knowledge.term} means and apply it to a new case.`,
-          near: [`A learner can name the asset with the fastest chart today.`, `A learner can finish without writing down any reason.`, `A learner can repeat a popular opinion from memory.`]
+          prompt: `The report for ${profile.asset} shows ${profile.metric} below the plan's review trigger. What is the strongest next step?`,
+          correct: `Recheck the evidence, compare it with the written thesis, and resize or pause before acting.`,
+          near: [`Add units immediately because the lower metric makes the asset cheaper.`, `Ignore the report until the price confirms the same direction.`, `Delete the trigger because changing a plan after evidence is emotional.`]
         },
         {
-          prompt: `A post claims, "${knowledge.falseIdea}." What makes that claim unreliable?`,
-          correct: `It skips the conditions and risks that the lesson says still matter.`,
-          near: [`It uses too many words for a short market note.`, `It may be true only when every asset is green.`, `It is fine after the learner completes one quiz.`]
+          prompt: `A post says, "${knowledge.falseIdea}." Which missing check makes that claim weakest?`,
+          correct: `It does not identify the conditions, evidence, or downside that could make the claim wrong.`,
+          near: [`It is too short to be useful, even if its evidence is correct.`, `It should be accepted whenever ${profile.asset} has recently gained value.`, `It becomes reliable after enough people repeat the same wording.`]
         },
         {
-          prompt: `A paper trade using ${profile.asset} finishes with a gain. What is the most useful journal entry?`,
-          correct: `The original reason, the result, and whether the expected risk appeared.`,
-          near: [`Only the gain, because a winning result explains itself.`, `A new reason invented after seeing the gain.`, `The asset name with no note about the decision.`]
+          prompt: `A paper trade in ${profile.asset} finishes with a gain, but the original thesis was partly wrong. What should the journal conclude?`,
+          correct: `Separate the lucky outcome from the weak reasoning and record what evidence should change the next plan.`,
+          near: [`Call the trade fully correct because the final return was positive.`, `Rewrite the original thesis so the result appears predictable.`, `Ignore the reasoning because paper trades do not involve real cash.`]
         },
         {
-          prompt: `Which sentence best connects ${focus} to a real decision?`,
-          correct: `Use the lesson idea to set a reason, a limit, and a next step.`,
-          near: [`Use the lesson idea only after a trade is already finished.`, `Use the lesson idea to follow the loudest online opinion.`, `Use the lesson idea to ignore a result that feels inconvenient.`]
+          prompt: `${profile.asset} and ${profile.secondAsset} respond to the same headline for different business reasons. How should the ${title} lesson transfer?`,
+          correct: `Keep the method, rebuild the assumptions and risks for each asset, and allow the conclusions to differ.`,
+          near: [`Copy the conclusion from the first asset because one lesson should produce one trade.`, `Use the faster chart as the only new evidence for the second asset.`, `Treat the two assets as interchangeable because the headline was identical.`]
         }
       ];
       return questions.slice(0, count).map((question, index) => {
@@ -2863,31 +2879,40 @@
       const units = 2 + (number % 4);
       const unitPrice = 10 + (number * 2);
       const positionValue = units * unitPrice;
+      const cash = 180 + (number * 25);
+      const fee = 2 + (number % 2);
+      const cashAfterTrade = cash - positionValue - fee;
+      const peak = 80 + (number * 5);
+      const close = peak - 9 - (number % 4);
+      const drawdown = roundedLessonNumber(((peak - close) / peak) * 100);
+      const riskBudget = 40 + (number * 10);
+      const riskPerUnit = 5 + (number % 3);
+      const simulationMaxUnits = Math.floor(riskBudget / riskPerUnit);
       const simulations = [
         {
-          prompt: `Simulation: ${knowledge.example}. What is the best first response?`,
-          correct: knowledge.action,
-          near: [`Act immediately because the event already tells the whole story.`, `Ignore the event until the price returns to its old level.`, `Choose the asset that has the most comments online.`]
+          prompt: `Simulation: You have $${cash} of paper cash and buy ${units} units of ${profile.asset} at $${unitPrice} each with a $${fee} fee. How much remains after the order?`,
+          correct: `$${cashAfterTrade} remains after the position and fee`,
+          near: [`$${cash - positionValue} remains because fees do not affect paper cash`, `$${cash - fee} remains because the units are only a reference`, `$${positionValue + fee} remains because that is the amount invested`]
         },
         {
-          prompt: `Simulation: You buy ${units} paper units of ${profile.asset} at $${unitPrice} each. What amount is used for the buy?`,
-          correct: `$${positionValue}`,
-          near: [`$${positionValue + unitPrice}`, `$${unitPrice}`, `$${units}`]
+          prompt: `Simulation: ${profile.asset} falls from a recent high of $${peak} to $${close}. What drawdown should the review note record?`,
+          correct: `${drawdown}% drawdown from the high`,
+          near: [`${roundedLessonNumber(((peak - close) / close) * 100)}% drawdown from the high`, `${drawdown}% gain because the price is still above zero`, `${roundedLessonNumber((peak - close) / peak * 100 + 5)}% drawdown from the high`]
         },
         {
-          prompt: `Simulation: A friend says, "${knowledge.falseIdea}." What is the strongest reply?`,
-          correct: `That skips the conditions and risks that still affect the decision.`,
-          near: [`That is enough evidence when the chart is currently green.`, `That becomes true after a profitable paper trade.`, `That matters only when the asset is unfamiliar.`]
+          prompt: `Simulation: A friend repeats a claim about ${profile.asset}, but the two links use different dates and definitions. What should happen before a decision?`,
+          correct: `Trace the original sources, reconcile the measurements, and write down what is still unknown.`,
+          near: [`Average the numbers immediately so the disagreement disappears.`, `Choose the link that agrees with the current price.`, `Count both links as independent proof because their headlines differ.`]
         },
         {
-          prompt: `Simulation: Your ${profile.asset} paper trade is gaining value, but ${knowledge.risk}. What should happen next?`,
-          correct: `Keep the stated limit and record whether the original reason still applies.`,
-          near: [`Remove the limit because the gain proves the risk is gone.`, `Add more units immediately so the gain becomes larger.`, `Delete the original note because the result is positive.`]
+          prompt: `Simulation: Your plan allows $${riskBudget} of loss on ${profile.asset}; each unit could lose $${riskPerUnit}. What is the largest position that respects the limit?`,
+          correct: `${simulationMaxUnits} whole units, leaving the risk at or below the limit`,
+          near: [`${simulationMaxUnits + 1} units because rounding up uses the full opportunity`, `${Math.floor(riskBudget / (riskPerUnit + 1))} units because the entry price is the only risk`, `${Math.ceil(riskBudget / riskPerUnit)} units because partial risk can be ignored`]
         },
         {
-          prompt: `Simulation: The result surprises you after studying ${title}. What should go in the next journal note?`,
-          correct: `The original reason, the actual result, and a clear update for the next step.`,
-          near: [`A new story that makes the original choice look perfect.`, `Only the final price, because the reason is no longer useful.`, `Nothing until the same surprise happens again.`]
+          prompt: `Simulation: New evidence weakens the original ${title} thesis for ${profile.asset}, but the price has not moved yet. What is the disciplined response?`,
+          correct: `Review the thesis now, state the invalidating evidence, and choose a size or pause that fits the revised risk.`,
+          near: [`Wait for the price to fall before admitting the evidence matters.`, `Add units because unchanged price means the thesis is protected.`, `Keep the original plan unchanged so the first decision cannot be wrong.`]
         }
       ];
       return simulations.slice(0, count).map((simulation, index) => {
