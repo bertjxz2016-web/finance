@@ -1034,6 +1034,90 @@
       color: var(--muted);
     }
 
+    .lesson-reading {
+      display: grid;
+      color: var(--muted);
+    }
+
+    .lesson-reading section {
+      padding: 15px 2px;
+      border-top: 1px solid #e7eae3;
+      display: grid;
+      gap: 8px;
+    }
+
+    .lesson-reading section:first-child {
+      border-top: 0;
+    }
+
+    .lesson-reading .lesson-key {
+      margin: 0 -12px;
+      padding: 16px 14px;
+      background: var(--green-soft);
+      border-top: 0;
+    }
+
+    .lesson-reading .lesson-checkpoint {
+      margin: 0 -12px -12px;
+      padding: 16px 14px;
+      background: var(--gold-soft);
+    }
+
+    .lesson-reading h4 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .lesson-reading p {
+      margin: 0;
+      line-height: 1.65;
+    }
+
+    .lesson-label {
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .lesson-checkpoint .lesson-label {
+      color: #7b5107;
+    }
+
+    .lesson-reasoning {
+      margin: 2px 0 0;
+      padding-left: 22px;
+      display: grid;
+      gap: 7px;
+      line-height: 1.55;
+    }
+
+    .lesson-reasoning strong {
+      color: var(--ink);
+    }
+
+    .lesson-path {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .question-focus {
+      border-left: 4px solid var(--teal);
+      padding: 8px 10px;
+      background: #f2f8f8;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .question-focus strong {
+      color: var(--ink);
+    }
+
     .module-status {
       display: flex;
       flex-wrap: wrap;
@@ -1141,6 +1225,22 @@
       text-align: left;
       font-weight: 850;
       color: var(--ink);
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+    }
+
+    .option-letter {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #edf1eb;
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 950;
     }
 
     .quiz-option.correct {
@@ -1148,9 +1248,19 @@
       background: var(--green-soft);
     }
 
+    .quiz-option.correct .option-letter {
+      background: var(--green);
+      color: #fff;
+    }
+
     .quiz-option.wrong {
       border-color: rgba(188, 61, 53, .55);
       background: var(--red-soft);
+    }
+
+    .quiz-option.wrong .option-letter {
+      background: var(--red);
+      color: #fff;
     }
 
     .xp {
@@ -1892,6 +2002,164 @@
       return knowledge[number - 1] || knowledge[0];
     }
 
+    function lessonKnowledge(moduleNumber, lessonNumber) {
+      const bank = lessonKnowledge.bank || (lessonKnowledge.bank = [
+        [
+          ["market price", "the latest price where a buyer and seller completed a trade", "A new trade can change the displayed price even when earlier trades happened elsewhere.", "one small trade may not represent the price available for a larger order", "check the quote, trade time, and order size before acting"],
+          ["percentage change", "a price move measured relative to its starting price", "A $5 move is 10% from $50 but only 1% from $500.", "a dollar move can look large or small without the starting value", "record both the dollar move and percentage move"],
+          ["trading volume", "the number of shares or units traded during a period", "A price jump with unusually high volume can show broader participation than one tiny trade.", "volume shows activity but does not prove why people traded", "compare current volume with a normal period and verify the cause"],
+          ["bid-ask spread", "the gap between the highest bid and lowest asking price", "A $10.00 bid and $10.20 ask create a $0.20 spread before any price move.", "a wide spread can create an immediate paper loss", "include the spread when estimating entry and exit cost"],
+          ["order type", "the instruction that controls how a buy or sell may be filled", "A market order favors speed while a limit order controls the worst acceptable price.", "speed and price control cannot both be guaranteed", "match the order type to liquidity and price limits"],
+          ["market catalyst", "new information that can change supply, demand, or expectations", "An earnings release may be a catalyst, while a repeated rumor may add no new facts.", "the first explanation for a move may confuse timing with cause", "trace the event to an original source and time"],
+          ["position size", "the amount of an asset held relative to the full account", "A $100 position has very different impact in a $500 account and a $10,000 account.", "an acceptable idea can become dangerous when the position is too large", "set size from a risk limit before placing the paper order"],
+          ["decision journal", "a record of the facts, reasoning, and rules known before an outcome", "A dated entry can show whether a later gain came from a sound plan or luck.", "memory can rewrite the original reason after the result", "write the thesis and risk before seeing the outcome"],
+          ["cash allocation", "the part of a portfolio intentionally left uninvested", "Cash can reduce volatility and preserve room for a later decision.", "holding no cash can force a sale when a new need appears", "give cash a stated role instead of treating it as forgotten money"],
+          ["decision review", "a comparison of the original plan with the evidence and result", "A good review can praise a sound process even when the trade lost.", "judging only by profit rewards lucky but weak decisions", "score the process, evidence, risk control, and outcome separately"]
+        ],
+        [
+          ["common share", "a unit of ownership in a public company with a claim on its future results", "A shareholder benefits if the business creates value but also bears business risk.", "ownership does not guarantee dividends, growth, or voting influence", "connect the share price to the underlying business"],
+          ["earnings reaction", "the price response to reported results compared with expectations", "Profit can rise while a stock falls if investors expected an even stronger report.", "the direction of earnings and the direction of price need not match", "compare results with prior guidance and market expectations"],
+          ["financial statement", "a standardized report of revenue, expenses, assets, cash, and obligations", "Revenue growth with falling cash flow may tell a different story than the headline profit.", "one attractive number can hide weaker margins, debt, or cash flow", "check several connected figures in the original filing"],
+          ["company-specific risk", "a downside tied to one company's operations, finances, or leadership", "A product recall can hurt one company even while its industry rises.", "a famous brand can still face concentrated business problems", "name the company event that would break the thesis"],
+          ["valuation multiple", "a ratio comparing a stock price with earnings, sales, or another business measure", "Two growing companies can deserve different multiples because their margins and risks differ.", "a lower multiple is not automatically a bargain", "compare like businesses and explain why the multiple differs"],
+          ["company guidance", "management's forward-looking estimate or description of future performance", "A strong quarter can be followed by cautious guidance for the next one.", "guidance is an estimate and may reflect incentives or uncertainty", "compare guidance with past accuracy and outside evidence"],
+          ["stock thesis", "a specific reason the company's future results could differ from current expectations", "A thesis should name the business driver, not merely predict a higher price.", "a vague thesis cannot be tested or sized carefully", "write the driver, time horizon, risk, and review trigger"],
+          ["earnings journal", "a before-and-after record of expectations, reported facts, and market reaction", "Writing the expected margin before earnings prevents hindsight from changing the target.", "recording only the result hides whether the forecast was useful", "save the forecast before the report and score each assumption"],
+          ["sector exposure", "the portion of a portfolio affected by the same industry forces", "Tesla and another automaker may react together to battery costs or auto demand.", "different company names can still create one concentrated bet", "group holdings by business driver before counting diversification"],
+          ["thesis revision", "a deliberate update to a stock idea after material evidence changes", "A lower sales forecast may weaken a growth thesis even if the share price has not moved yet.", "protecting the old story can turn analysis into loyalty", "state exactly which fact changed and what action follows"]
+        ],
+        [
+          ["exchange-traded fund", "a pooled basket of assets whose shares trade on an exchange", "One QQQ share represents exposure to many holdings rather than ownership of one company.", "a basket can still be concentrated in a few large holdings", "read the fund objective and top holdings before using it"],
+          ["index weighting", "the rule that determines how much each constituent affects an index", "A market-cap-weighted index moves more when its largest companies move.", "an index name alone does not reveal which holdings drive it", "check the weighting method and largest weights"],
+          ["fund fact sheet", "a primary summary of an ETF's objective, holdings, fees, and performance", "The issuer's holdings table can verify whether an ETF really owns the sector a post claims.", "a marketing description may omit concentration or tracking details", "use the dated holdings and prospectus for confirmation"],
+          ["concentration risk", "the chance that a few holdings or one sector dominate a basket", "An ETF with 100 names can still depend heavily on its ten largest positions.", "a high holding count can create a false sense of diversification", "measure top-holding and sector weights"],
+          ["tracking difference", "the gap between a fund's return and the index it aims to follow", "Fees, trading costs, and portfolio construction can make an ETF trail its benchmark.", "two funds tracking similar indexes may deliver different results", "compare fees, holdings, and long-run tracking difference"],
+          ["index reconstitution", "a scheduled change to index members or weights", "A company entering an index can attract trades from funds that must track it.", "temporary trading pressure is not the same as a business improvement", "separate mechanical index demand from company fundamentals"],
+          ["benchmark selection", "the choice of a reference index that matches an investment goal", "QQQ is a poor benchmark for a portfolio designed to track small US companies.", "the wrong benchmark can make performance look unfairly strong or weak", "match geography, company size, and asset type"],
+          ["tracking journal", "a record comparing an ETF with its benchmark and stated purpose", "A journal can separate market losses from unusual fund behavior.", "looking only at the ETF return cannot reveal tracking quality", "record benchmark return, fund return, fees, and major changes"],
+          ["fund overlap", "the same underlying holdings appearing in more than one fund", "QQQ and an S&P 500 ETF can both hold many large technology companies.", "owning several ETFs may duplicate rather than diversify exposure", "compare holdings and calculate shared weights"],
+          ["benchmark-relative thesis", "a reason a fund should fit a goal better than its comparison index", "A small-cap ETF thesis should explain why small-company exposure is wanted now.", "a fund thesis can fail even when the broad market rises", "review the intended exposure against the actual holdings"]
+        ],
+        [
+          ["crypto asset", "a digital asset recorded through a blockchain or related network", "Bitcoin and Ethereum have different designs, uses, and supply rules.", "the word crypto hides major differences among networks and tokens", "identify the network purpose and how the asset is used"],
+          ["crypto volatility", "the speed and size of crypto price changes", "A 10% daily move may be unusual for a large stock but ordinary during a crypto shock.", "recent calm can cause a learner to underestimate future movement", "size the position for a much larger move than expected"],
+          ["on-chain evidence", "data recorded on a blockchain about transactions, supply, or network activity", "Active addresses may add context but do not directly prove future demand.", "one on-chain metric can be selected to support almost any story", "compare definitions, time periods, and several independent measures"],
+          ["crypto liquidity", "the ability to trade a crypto asset without moving its price sharply", "A small token can show a quoted price but offer little depth near that price.", "thin order books can turn an exit into a much worse fill", "check volume, spread, venue quality, and market depth"],
+          ["token supply", "the current and possible future number of tokens available", "A low unit price can still imply a large total value when billions of tokens exist.", "new issuance can dilute holders even if demand stays unchanged", "study circulating supply, maximum supply, and release schedules"],
+          ["regulatory event", "a rule, ruling, or enforcement action that can change crypto access or demand", "A headline about one country may affect exchanges, users, and tokens differently.", "early summaries may overstate what the legal text actually changes", "read the original announcement and identify who it covers"],
+          ["crypto risk budget", "the maximum portfolio loss allowed from a volatile crypto position", "A smaller position can keep a 20% crypto drop from dominating the full account.", "using only available cash ignores volatility and correlation", "set maximum loss first and calculate size from it"],
+          ["crypto decision journal", "a dated record of network evidence, market conditions, and trade rules", "A journal can reveal whether a profitable trade relied only on online excitement.", "24-hour markets make it easy to react without preserving the reason", "record source times, position size, and invalidation evidence"],
+          ["cross-asset correlation", "the degree to which crypto and other holdings move together", "Crypto and technology stocks can sometimes fall together during a risk-off event.", "an asset labeled different may not diversify during stress", "check behavior across several market conditions"],
+          ["adoption thesis", "a testable claim that growing use or demand could support a crypto asset", "More network use matters only if it creates durable demand for the asset itself.", "attention, transactions, and economic value are not interchangeable", "name the adoption metric and what decline would disprove the claim"]
+        ],
+        [
+          ["risk-return tradeoff", "the relationship between possible reward and the uncertainty or loss required to pursue it", "A higher possible return may be unattractive if the loss is too large for the goal.", "focusing on the best outcome hides the full range of results", "compare upside, downside, probability, and recovery time"],
+          ["drawdown", "the decline from a portfolio peak to a later low", "A fall from $1,000 to $800 is a 20% drawdown and needs a 25% gain to recover.", "loss and recovery percentages are not symmetrical", "measure peak-to-low loss and required recovery"],
+          ["base rate", "the historical frequency of similar outcomes before case-specific evidence", "A bold prediction should be weighed against how often comparable events succeeded.", "an exciting story can cause a rare outcome to feel common", "start with the base rate and then adjust for new evidence"],
+          ["maximum loss", "the largest loss a plan permits before it must be reviewed or closed", "Five units with $4 of risk each create $20 of planned risk.", "a price trigger without position size does not define total loss", "calculate risk per unit times the number of units"],
+          ["expected value", "the probability-weighted average result across repeated similar decisions", "A 60% chance to gain $20 and 40% chance to lose $10 has an $8 expected value.", "a positive expected value can still produce individual losses", "combine every outcome with its probability"],
+          ["event risk", "the possibility that a scheduled or surprise event causes a rapid repricing", "Earnings or a court ruling can move price past a planned review level.", "normal-day volatility can understate event-day loss", "reduce size or define a separate event plan"],
+          ["risk budget", "the amount of total portfolio risk assigned to one decision", "A 2% risk budget limits how much one failed idea can damage the account.", "equal dollar positions can carry very unequal risk", "size each position from volatility and maximum loss"],
+          ["decision-quality journal", "a scorecard for evidence, process, sizing, and outcome", "A losing trade can receive a strong process score if every rule was followed.", "outcome bias confuses luck with skill", "grade the decision before grading the result"],
+          ["portfolio correlation", "how strongly holdings tend to move together", "Two volatile assets can create less diversification when their losses occur together.", "past correlation may rise sharply during a crisis", "test ordinary periods and stressed periods separately"],
+          ["invalidation rule", "a prewritten fact or threshold that would make a thesis no longer valid", "A growth thesis may fail when customer growth falls below its stated floor.", "moving the rule after bad news prevents honest review", "write the rule before entry and apply it consistently"]
+        ],
+        [
+          ["national market index", "a measure designed to represent a defined group of companies in one country", "The Dow 30 and Russell 2000 describe different slices of the US market.", "one index cannot represent every company equally", "identify membership, weighting, and company-size focus"],
+          ["market breadth", "the number of stocks participating in a market rise or fall", "An index can rise while most members fall if a few large companies gain enough.", "a headline index may hide weak participation underneath", "compare advancing and declining stocks with the index move"],
+          ["economic release", "a scheduled report about inflation, jobs, growth, or another economy-wide measure", "A jobs number matters partly through how it changes expectations for rates and demand.", "the first headline can omit revisions or important components", "read the release, prior value, expectation, and revision"],
+          ["interest-rate sensitivity", "the degree to which an asset responds to changes in borrowing costs or discount rates", "Small companies with more financing needs may react differently than mature cash-rich firms.", "rate effects vary by debt, duration, and business model", "connect rate changes to cash flows and financing needs"],
+          ["market capitalization", "the share price multiplied by the number of shares outstanding", "A $10 stock can represent a larger company than a $300 stock if it has far more shares.", "share price alone says nothing about company size", "compare market value, business scale, and index category"],
+          ["central-bank communication", "official guidance about policy goals, rates, and economic conditions", "Markets can react to changes in wording even when the rate itself stays unchanged.", "commentary can be interpreted differently across sectors", "compare the full statement with the previous one"],
+          ["domestic benchmark", "a national-market reference selected to match a strategy", "The Russell 2000 may fit a small-company strategy better than the Dow 30.", "a mismatched benchmark creates misleading comparisons", "choose the index with the closest universe and weighting"],
+          ["macro journal", "a record linking economic expectations, releases, and market reactions", "Saving the expected inflation figure makes it possible to study surprise versus outcome.", "remembering only the headline move hides the forecast error", "record consensus, actual, revisions, rates, and breadth"],
+          ["sector leadership", "the sectors contributing most to a national market's move", "A broad index gain led only by technology differs from one shared across many sectors.", "narrow leadership can make a diversified-looking index fragile", "measure sector contribution and breadth"],
+          ["macro thesis", "a testable view connecting economic conditions to market behavior", "A rate-cut thesis should name which data would make cuts less likely.", "economic forecasts can remain vague enough to avoid being wrong", "define the data path, affected assets, and invalidation point"]
+        ],
+        [
+          ["foreign listing", "a security traded in a market outside the investor's home country", "Toyota shares can be influenced by its business, home market, and exchange rate.", "company analysis alone can miss currency and country effects", "identify exchange, trading currency, and home-market exposure"],
+          ["currency-adjusted return", "an investment return after including the change in exchange rates", "A foreign stock can gain locally but lose value in dollars when its currency weakens enough.", "a local chart may not equal the home-currency result", "calculate both local return and currency effect"],
+          ["ADR and local filing", "a US-traded receipt and the original reporting documents of its foreign company", "An ADR page may be convenient while the company's home filing contains fuller details.", "translations, dates, and share ratios can create confusion", "trace ADR information to the company's original report"],
+          ["country risk", "political, legal, economic, or market-structure risk tied to a country", "Capital controls or rule changes can affect every company in a market.", "a strong company cannot remove all country-level exposure", "name the country event and the holdings it could affect"],
+          ["country-sector mix", "the combination of geography and industry that drives an international investment", "Comparing Toyota with Samsung mixes country, currency, and industry differences.", "a country comparison can accidentally become a sector comparison", "hold one factor constant or explain every major difference"],
+          ["time-zone reaction", "a price response that unfolds across markets opening at different times", "US news may affect an Asian listing only when its local exchange opens later.", "timestamps can make one market appear to predict news it had not traded yet", "align news times, exchange hours, and currency moves"],
+          ["ADR conversion ratio", "the number of local shares represented by one depositary receipt", "One ADR may represent one share, several shares, or a fraction of a local share.", "comparing raw prices without the ratio can be meaningless", "adjust prices and dividends by the stated ratio"],
+          ["currency journal", "a record separating business return, local-market return, and exchange-rate return", "A journal can show that a dollar loss came from currency even when the local share rose.", "combining all effects prevents useful diagnosis", "record local price, exchange rate, ADR ratio, and total return"],
+          ["home bias", "the tendency to hold too much of one's home market", "Adding foreign exposure may broaden opportunity but also adds currency and country risks.", "international ownership does not guarantee diversification", "compare sector and factor exposure before and after adding it"],
+          ["international thesis", "a testable reason a foreign investment fits despite currency and country risks", "A thesis should say whether expected return comes from the business, currency, valuation, or all three.", "mixing several drivers makes failure hard to diagnose", "separate each driver and assign a review trigger"]
+        ],
+        [
+          ["microcap stock", "a public company with a very small total market value", "A low share price does not necessarily mean a small valuation or limited downside.", "small companies can have limited information and financing access", "check market cap, filings, exchange, and cash needs"],
+          ["thin liquidity", "limited buying and selling interest near the quoted price", "A penny stock may show a last trade at $0.01 while the next seller asks much more.", "the chart can hide the cost of entering or leaving", "inspect spread, quote depth, volume, and trade size"],
+          ["promotional claim", "a persuasive statement designed to attract buyers rather than report verified facts", "A post promising a huge contract needs the named customer's or company's confirmation.", "repetition and excitement can imitate independent evidence", "trace every material claim to a filing or direct source"],
+          ["share dilution", "an increase in shares outstanding that reduces each old share's ownership percentage", "Issuing many new shares can raise cash while weakening existing holders' claim.", "a low price can hide repeated financing through new shares", "compare share count over time and read financing terms"],
+          ["share price versus value", "the difference between one share's price and the value of the whole company", "A $0.50 stock with billions of shares may be worth more than a $20 stock with few shares.", "calling a low-priced stock cheap confuses unit price with valuation", "multiply price by diluted share count and examine the business"],
+          ["promotion-driven catalyst", "attention that moves a thin stock without clear business evidence", "Social posts can create a spike that fades when buyers disappear.", "price momentum can end before a learner can exit", "separate verified news from promotion and watch liquidity"],
+          ["speculative position cap", "a strict maximum allocation for a high-risk idea", "Capping a penny position can prevent one collapse from dominating the account.", "small share price can tempt a learner to buy too many units", "set maximum portfolio loss rather than maximum share count"],
+          ["execution journal", "a record of quotes, spread, order, fill, and exit conditions", "Saving bid and ask can explain a loss that the closing chart does not show.", "last-trade prices can make simulated fills unrealistically favorable", "record both sides of the quote and expected slippage"],
+          ["speculative allocation", "the limited portfolio portion reserved for ideas with unusually high uncertainty", "Several penny stocks can still behave like one hype-driven position.", "splitting money across similar microcaps may not diversify risk", "group positions by liquidity, promotion, and financing exposure"],
+          ["liquidity exit thesis", "a plan that explains how and why a thin position can be closed", "A price target is incomplete when there may be no buyers at that price.", "paper profits can be impossible to realize in a thin market", "define volume, spread, order size, and invalidation conditions"]
+        ],
+        [
+          ["private-company share", "an ownership interest not normally traded on a public exchange", "A private company can have investors and a valuation without a public Buy button.", "access, pricing, and resale can be restricted", "treat the company as research-only unless a lawful market is available"],
+          ["funding-round valuation", "an implied company value based on the price and terms of a private financing", "A new preferred-share round may not price every older common share identically.", "headline valuation can ignore special rights and dilution", "read the round date, security type, and stated terms"],
+          ["private-market source", "a direct company, regulatory, investor, or transaction record about a private business", "A funding announcement is stronger evidence than an undated valuation estimate.", "private companies disclose less standardized information", "label estimates clearly and verify dates and source ownership"],
+          ["private-market illiquidity", "difficulty finding a permitted buyer and completing a resale", "A valuation can rise on paper while holders remain unable to sell.", "an estimated price is not the same as available cash", "separate marked value from executable value"],
+          ["preferred versus common shares", "different ownership classes with different financial and control rights", "Preferred investors may receive liquidation protection that common holders lack.", "using one class's price for every share can overstate value", "compare rights, preferences, and conversion terms"],
+          ["funding announcement", "news that a private company raised capital under stated or unstated terms", "A large round may support growth but can also dilute earlier ownership.", "the amount raised alone does not show price, rights, or business health", "check investors, security type, valuation date, and use of funds"],
+          ["access restriction", "a legal, platform, or company rule limiting who may buy or sell private shares", "Interest in OpenAI does not make its shares available like a public stock.", "a learner may confuse a company profile with a tradable listing", "confirm eligibility and availability before showing any trade control"],
+          ["valuation-mark journal", "a dated record of each private valuation estimate and its source", "Separate entries prevent a 2024 funding value from appearing like a live 2026 quote.", "stale marks can look current when dates are hidden", "record date, source, share class, and confidence level"],
+          ["public comparable", "a listed company used to study a similar business or market", "A public software company may offer accessible data related to a private AI company.", "no public company is a perfect substitute for a private one", "state the similarities and the important differences"],
+          ["liquidity-path thesis", "a testable view of how a private holding might eventually become sellable", "An IPO is one possible path, not a guaranteed date or outcome.", "assuming an exit can make a paper valuation feel like cash", "name several paths, required evidence, and reasons each could fail"]
+        ],
+        [
+          ["paper trade", "a simulated transaction used to practice a real decision process without real money", "A useful paper trade records the same thesis and risk controls a real trade would need.", "easy resets can remove emotional and execution realism", "treat the simulation as a test of rules rather than a game of guesses"],
+          ["simulated fill", "the price a paper system assigns to an order", "A realistic fill may occur at the ask when buying rather than at the last displayed trade.", "perfect fills can exaggerate strategy performance", "model spread, delay, order type, and slippage"],
+          ["market-data timestamp", "the exact time and trading session attached to a quote", "A delayed close should not be labeled as a live intraday price.", "mixed timestamps can create impossible paper results", "show the source, exchange, session, and update time"],
+          ["realistic paper risk", "loss assumptions that include gaps, volatility, and execution limits", "A stop at $20 may fill below $20 after sudden bad news.", "a paper stop can look guaranteed when real execution is not", "stress-test a worse fill and a larger-than-normal move"],
+          ["market and limit simulation", "paper modeling of speed-first and price-controlled order instructions", "A limit order may remain unfilled even when the chart briefly touches its price.", "assuming every favorable limit fills creates false performance", "use bid, ask, volume, and order priority rules"],
+          ["event replay", "a paper test that applies a plan to a known historical market event", "Hiding later data lets the learner decide using only facts available at that time.", "seeing the final chart creates hindsight bias", "reveal information in timestamp order and lock each decision"],
+          ["paper order ticket", "a complete simulated instruction containing asset, side, amount, order type, and limits", "A ticker and dollar amount are not enough when the risk and order rule are missing.", "incomplete tickets make results impossible to review fairly", "include entry logic, size, price rule, and review trigger"],
+          ["pre-trade and post-trade journal", "paired notes written before entry and after review", "The first note preserves expectations; the second tests them against the outcome.", "one note written afterward can reconstruct a convenient story", "lock the pre-trade note before revealing the result"],
+          ["simulated portfolio exposure", "the combined risk created by all open paper positions", "Five winning practice trades can still represent one concentrated technology bet.", "evaluating trades separately hides overlap and total loss", "calculate weights, shared factors, and scenario loss"],
+          ["process score", "a grade for following evidence, sizing, execution, and review rules", "A disciplined loss can score higher than a lucky gain with no plan.", "rewarding profit alone teaches outcome chasing", "score each process step before adding the outcome score"]
+        ],
+        [
+          ["diversification", "the use of genuinely different return and risk drivers in one portfolio", "Adding an international fund may diversify some risks while introducing currency exposure.", "more holdings do not help when they respond to the same factor", "identify the driver and role of every holding"],
+          ["weighted portfolio return", "the sum of each holding's return multiplied by its portfolio weight", "A 10% gain in a 20% position adds about 2% to the full portfolio.", "averaging holding returns without weights gives the wrong result", "multiply each return by its starting weight"],
+          ["correlation", "a measure of how consistently two returns move together", "Low average correlation may disappear during a market panic.", "one historical number can hide changing relationships", "compare rolling periods and stressed markets"],
+          ["portfolio drawdown", "the decline of the combined portfolio from peak to low", "A steadier holding can reduce total drawdown even if it has a lower return.", "reviewing only individual losses misses interaction among positions", "measure the portfolio path and each holding's contribution"],
+          ["asset allocation", "the target division of a portfolio among broad types of investments", "A 60% stock target is a risk choice, not merely a list of tickers.", "small position decisions can slowly move the portfolio far from its goal", "set target ranges based on goal and time horizon"],
+          ["market regime", "a period in which growth, inflation, rates, or risk appetite shape asset behavior", "The same portfolio can behave differently when rates rise instead of fall.", "a strategy fitted to one regime may look universally reliable", "test the portfolio across several economic conditions"],
+          ["rebalancing band", "a permitted range around a target weight that triggers review", "A 40% target with a 35%-45% band avoids reacting to every tiny move.", "rebalancing too often adds noise while waiting too long changes risk", "write target bands and a review schedule"],
+          ["contribution journal", "a record of how each holding helped or hurt total performance", "A small holding with a huge gain may contribute less than a large holding with a modest gain.", "attention can focus on dramatic returns instead of portfolio impact", "record weight, return, contribution, and intended role"],
+          ["look-through overlap", "shared companies, sectors, or factors inside different holdings", "An ETF and an individual stock can duplicate the same company exposure.", "fund labels can conceal concentration already held elsewhere", "inspect underlying holdings and aggregate repeated exposure"],
+          ["investment policy", "a written set of portfolio goals, limits, targets, and review rules", "A policy can prevent one exciting idea from overriding the whole plan.", "rules written during stress may chase recent events", "set the policy in advance and revise it on a schedule"]
+        ],
+        [
+          ["investment thesis", "a testable explanation for why an idea may work and what would prove it wrong", "A thesis names the driver and evidence instead of only predicting a price.", "an unfalsifiable story can survive every bad result", "write the cause, horizon, evidence, and invalidation rule"],
+          ["return attribution", "the process of identifying which positions and factors produced a result", "A portfolio gain may come from market exposure rather than stock selection skill.", "crediting every gain to the thesis prevents learning", "separate market, sector, currency, sizing, and selection effects"],
+          ["evidence update", "new reliable information that changes confidence in a claim", "A primary filing should usually carry more weight than another repeated opinion.", "adding evidence that agrees while ignoring conflicts creates bias", "update with both confirming and disconfirming facts"],
+          ["thesis invalidation", "the point at which the original reason no longer fits the facts", "A broken customer-growth assumption can invalidate a growth thesis before price reacts.", "waiting for a large loss can replace evidence with emotion", "act on the written evidence trigger rather than pain alone"],
+          ["opportunity cost", "the value of the best alternative given up by choosing one action", "Holding a weak idea also uses time and portfolio capacity that another idea could use.", "reviewing an investment alone can make holding it seem costless", "compare the current choice with cash and the best available alternative"],
+          ["confirmation bias", "the tendency to favor information that supports an existing belief", "Searching only bullish sources can make a fragile thesis feel well researched.", "confidence can rise while evidence quality falls", "seek the strongest opposing case and define what would change the view"],
+          ["decision rule", "a prewritten link between observable evidence and a specific action", "If margin falls below the thesis floor, review size before adding more.", "vague rules allow a different excuse after every outcome", "make the condition measurable and the response explicit"],
+          ["decision postmortem", "a structured review of assumptions, process, execution, and outcome", "A postmortem asks what was knowable at the time rather than blaming every surprise.", "judging with hindsight creates lessons that could not have been used", "separate forecast error, process error, execution error, and luck"],
+          ["strategy fit", "the match between a decision and the portfolio's goal, horizon, and limits", "A sound short-term trade may still be wrong for a long-term low-risk plan.", "evaluating an idea outside its portfolio role ignores constraints", "test the decision against the written policy and current exposures"],
+          ["thesis revision", "a transparent change to a thesis after weighing new evidence", "A revision should preserve what changed, why it changed, and what follows.", "quietly rewriting the old thesis makes progress impossible to measure", "keep the prior version and document the evidence behind each change"]
+        ]
+      ]);
+      const moduleTopics = bank[moduleNumber - 1] || bank[0];
+      const topic = moduleTopics[lessonNumber - 1] || moduleTopics[0];
+      return {
+        term: topic[0],
+        definition: topic[1],
+        example: topic[2],
+        risk: topic[3],
+        action: topic[4]
+      };
+    }
+
     function lessonQuestionContext(lessonNumber) {
       const contexts = [
         { title: "Core ideas", focus: "state the key term in plain language", scenario: "A learner wants to act because a price is green but cannot explain the market term in the lesson.", move: "Define the term in plain words and connect it to one clear example.", mistake: "Using a word as proof without knowing what it means.", journal: "Write the term, one example, and one open question.", source: "A post uses a market word but gives no example or definition." },
@@ -1983,7 +2251,7 @@
       if (learner.level === "Intermediate") {
         return lessonQuestion(
           "Concept",
-          `In ${learner.setting}, which statement correctly connects ${knowledge.term} to ${context.title} and the skill of ${context.focus}?`,
+          `In ${learner.setting}, which statement correctly connects ${knowledge.term} to ${context.title} and a decision about ${profile.asset}?`,
           `${knowledge.definition}, so the learner should ${knowledge.action}.`,
           [
             `${knowledge.definition}, so one green chart is enough evidence to act.`,
@@ -1995,7 +2263,7 @@
       }
       return lessonQuestion(
         "Concept",
-        `For ${context.title}, a learner in ${learner.setting} asks what ${knowledge.term} means. Which answer is accurate?`,
+        `For ${context.title}, a learner in ${learner.setting} asks what ${knowledge.term} means for ${profile.asset}. Which answer is accurate?`,
         knowledge.definition,
         [
           `a promise that ${profile.asset} will rise after any positive news`,
@@ -2287,7 +2555,7 @@
         : knowledge.risk;
       return lessonQuestion(
         "Risk",
-        `In ${learner.setting}, which downside is most important when applying ${context.title} to ${knowledge.term}?`,
+        `In ${learner.setting}, which downside is most important when applying ${context.title} and ${knowledge.term} to ${profile.asset}?`,
         correct,
         [
           `The lesson title may be harder to remember after the price changes.`,
@@ -2362,7 +2630,7 @@
 
     function buildPracticePages(number, title, shortName, focus, lessonNumber = 1, lessonTitle = "Core ideas", learnerProfile = {}) {
       const profile = moduleProfile(number, title, shortName, focus);
-      const knowledge = moduleKnowledge(number);
+      const knowledge = lessonKnowledge(number, lessonNumber);
       const context = lessonQuestionContext(lessonNumber);
       const learner = normalizeLessonLearner(learnerProfile);
       const pages = [
@@ -2375,13 +2643,21 @@
         buildJournalPractice(profile, context, learner),
         buildTransferPractice(profile, context, learner)
       ];
-      return pages.map((page, index) => scrambleQuestion(page, `practice-${number}-${lessonNumber}-${index}-${learner.ageBand}-${learner.level}`));
+      return pages.map((page, index) => ({
+        ...scrambleQuestion(page, `practice-${number}-${lessonNumber}-${index}-${learner.ageBand}-${learner.level}`),
+        topic: knowledge.term,
+        objective: context.focus
+      }));
     }
 
     function buildLessonPages(number, title, shortName, focus, lessonNumber = 1, lessonTitle = "Core ideas", learnerProfile = {}) {
+      const knowledge = lessonKnowledge(number, lessonNumber);
+      const context = lessonQuestionContext(lessonNumber);
       const lecturePage = {
         type: "text",
         title: `${lessonTitle}: ${title}`,
+        topic: knowledge.term,
+        objective: context.focus,
         body: lessonTextForPage(lessonNumber - 1, title, shortName, focus, number, learnerProfile)
       };
       const practicePages = buildPracticePages(number, title, shortName, focus, lessonNumber, lessonTitle, learnerProfile);
@@ -2390,7 +2666,7 @@
 
     function lessonTextForPage(index, title, shortName, focus, number = 1, learnerProfile = {}) {
       const profile = moduleProfile(number, title, shortName, focus);
-      const knowledge = moduleKnowledge(number);
+      const knowledge = lessonKnowledge(number, index + 1);
       const context = lessonQuestionContext(index + 1);
       const learner = normalizeLessonLearner(learnerProfile);
       const teachingPoints = [
@@ -2428,7 +2704,36 @@
           ? `Compare at least two explanations, identify the missing evidence, and calculate the effect on position or portfolio risk.`
           : `Test the strongest counterargument, distinguish correlation from cause, and include opportunity cost in the decision rule.`;
 
-      return `${teachingPoints[index % teachingPoints.length]} ${profile.signal} is useful evidence, while ${profile.trap} is a common trap.<br><br><strong>Example:</strong> ${workedExamples[index % workedExamples.length]}<br><br><strong>Apply it:</strong> ${ageApplication} ${levelApplication}<br><br><strong>Checkpoint:</strong> Before moving on, explain why "${context.mistake}" would weaken the decision and name one fact that could change your answer.`;
+      const topicTitle = `${knowledge.term.charAt(0).toUpperCase()}${knowledge.term.slice(1)}`;
+      return `
+        <section class="lesson-key">
+          <span class="lesson-label">Key idea</span>
+          <h4>${topicTitle}</h4>
+          <p>${knowledge.definition}. ${teachingPoints[index % teachingPoints.length]}</p>
+        </section>
+        <section>
+          <span class="lesson-label">Why it matters</span>
+          <p>${knowledge.example} ${profile.signal} is useful evidence, while ${profile.trap} is a common trap.</p>
+        </section>
+        <section>
+          <span class="lesson-label">Worked example</span>
+          <p>${workedExamples[index % workedExamples.length]}</p>
+          <ol class="lesson-reasoning">
+            <li><strong>Observe:</strong> separate the known fact from the assumed cause.</li>
+            <li><strong>Test:</strong> ${knowledge.action}.</li>
+            <li><strong>Protect:</strong> remember that ${knowledge.risk}.</li>
+          </ol>
+        </section>
+        <section>
+          <span class="lesson-label">Use it in your plan</span>
+          <p>${ageApplication}</p>
+          <p>${levelApplication}</p>
+        </section>
+        <section class="lesson-checkpoint">
+          <span class="lesson-label">Checkpoint</span>
+          <p>Explain why "${context.mistake}" would weaken the decision. Then name one fact that could change your answer.</p>
+        </section>
+      `;
     }
 
     function buildMultipleChoiceQuestions(number, title, shortName, focus, count) {
@@ -4038,8 +4343,14 @@
         ${moduleStatusTemplate(module, progress)}
         ${missPanel}
         <div class="lesson-step">
-          <strong>${page.title}</strong>
-          <p class="lesson-body">${page.body}</p>
+          <div class="question-meta">
+            <strong>${page.title}</strong>
+            <div class="lesson-path">
+              <span class="mini-pill">${page.topic}</span>
+              <span class="mini-pill">${state.profile.level || "Beginner"} - age ${state.profile.age || "not set"}</span>
+            </div>
+          </div>
+          <div class="lesson-reading">${page.body}</div>
         </div>
         <div class="actions">
           <button class="btn green" data-next-lesson="${module.id}">Start 8 questions</button>
@@ -4094,9 +4405,10 @@
             <span class="mini-pill">${retryPractice.length} to retry</span>
             <span class="mini-pill">${practice.style}</span>
           </div>
+          <div class="question-focus"><strong>${practice.topic}</strong> - ${practice.objective}</div>
           <p class="lesson-body">${practice.prompt}</p>
           <div class="quiz-options">
-            ${practice.options.map((option, index) => `<button class="quiz-option" data-module="${module.id}" data-page="${pageIndex}" data-lesson-answer="${index}">${option}</button>`).join("")}
+            ${practice.options.map((option, index) => `<button class="quiz-option" data-module="${module.id}" data-page="${pageIndex}" data-lesson-answer="${index}"><span class="option-letter">${String.fromCharCode(65 + index)}</span><span>${option}</span></button>`).join("")}
           </div>
         </div>
         <div class="actions">
@@ -4132,10 +4444,11 @@
           <div class="question-meta">
             <strong>${question.sourceLesson}</strong>
             <span class="mini-pill">${question.style}</span>
+            ${question.topic ? `<span class="mini-pill">${question.topic}</span>` : ""}
           </div>
           <p class="lesson-body">${question.prompt}</p>
           <div class="quiz-options">
-            ${question.options.map((option, optionIndex) => `<button class="quiz-option" data-module="${module.id}" data-skip-answer="${optionIndex}">${option}</button>`).join("")}
+            ${question.options.map((option, optionIndex) => `<button class="quiz-option" data-module="${module.id}" data-skip-answer="${optionIndex}"><span class="option-letter">${String.fromCharCode(65 + optionIndex)}</span><span>${option}</span></button>`).join("")}
           </div>
         </div>
       `;
@@ -4227,7 +4540,7 @@
           </div>
           <p class="lesson-body">${question.prompt}</p>
           <div class="quiz-options">
-            ${question.options.map((option, optionIndex) => `<button class="quiz-option" data-item="${item.id}" data-answer="${optionIndex}">${option}</button>`).join("")}
+            ${question.options.map((option, optionIndex) => `<button class="quiz-option" data-item="${item.id}" data-answer="${optionIndex}"><span class="option-letter">${String.fromCharCode(65 + optionIndex)}</span><span>${option}</span></button>`).join("")}
           </div>
         </div>
       `;
