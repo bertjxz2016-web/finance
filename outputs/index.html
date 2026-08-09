@@ -890,6 +890,54 @@
       font-weight: 900;
     }
 
+    .trade-balance {
+      margin-top: 16px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .trade-balance span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .trade-balance strong {
+      display: block;
+      margin-top: 3px;
+      overflow-wrap: anywhere;
+    }
+
+    .trade-estimate {
+      min-height: 50px;
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-left: 4px solid var(--teal);
+      background: #f2f8f8;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .trade-estimate strong {
+      color: var(--ink);
+    }
+
+    .trade-estimate.good {
+      border-left-color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .trade-estimate.bad {
+      border-left-color: var(--red);
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
     .trade-confirm {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3023,6 +3071,7 @@
     const chartPlot = { width: 640, height: 260, left: 92, right: 24, top: 24, bottom: 34 };
     const MARKET_CHART_CACHE_KEY = "invest-quest-market-chart-cache-v1";
     const MARKET_CHART_CACHE_LIMIT = 12;
+    const XP_PER_TRADE_DOLLAR = 7;
     const marketChartCacheMaxAge = {
       "1D": 5 * 60 * 1000,
       "1W": 30 * 60 * 1000,
@@ -3191,6 +3240,7 @@
         if (requestId !== marketChartRequest) return;
         marketChartState.loading = false;
         renderMarketChart();
+        if (tradeState?.asset?.symbol === asset.symbol) renderTradePage();
         scheduleMarketChartRefresh();
       }
     }
@@ -3879,11 +3929,24 @@
       const title = `${side === "buy" ? "Buying" : "Selling"} by ${method}`;
       const unitLabel = method === "money" ? "dollars" : "units";
       const tradePrice = getTradePrice(asset);
+      const xpBalance = Math.max(0, Math.floor(Number(state.xp) || 0));
+      const holding = getPortfolioHolding(asset.symbol);
+      const maximumBuyDollars = xpBalance / XP_PER_TRADE_DOLLAR;
+      const maximumBuyUnits = tradePrice > 0 ? maximumBuyDollars / tradePrice : 0;
+      const availableSellDollars = tradePrice > 0 ? holding.units * tradePrice : 0;
+      const inputMaximum = side === "buy"
+        ? (method === "money" ? maximumBuyDollars : maximumBuyUnits)
+        : (method === "money" ? availableSellDollars : holding.units);
+      const availableLabel = side === "buy"
+        ? formatMarketPrice(maximumBuyDollars, "USD")
+        : method === "money"
+          ? formatMarketPrice(availableSellDollars, "USD")
+          : `${formatTradeUnits(holding.units)} units`;
       panel.innerHTML = `
         <div class="trade-card">
           <p class="muted">Paper trade</p>
           <h2>${escapeHtml(title)}</h2>
-          <p class="muted">${escapeHtml(asset.name)} ${asset.symbol ? `â€¢ ${escapeHtml(asset.symbol)}` : ""}</p>
+          <p class="muted">${escapeHtml(asset.name)} ${asset.symbol ? `- ${escapeHtml(asset.symbol)}` : ""}</p>
           <div class="trade-mode-grid" aria-label="Trade type">
             ${["buy-money", "buy-units", "sell-money", "sell-units"].map(key => {
               const [modeSide, modeMethod] = key.split("-");
@@ -3892,11 +3955,17 @@
             }).join("")}
           </div>
           <label class="trade-amount-label" for="tradeAmount">Enter ${unitLabel}</label>
-          <input class="trade-amount" id="tradeAmount" type="number" min="0" step="any" value="${escapeAttr(amount)}" placeholder="0" inputmode="decimal" aria-label="Trade ${unitLabel}">
+          <input class="trade-amount" id="tradeAmount" type="number" min="0" max="${escapeAttr(inputMaximum)}" step="any" value="${escapeAttr(amount)}" placeholder="0" inputmode="decimal" aria-label="Trade ${unitLabel}">
           <p class="muted" style="margin-top:10px">${tradePrice ? `Current price: ${escapeHtml(formatMarketPrice(tradePrice, "USD"))}` : "Loading the current price for this trade..."}</p>
+          <div class="trade-balance">
+            <div><span>XP balance</span><strong>${xpBalance.toLocaleString()} XP</strong></div>
+            <div><span>${side === "buy" ? "Maximum buy" : "Available to sell"}</span><strong>${escapeHtml(availableLabel)}</strong></div>
+          </div>
+          <p class="muted" style="margin-top:10px">Exchange rate: USD 1 = ${XP_PER_TRADE_DOLLAR} XP.</p>
+          <div class="trade-estimate" id="tradeEstimate" aria-live="polite"></div>
           <p class="muted" style="margin-top:12px">This is a paper trade. It changes your practice position and XP only; no real money is used.</p>
           <div class="trade-confirm">
-            <button class="btn green" id="confirmTradeBtn" type="button">Yes</button>
+            <button class="btn green" id="confirmTradeBtn" type="button" disabled>Yes</button>
             <button class="btn secondary" id="cancelTradeBtn" type="button">No</button>
           </div>
         </div>
@@ -3912,41 +3981,113 @@
       });
       document.getElementById("tradeAmount").addEventListener("input", event => {
         tradeState.amount = event.target.value;
+        renderTradeEstimate();
+      });
+      document.getElementById("tradeAmount").addEventListener("keydown", event => {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        confirmTrade();
       });
       document.getElementById("confirmTradeBtn").addEventListener("click", confirmTrade);
       document.getElementById("cancelTradeBtn").addEventListener("click", closeTradePage);
+      renderTradeEstimate();
       document.getElementById("tradeAmount").focus();
+    }
+
+    function formatTradeUnits(value) {
+      const units = Number(value);
+      if (!Number.isFinite(units)) return "0";
+      return units.toLocaleString(undefined, { maximumFractionDigits: 8 });
+    }
+
+    function calculateTrade() {
+      if (!tradeState) return { valid: false, kind: "missing", reason: "No trade is open." };
+      const rawAmount = String(tradeState.amount ?? "").trim();
+      const amount = Number(rawAmount);
+      if (!rawAmount || !Number.isFinite(amount) || amount <= 0) {
+        return { valid: false, kind: "empty", reason: "Enter a positive number to see the XP total." };
+      }
+      const price = getTradePrice(tradeState.asset);
+      if (!Number.isFinite(price) || price <= 0) {
+        return { valid: false, kind: "price", reason: "Wait for the current market price, then try again." };
+      }
+      const units = tradeState.method === "money" ? amount / price : amount;
+      const dollars = tradeState.method === "money" ? amount : amount * price;
+      if (!Number.isFinite(units) || !Number.isFinite(dollars) || units <= 0 || dollars <= 0 || dollars > Number.MAX_SAFE_INTEGER / XP_PER_TRADE_DOLLAR) {
+        return { valid: false, kind: "large", reason: "That trade amount is too large. Enter a smaller number." };
+      }
+      const holding = getPortfolioHolding(tradeState.asset.symbol);
+      const xpBalance = Math.max(0, Math.floor(Number(state.xp) || 0));
+      const xpAmount = tradeState.side === "buy"
+        ? Math.max(1, Math.ceil(dollars * XP_PER_TRADE_DOLLAR))
+        : Math.max(0, Math.floor(dollars * XP_PER_TRADE_DOLLAR));
+      if (tradeState.side === "buy" && xpAmount > xpBalance) {
+        return {
+          valid: false,
+          kind: "xp",
+          reason: `This buy needs ${xpAmount.toLocaleString()} XP, but you have ${xpBalance.toLocaleString()} XP.`,
+          amount,
+          price,
+          units,
+          dollars,
+          xpAmount,
+          xpBalance,
+          holding
+        };
+      }
+      if (tradeState.side === "sell" && units > holding.units + 1e-10) {
+        return {
+          valid: false,
+          kind: "units",
+          reason: `You only own ${formatTradeUnits(holding.units)} units (${formatMarketPrice(holding.units * price, "USD")}).`,
+          amount,
+          price,
+          units,
+          dollars,
+          xpAmount,
+          xpBalance,
+          holding
+        };
+      }
+      return { valid: true, kind: "ready", amount, price, units, dollars, xpAmount, xpBalance, holding };
+    }
+
+    function renderTradeEstimate() {
+      const estimate = document.getElementById("tradeEstimate");
+      const confirm = document.getElementById("confirmTradeBtn");
+      if (!estimate || !confirm || !tradeState) return;
+      const trade = calculateTrade();
+      confirm.disabled = !trade.valid;
+      estimate.className = `trade-estimate ${trade.valid ? "good" : trade.kind === "empty" || trade.kind === "price" ? "" : "bad"}`;
+      if (!trade.valid) {
+        const maximum = trade.kind === "xp" ? ` Maximum buy: ${formatMarketPrice(trade.xpBalance / XP_PER_TRADE_DOLLAR, "USD")}.` : "";
+        estimate.textContent = `${trade.reason}${maximum}`;
+        return;
+      }
+      if (tradeState.side === "buy") {
+        estimate.innerHTML = `<strong>${trade.xpAmount.toLocaleString()} XP will be deducted.</strong> You will receive ${formatTradeUnits(trade.units)} paper units for ${escapeHtml(formatMarketPrice(trade.dollars, "USD"))}.`;
+      } else {
+        estimate.innerHTML = `<strong>+${trade.xpAmount.toLocaleString()} XP will be added.</strong> You will sell ${formatTradeUnits(trade.units)} paper units for ${escapeHtml(formatMarketPrice(trade.dollars, "USD"))}.`;
+      }
     }
 
     function confirmTrade() {
       if (!tradeState) return;
-      const amount = Number(tradeState.amount);
-      if (!Number.isFinite(amount) || amount <= 0) {
-        showToast("Enter a number before confirming the trade.");
+      const trade = calculateTrade();
+      if (!trade.valid) {
+        showToast(trade.reason);
+        renderTradeEstimate();
         document.getElementById("tradeAmount")?.focus();
         return;
       }
-      const price = getTradePrice(tradeState.asset);
-      if (!price) {
-        showToast("Wait for the current market price, then try again.");
-        return;
-      }
-      const units = tradeState.method === "money" ? amount / price : amount;
-      const dollars = tradeState.method === "money" ? amount : amount * price;
-      const holding = getPortfolioHolding(tradeState.asset.symbol);
-      if (tradeState.side === "sell" && units > holding.units + 1e-10) {
-        const availableValue = holding.units * price;
-        showToast(`You only own ${holding.units.toLocaleString(undefined, { maximumFractionDigits: 8 })} units (${formatMarketPrice(availableValue, "USD")}).`);
-        return;
-      }
-      holding.units = Math.max(0, holding.units + (tradeState.side === "buy" ? units : -units));
-      holding.netDollars = Math.max(0, holding.netDollars + (tradeState.side === "buy" ? dollars : -dollars));
+      const holding = trade.holding;
+      holding.units = Math.max(0, holding.units + (tradeState.side === "buy" ? trade.units : -trade.units));
+      holding.netDollars = Math.max(0, holding.netDollars + (tradeState.side === "buy" ? trade.dollars : -trade.dollars));
       state.portfolio.holdings[tradeState.asset.symbol] = holding;
       const label = `${tradeState.side === "buy" ? "Buy" : "Sell"} ${tradeState.asset.name}`;
       state.claimed.trade = true;
-      const tradeXp = Math.round(dollars * 7) * (tradeState.side === "buy" ? -1 : 1);
-      saveState();
-      addXp(tradeXp, `${label} at ${formatMarketPrice(dollars, "USD")}`);
+      const tradeXp = trade.xpAmount * (tradeState.side === "buy" ? -1 : 1);
+      addXp(tradeXp, `${label} at ${formatMarketPrice(trade.dollars, "USD")}`);
       closeTradePage();
     }
 
