@@ -1666,6 +1666,7 @@
         number,
         title: `Module ${number}: ${title}`,
         shortTitle: title,
+        shortName,
         focus,
         lessonXp: 75,
         quizXp: 60,
@@ -1907,108 +1908,527 @@
       return contexts[lessonNumber - 1] || contexts[0];
     }
 
-    function buildPracticePages(number, title, shortName, focus, lessonNumber = 1, lessonTitle = "Core ideas") {
+    function normalizeLessonLearner(profile = {}) {
+      const allowedLevels = ["Beginner", "Intermediate", "Expert"];
+      const level = allowedLevels.includes(profile.level) ? profile.level : "Beginner";
+      const parsedAge = Number(profile.age);
+      const age = Number.isFinite(parsedAge) && parsedAge > 0 ? parsedAge : 14;
+      if (age < 13) {
+        return {
+          age,
+          ageBand: "youth",
+          level,
+          levelRank: allowedLevels.indexOf(level),
+          setting: "a school investing club",
+          goal: "save for a future goal",
+          baseAccount: 200
+        };
+      }
+      if (age < 18) {
+        return {
+          age,
+          ageBand: "teen",
+          level,
+          levelRank: allowedLevels.indexOf(level),
+          setting: "a student paper portfolio",
+          goal: "plan how part-time income could be invested",
+          baseAccount: 800
+        };
+      }
+      return {
+        age,
+        ageBand: "adult",
+        level,
+        levelRank: allowedLevels.indexOf(level),
+        setting: "a long-term household portfolio",
+        goal: "balance growth, risk, and future spending needs",
+        baseAccount: 4000
+      };
+    }
+
+    function lessonQuestion(style, prompt, correct, distractors, explanation) {
+      return {
+        type: "practice",
+        style,
+        prompt,
+        options: [correct, ...distractors],
+        answer: 0,
+        explanation
+      };
+    }
+
+    function lessonMoney(value) {
+      const amount = Number(value);
+      return `$${Number.isInteger(amount) ? amount.toLocaleString("en-US") : amount.toFixed(2)}`;
+    }
+
+    function roundedLessonNumber(value, places = 1) {
+      return Number(Number(value).toFixed(places));
+    }
+
+    function buildConceptPractice(profile, knowledge, context, learner) {
+      if (learner.level === "Expert") {
+        return lessonQuestion(
+          "Concept",
+          `In ${learner.setting}, which explanation of ${knowledge.term} is precise enough for ${context.title} and a decision about ${profile.asset} without promising an outcome?`,
+          `${knowledge.definition}; it informs a decision but cannot guarantee the result.`,
+          [
+            `${knowledge.definition}; therefore the asset should rise whenever demand increases.`,
+            `${knowledge.definition}; therefore the lesson's risk can be ignored after entry.`,
+            `${knowledge.definition}; therefore recent performance predicts the next move.`
+          ],
+          `A strong definition explains what ${knowledge.term} is while leaving room for uncertainty, evidence, and ${profile.risk}.`
+        );
+      }
+      if (learner.level === "Intermediate") {
+        return lessonQuestion(
+          "Concept",
+          `In ${learner.setting}, which statement correctly connects ${knowledge.term} to ${context.title} and the skill of ${context.focus}?`,
+          `${knowledge.definition}, so the learner should ${knowledge.action}.`,
+          [
+            `${knowledge.definition}, so one green chart is enough evidence to act.`,
+            `${knowledge.definition}, so popularity can replace a written reason.`,
+            `${knowledge.definition}, so downside risk matters only after a loss.`
+          ],
+          `${knowledge.term} matters because it changes what the learner should check before making a decision.`
+        );
+      }
+      return lessonQuestion(
+        "Concept",
+        `For ${context.title}, a learner in ${learner.setting} asks what ${knowledge.term} means. Which answer is accurate?`,
+        knowledge.definition,
+        [
+          `a promise that ${profile.asset} will rise after any positive news`,
+          `the latest direction shown by ${profile.asset} on a price chart`,
+          `a rule that removes the need to think about possible losses`
+        ],
+        `${knowledge.term} means ${knowledge.definition}. The definition does not promise that a price will rise.`
+      );
+    }
+
+    function buildNumberPractice(number, lessonNumber, profile, learner) {
+      const rank = learner.levelRank;
+      const units = 3 + ((number + lessonNumber + rank) % 4);
+      const unitPrice = 10 + (number * 2) + lessonNumber;
+      const positionValue = units * unitPrice;
+      const account = learner.baseAccount + (number * 50);
+      let prompt;
+      let correct;
+      let distractors;
+      let explanation;
+
+      if (lessonNumber === 1) {
+        if (learner.level === "Beginner") {
+          prompt = `${learner.setting} buys ${units} paper units of ${profile.asset} at ${lessonMoney(unitPrice)} each. What is the position value?`;
+          correct = lessonMoney(positionValue);
+          distractors = [lessonMoney(positionValue + unitPrice), lessonMoney(positionValue - unitPrice), lessonMoney(unitPrice + units)];
+          explanation = `${units} units x ${lessonMoney(unitPrice)} = ${lessonMoney(positionValue)}.`;
+        } else if (learner.level === "Intermediate") {
+          prompt = `${learner.setting} starts with ${lessonMoney(account)} and buys ${units} units of ${profile.asset} at ${lessonMoney(unitPrice)}. How much paper cash remains?`;
+          correct = lessonMoney(account - positionValue);
+          distractors = [lessonMoney(account - unitPrice), lessonMoney(account - positionValue - unitPrice), lessonMoney(account + positionValue)];
+          explanation = `The position costs ${lessonMoney(positionValue)}, so ${lessonMoney(account)} - ${lessonMoney(positionValue)} = ${lessonMoney(account - positionValue)}.`;
+        } else {
+          const portfolioTotal = positionValue * 4;
+          prompt = `${profile.asset} is worth ${lessonMoney(positionValue)} inside a ${lessonMoney(portfolioTotal)} paper portfolio. What percentage of the portfolio is in that position?`;
+          correct = "25% of the portfolio";
+          distractors = ["20% of the portfolio", "40% of the portfolio", "75% of the portfolio"];
+          explanation = `${lessonMoney(positionValue)} / ${lessonMoney(portfolioTotal)} = 0.25, or 25%.`;
+        }
+      } else if (lessonNumber === 2) {
+        const start = 50 + (number * 5);
+        const move = 5 + (rank * 2);
+        const end = start + move;
+        const movePercent = roundedLessonNumber((move / start) * 100);
+        if (learner.level === "Beginner") {
+          prompt = `${profile.asset} moves from ${lessonMoney(start)} to ${lessonMoney(end)}. What is the dollar change?`;
+          correct = `${lessonMoney(move)} increase`;
+          distractors = [`${lessonMoney(move)} decrease`, `${lessonMoney(end)} increase`, `${lessonMoney(start)} increase`];
+          explanation = `${lessonMoney(end)} - ${lessonMoney(start)} = ${lessonMoney(move)}, so the move is an increase.`;
+        } else if (learner.level === "Intermediate") {
+          prompt = `${profile.asset} moves from ${lessonMoney(start)} to ${lessonMoney(end)}. What is the percentage change, rounded to one decimal place?`;
+          correct = `${movePercent}% increase`;
+          distractors = [`${movePercent}% decrease`, `${roundedLessonNumber(movePercent + 2)}% increase`, `${roundedLessonNumber(movePercent - 2)}% increase`];
+          explanation = `(${lessonMoney(end)} - ${lessonMoney(start)}) / ${lessonMoney(start)} x 100 = ${movePercent}%.`;
+        } else {
+          const portfolioImpact = roundedLessonNumber(movePercent * 0.4);
+          prompt = `${profile.asset} is 40% of a portfolio and rises ${movePercent}%, while every other holding is flat. About how much does the full portfolio rise?`;
+          correct = `${portfolioImpact}% portfolio gain`;
+          distractors = [`${movePercent}% portfolio gain`, `${roundedLessonNumber(movePercent * 0.6)}% portfolio gain`, `${portfolioImpact}% portfolio loss`];
+          explanation = `Multiply the ${movePercent}% asset move by its 40% portfolio weight: about ${portfolioImpact}%.`;
+        }
+      } else if (lessonNumber === 3) {
+        const sourceCount = rank + 1;
+        prompt = `${learner.setting} finds ${sourceCount + 3} posts about ${profile.asset}. Several repeat the same company release, and only ${sourceCount} use separate original sources. How many independent sources are there?`;
+        correct = `${sourceCount} independent source${sourceCount === 1 ? "" : "s"}`;
+        distractors = [`${sourceCount + 1} independent sources`, `${sourceCount + 2} independent sources`, `${sourceCount + 3} independent sources`];
+        explanation = `Repeated posts do not become new evidence. Only the ${sourceCount} separate original source${sourceCount === 1 ? " counts" : "s count"}.`;
+      } else if (lessonNumber === 4) {
+        const entry = 30 + number;
+        const stopDistance = 3 + rank;
+        const stop = entry - stopDistance;
+        const maxLoss = units * stopDistance;
+        if (learner.level === "Beginner") {
+          prompt = `${units} paper units are bought at ${lessonMoney(entry)} with a review point at ${lessonMoney(stop)}. What is the planned dollar loss if that point is reached?`;
+          correct = lessonMoney(maxLoss);
+          distractors = [lessonMoney(maxLoss + stopDistance), lessonMoney(entry - stop), lessonMoney(units * entry)];
+          explanation = `Each unit risks ${lessonMoney(stopDistance)}. ${units} x ${lessonMoney(stopDistance)} = ${lessonMoney(maxLoss)}.`;
+        } else if (learner.level === "Intermediate") {
+          const lossPercent = roundedLessonNumber((stopDistance / entry) * 100);
+          prompt = `A paper trade enters ${profile.asset} at ${lessonMoney(entry)} and uses ${lessonMoney(stop)} as its review point. What percentage decline triggers the review?`;
+          correct = `${lossPercent}% decline`;
+          distractors = [`${roundedLessonNumber(lossPercent + 3)}% decline`, `${roundedLessonNumber(lossPercent - 2)}% decline`, `${lossPercent}% increase`];
+          explanation = `${lessonMoney(stopDistance)} / ${lessonMoney(entry)} x 100 = ${lossPercent}%.`;
+        } else {
+          const portfolioTotal = maxLoss * 50;
+          prompt = `The maximum planned loss on ${profile.asset} is ${lessonMoney(maxLoss)} inside a ${lessonMoney(portfolioTotal)} portfolio. What percentage of the portfolio is at risk?`;
+          correct = "2% of the portfolio";
+          distractors = ["1% of the portfolio", "5% of the portfolio", "20% of the portfolio"];
+          explanation = `${lessonMoney(maxLoss)} / ${lessonMoney(portfolioTotal)} = 0.02, or 2%.`;
+        }
+      } else if (lessonNumber === 5) {
+        if (learner.level === "Expert") {
+          prompt = `${profile.asset} returns 8% with a 6% drawdown. ${profile.secondAsset} returns 7% with a 3% drawdown. Which has more return per point of drawdown?`;
+          correct = `${profile.secondAsset}, about 2.3 return points per drawdown point`;
+          distractors = [`${profile.asset}, about 1.3 return points per drawdown point`, `${profile.asset}, about 2.0 return points per drawdown point`, `${profile.secondAsset}, about 1.2 return points per drawdown point`];
+          explanation = `${profile.asset}: 8 / 6 is about 1.3. ${profile.secondAsset}: 7 / 3 is about 2.3.`;
+        } else {
+          const firstFee = learner.level === "Beginner" ? 0 : 1;
+          const secondFee = learner.level === "Beginner" ? 0 : 0.5;
+          prompt = `${profile.asset} gains 8% with a ${firstFee}% paper fee. ${profile.secondAsset} gains 7% with a ${secondFee}% paper fee. Which has the higher net return?`;
+          correct = `${profile.asset}, with a ${8 - firstFee}% net return`;
+          distractors = [`${profile.secondAsset}, with a ${7 - secondFee}% net return`, `Both choices, with the same net return`, `Neither choice, because fees erase both returns`];
+          explanation = `After the stated fees, the net returns are ${8 - firstFee}% and ${7 - secondFee}%.`;
+        }
+      } else if (lessonNumber === 6) {
+        const before = 80 + number;
+        const headline = before + 10;
+        const confirmed = before + 3;
+        if (learner.level === "Expert") {
+          prompt = `${profile.asset} jumps from ${lessonMoney(before)} to ${lessonMoney(headline)} on a headline, then closes at ${lessonMoney(confirmed)} after the report. Which measurement is most accurate?`;
+          correct = `${lessonMoney(3)} net gain; ${lessonMoney(7)} of the headline jump reversed`;
+          distractors = [`${lessonMoney(10)} net gain; none of the headline jump reversed`, `${lessonMoney(7)} net gain; ${lessonMoney(3)} of the jump reversed`, `${lessonMoney(3)} net loss; ${lessonMoney(10)} of the jump reversed`];
+          explanation = `The close is ${lessonMoney(3)} above the starting price, and ${lessonMoney(7)} below the headline high.`;
+        } else {
+          prompt = `${profile.asset} starts at ${lessonMoney(before)}, jumps to ${lessonMoney(headline)} on a headline, and closes at ${lessonMoney(confirmed)}. What is the final change from the starting price?`;
+          correct = `${lessonMoney(3)} increase`;
+          distractors = [`${lessonMoney(10)} increase`, `${lessonMoney(7)} decrease`, `${lessonMoney(3)} decrease`];
+          explanation = `${lessonMoney(confirmed)} - ${lessonMoney(before)} = ${lessonMoney(3)}. The temporary high is not the closing result.`;
+        }
+      } else if (lessonNumber === 7) {
+        const riskBudget = learner.ageBand === "youth" ? 24 : learner.ageBand === "teen" ? 60 : 120;
+        const entry = 25 + number;
+        const review = entry - (4 + rank);
+        const extraCost = learner.level === "Expert" ? 1 : 0;
+        const riskPerUnit = entry - review + extraCost;
+        const maxUnits = Math.floor(riskBudget / riskPerUnit);
+        prompt = `${learner.setting} limits one idea to ${lessonMoney(riskBudget)} of risk. Entry is ${lessonMoney(entry)}, review is ${lessonMoney(review)}${extraCost ? ", and possible slippage adds $1 per unit" : ""}. What is the largest whole-unit position?`;
+        correct = `${maxUnits} units within the risk limit`;
+        distractors = [`${maxUnits + 1} units above the risk limit`, `${Math.max(1, maxUnits - 2)} units using only half the limit`, `${Math.floor(riskBudget / entry)} units based on entry cost alone`];
+        explanation = `Risk per unit is ${lessonMoney(riskPerUnit)}. ${lessonMoney(riskBudget)} / ${lessonMoney(riskPerUnit)} allows ${maxUnits} whole units.`;
+      } else if (lessonNumber === 8) {
+        const entry = 40 + number;
+        const exit = entry + (4 + rank);
+        const gain = units * (exit - entry);
+        if (learner.level === "Beginner") {
+          prompt = `A journal shows ${units} units bought at ${lessonMoney(entry)} and reviewed at ${lessonMoney(exit)}. What paper gain should be recorded?`;
+          correct = lessonMoney(gain);
+          distractors = [lessonMoney(exit - entry), lessonMoney(units * exit), lessonMoney(units * entry)];
+          explanation = `${units} x (${lessonMoney(exit)} - ${lessonMoney(entry)}) = ${lessonMoney(gain)}.`;
+        } else {
+          const returnPercent = roundedLessonNumber(((exit - entry) / entry) * 100);
+          const benchmark = Math.max(1, returnPercent - (learner.level === "Expert" ? 3 : 2));
+          prompt = `A journaled trade moves from ${lessonMoney(entry)} to ${lessonMoney(exit)}, a ${returnPercent}% return. Its benchmark gains ${benchmark}%. What is the trade's excess return?`;
+          correct = `${roundedLessonNumber(returnPercent - benchmark)} percentage points`;
+          distractors = [`${roundedLessonNumber(returnPercent + benchmark)} percentage points`, `${benchmark} percentage points`, `${returnPercent} percentage points`];
+          explanation = `${returnPercent}% - ${benchmark}% = ${roundedLessonNumber(returnPercent - benchmark)} percentage points.`;
+        }
+      } else if (lessonNumber === 9) {
+        const total = learner.baseAccount;
+        const overlapping = total * (learner.level === "Expert" ? 0.55 : learner.level === "Intermediate" ? 0.45 : 0.4);
+        const overlapPercent = roundedLessonNumber((overlapping / total) * 100);
+        if (learner.level === "Expert") {
+          const target = 35;
+          const reduction = total * ((overlapPercent - target) / 100);
+          prompt = `${lessonMoney(overlapping)} of a ${lessonMoney(total)} portfolio shares one risk. To reduce that exposure from ${overlapPercent}% to ${target}%, how much must move to another role?`;
+          correct = lessonMoney(reduction);
+          distractors = [lessonMoney(total * 0.35), lessonMoney(overlapping * 0.35), lessonMoney(total - overlapping)];
+          explanation = `The exposure must fall by ${overlapPercent - target}% of ${lessonMoney(total)}, which is ${lessonMoney(reduction)}.`;
+        } else {
+          prompt = `${lessonMoney(overlapping)} of a ${lessonMoney(total)} paper portfolio shares the same sector risk. What percentage of the portfolio overlaps?`;
+          correct = `${overlapPercent}% overlapping exposure`;
+          distractors = [`${100 - overlapPercent}% overlapping exposure`, `${Math.max(5, overlapPercent - 10)}% overlapping exposure`, `${Math.min(95, overlapPercent + 15)}% overlapping exposure`];
+          explanation = `${lessonMoney(overlapping)} / ${lessonMoney(total)} x 100 = ${overlapPercent}%.`;
+        }
+      } else {
+        if (learner.level === "Beginner") {
+          prompt = `A thesis says to review ${profile.asset} if its key metric falls below 70. The new report shows 66. What should the learner do?`;
+          correct = "Review the thesis because the written trigger was reached";
+          distractors = ["Keep the thesis unchanged because the price may recover", "Delete the trigger because the report was disappointing", "Add more units before checking why the metric changed"];
+          explanation = `The metric crossed the prewritten trigger, so the thesis should be reviewed before another action.`;
+        } else {
+          const gainChance = learner.level === "Expert" ? 0.45 : 0.6;
+          const gain = learner.level === "Expert" ? 24 : 20;
+          const lossChance = 1 - gainChance;
+          const loss = learner.level === "Expert" ? 12 : 10;
+          const expected = roundedLessonNumber((gainChance * gain) - (lossChance * loss));
+          prompt = `After new evidence, a plan has a ${gainChance * 100}% chance to gain ${lessonMoney(gain)} and a ${roundedLessonNumber(lossChance * 100)}% chance to lose ${lessonMoney(loss)}. What is its simple expected value?`;
+          correct = `${lessonMoney(expected)} per trial`;
+          distractors = [`${lessonMoney(gain - loss)} per trial`, `${lessonMoney(gainChance * gain)} per trial`, `-${lessonMoney(lossChance * loss)} per trial`];
+          explanation = `(${gainChance} x ${lessonMoney(gain)}) - (${roundedLessonNumber(lossChance, 2)} x ${lessonMoney(loss)}) = ${lessonMoney(expected)}.`;
+        }
+      }
+
+      if (!prompt.includes(profile.asset)) prompt = `While studying ${profile.asset}: ${prompt}`;
+      if (!prompt.includes(learner.setting)) prompt = `In ${learner.setting}: ${prompt}`;
+      return lessonQuestion("Numbers", prompt, correct, distractors, explanation);
+    }
+
+    function buildScenarioPractice(profile, context, learner) {
+      if (learner.level === "Expert") {
+        return lessonQuestion(
+          "Scenario",
+          `In ${learner.setting}, ${context.scenario.toLowerCase()} At the same time, ${profile.event}. Which response handles both the evidence and the uncertainty?`,
+          `Separate observed facts from assumptions, test ${profile.metric}, and define what evidence would reverse the decision.`,
+          [
+            `Treat the price move as confirmation, then explain the evidence after the position is opened.`,
+            `Wait until every uncertainty disappears, then copy the strongest market reaction without a limit.`,
+            `Choose the safer-sounding asset first, then adjust the thesis to match whatever result appears.`
+          ],
+          `Expert reasoning keeps facts, assumptions, decision rules, and disconfirming evidence separate.`
+        );
+      }
+      if (learner.level === "Intermediate") {
+        return lessonQuestion(
+          "Scenario",
+          `In ${learner.setting}, ${context.scenario.toLowerCase()} Which next step uses the lesson and also checks the main risk in ${profile.asset}?`,
+          `${context.move} Then check ${profile.metric} before choosing a position size.`,
+          [
+            `Follow the strongest move first, then write a reason if the result is profitable.`,
+            `Use the first confident explanation, then wait to think about risk after entry.`,
+            `Avoid the decision completely because one missing fact makes analysis impossible.`
+          ],
+          `The response applies ${context.title} and checks a concrete risk instead of reacting to price alone.`
+        );
+      }
+      return lessonQuestion(
+        "Scenario",
+        `${context.scenario} What should the learner in ${learner.setting} do next for ${profile.asset}?`,
+        context.move,
+        [
+          `Act on the first price move and write the reason afterward.`,
+          `Use the first opinion as proof and ignore missing information.`,
+          `Wait for a friend to choose without making a personal plan.`
+        ],
+        `The lesson's next step is: ${context.move}`
+      );
+    }
+
+    function buildEvidencePractice(profile, context, learner) {
+      const prompt = learner.level === "Beginner"
+        ? `In ${learner.setting}, while studying ${profile.asset}, ${context.source.toLowerCase()} What is the best way to check that claim?`
+        : learner.level === "Intermediate"
+          ? `In ${learner.setting}, while studying ${profile.asset}, ${context.source.toLowerCase()} Another article repeats it. What evidence check is strongest?`
+          : `In ${learner.setting}, while studying ${profile.asset}, ${context.source.toLowerCase()} Two reports also use different dates and definitions. What should an analyst do before deciding?`;
+      const correct = learner.level === "Beginner"
+        ? `Find a dated company release, filing, or direct dataset that supports the claim.`
+        : learner.level === "Intermediate"
+          ? `Trace both reports to their original sources, compare dates, and list what remains unknown.`
+          : `Reconcile definitions and time periods in primary sources, then look for independent confirmation.`;
+      const distractors = learner.level === "Beginner"
+        ? [
+            `Trust the claim if several accounts repeat the same wording.`,
+            `Trust the claim if ${profile.asset} is already moving in that direction.`,
+            `Reject the claim only because the post uses a short explanation.`
+          ]
+        : [
+            `Count every repeated article as separate proof because each has a different headline.`,
+            `Choose the source that agrees with the current price and ignore the publication date.`,
+            `Average the claims together before checking whether they measure the same thing.`
+          ];
+      return lessonQuestion("Evidence", prompt, correct, distractors, `Reliable evidence can be traced, dated, compared on equal terms, and separated from repetition.`);
+    }
+
+    function buildProcessPractice(profile, context, learner) {
+      const correct = learner.level === "Beginner"
+        ? `State the fact, use the ${context.title} skill, record the reason, then choose a next step.`
+        : learner.level === "Intermediate"
+          ? `Record the observation, verify the source, name the risk, then set the action and review point.`
+          : `Define the claim, test the evidence, model a counter-case, then apply a prewritten decision rule.`;
+      return lessonQuestion(
+        "Process",
+        `Which order creates the strongest ${context.title} decision for ${profile.asset} in ${learner.setting}?`,
+        correct,
+        [
+          `Choose the action, defend it with a source, then write the original observation and risk.`,
+          `Follow the price, copy a reason, remove conflicting evidence, then record only the outcome.`,
+          `Wait for certainty, skip the risk step, choose the action, then change the rule after the result.`
+        ],
+        `A sound process moves from observation and evidence to risk and action, with the rule written before the result.`
+      );
+    }
+
+    function buildRiskPractice(profile, knowledge, context, learner) {
+      if (learner.level === "Expert") {
+        return lessonQuestion(
+          "Risk",
+          `In ${learner.setting}, which risk statement about ${profile.asset} is specific, testable, and connected to ${context.title}?`,
+          `${knowledge.risk}; monitor ${profile.metric} and review the thesis if the evidence breaks its original reason.`,
+          [
+            `${knowledge.risk}; ignore the metric unless the paper position has already lost most of its value.`,
+            `${profile.asset} is risky because every investment can fall, so no separate trigger is necessary.`,
+            `${profile.asset} is safe while the chart is green, because current demand cancels the stated risk.`
+          ],
+          `A useful risk statement names the mechanism, the evidence to watch, and the point that requires review.`
+        );
+      }
+      const correct = learner.level === "Intermediate"
+        ? `${knowledge.risk}, so the plan should track ${profile.metric}.`
+        : knowledge.risk;
+      return lessonQuestion(
+        "Risk",
+        `In ${learner.setting}, which downside is most important when applying ${context.title} to ${knowledge.term}?`,
+        correct,
+        [
+          `The lesson title may be harder to remember after the price changes.`,
+          `The chart may use a different color without changing the investment facts.`,
+          `The learner may need more than one screen to finish the full lesson.`
+        ],
+        `The relevant downside is ${knowledge.risk}. A plan should connect that risk to something observable.`
+      );
+    }
+
+    function buildDecisionPractice(profile, context, learner) {
+      const correct = learner.level === "Beginner"
+        ? `Choose only after writing what each asset does, what could go wrong, and which one fits ${learner.goal}.`
+        : learner.level === "Intermediate"
+          ? `Compare each asset's role, evidence, overlap, and downside before choosing the one that improves the plan.`
+          : `Compare marginal portfolio benefit, shared risk, evidence quality, and opportunity cost before changing the allocation.`;
+      return lessonQuestion(
+        "Decision",
+        `${learner.setting} is considering ${profile.asset} and ${profile.secondAsset} during ${context.title}. Which decision rule is strongest?`,
+        correct,
+        [
+          `Choose the asset with the faster recent chart, then decide its portfolio role after seeing the result.`,
+          `Choose the more familiar asset, because name recognition reduces the need to compare evidence.`,
+          `Split money equally between both assets, because equal amounts always create equal sources of risk.`
+        ],
+        `The better decision rule connects evidence and risk to the portfolio goal instead of relying on speed, fame, or equal weights.`
+      );
+    }
+
+    function buildJournalPractice(profile, context, learner) {
+      const correct = learner.level === "Beginner"
+        ? context.journal
+        : learner.level === "Intermediate"
+          ? `${context.journal} Add the original evidence, position size, and the condition that would change the plan.`
+          : `${context.journal} Separate the prior belief, new evidence, alternative explanation, and rule used for the next decision.`;
+      return lessonQuestion(
+        "Journal",
+        `Which journal entry would let ${learner.setting} fairly review a ${profile.asset} decision from the ${context.title} lesson?`,
+        correct,
+        [
+          `Record only the final return and describe every profitable decision as well planned.`,
+          `Write a new reason after the result and remove the risk that actually occurred.`,
+          `Save the asset name and final price but leave out the original decision rule.`
+        ],
+        `A useful journal preserves what was known and planned before the outcome, then records what changed afterward.`
+      );
+    }
+
+    function buildTransferPractice(profile, context, learner) {
+      const challenge = learner.level === "Beginner"
+        ? `During ${context.title}, which action correctly transfers the lesson to ${profile.secondAsset}?`
+        : learner.level === "Intermediate"
+          ? `During ${context.title}, the evidence for ${profile.secondAsset} is mixed. Which action transfers the lesson without copying the first asset's conclusion?`
+          : `During ${context.title}, ${profile.asset} and ${profile.secondAsset} react to the same headline for different reasons. Which action transfers the method while allowing a different conclusion?`;
+      const correct = learner.level === "Beginner"
+        ? `${context.move} Apply the same steps using facts about ${profile.secondAsset}.`
+        : learner.level === "Intermediate"
+          ? `Repeat the evidence, risk, and review process with facts specific to ${profile.secondAsset}.`
+          : `Keep the same decision framework, rebuild the assumptions for ${profile.secondAsset}, and accept a different result if its evidence differs.`;
+      return lessonQuestion(
+        "Transfer",
+        `For ${learner.setting}, ${challenge.charAt(0).toLowerCase()}${challenge.slice(1)}`,
+        correct,
+        [
+          `Copy the conclusion from ${profile.asset}, because the same lesson should always produce the same trade.`,
+          `Use the recent chart as the only new fact, because the lesson method was already tested once.`,
+          `Ignore differences between the assets, because a general rule makes company details unnecessary.`
+        ],
+        `Transfer means reusing the thinking process, not copying an answer. The facts for ${profile.secondAsset} can lead elsewhere.`
+      );
+    }
+
+    function buildPracticePages(number, title, shortName, focus, lessonNumber = 1, lessonTitle = "Core ideas", learnerProfile = {}) {
       const profile = moduleProfile(number, title, shortName, focus);
       const knowledge = moduleKnowledge(number);
       const context = lessonQuestionContext(lessonNumber);
-      const units = 2 + (lessonNumber % 4);
-      const unitPrice = 7 + (number * 3) + lessonNumber;
-      const positionValue = units * unitPrice;
-      return [
-        {
-          type: "practice",
-          style: "Concept",
-          prompt: `Lesson ${lessonNumber}: What is the main skill in "${context.title}"?`,
-          options: [context.focus, `Memorize one asset name without using it.`, `Follow a chart without writing a reason.`, `Choose the most popular answer as quickly as possible.`],
-          answer: 0,
-          explanation: `The main skill for this lesson is to ${context.focus}.`
-        },
-        {
-          type: "practice",
-          style: "Quick math",
-          prompt: `During ${context.title}, a paper position has ${units} units of ${profile.asset} at $${unitPrice} each. What is its value before fees?`,
-          options: [`$${positionValue}`, `$${positionValue + unitPrice}`, `$${positionValue + (units * 3)}`, `$${Math.max(1, unitPrice - 2) * units}`],
-          answer: 0,
-          explanation: `Multiply ${units} units by $${unitPrice}: the position value is $${positionValue}.`
-        },
-        {
-          type: "practice",
-          style: "Scenario",
-          prompt: `Scenario for ${context.title}: ${context.scenario} What should happen next?`,
-          options: [context.move, `Follow the strongest recent price move right away.`, `Treat the first opinion as the final answer.`, `Wait for someone else to make the decision.`],
-          answer: 0,
-          explanation: `This lesson calls for the learner to ${context.move.toLowerCase()}`
-        },
-        {
-          type: "practice",
-          style: "Reasoning",
-          prompt: `Which mistake would most weaken a decision in ${context.title}?`,
-          options: [context.mistake, `Writing down the reason before acting.`, `Naming a risk that could change the plan.`, `Using a lesson idea in a paper trade.`],
-          answer: 0,
-          explanation: `The key mistake is: ${context.mistake}`
-        },
-        {
-          type: "practice",
-          style: "Risk",
-          prompt: `In ${context.title}, which risk is especially relevant to ${knowledge.term}?`,
-          options: [knowledge.risk, `The learner may forget the exact module number.`, `The task could take longer than a quick scroll.`, `The app may show more than one market category.`],
-          answer: 0,
-          explanation: `The important risk here is: ${knowledge.risk}.`
-        },
-        {
-          type: "practice",
-          style: "Journal",
-          prompt: `Which note best belongs in a ${context.title} journal entry?`,
-          options: [context.journal, `Only the final price, with no original reason.`, `A new explanation written after seeing the result.`, `The asset name with no note about the decision.`],
-          answer: 0,
-          explanation: `A useful entry for this lesson is: ${context.journal}`
-        },
-        {
-          type: "practice",
-          style: "Source",
-          prompt: `Which source warning matters most in ${context.title}?`,
-          options: [context.source, `A post includes the asset name in its headline.`, `A post has a short introduction before the claim.`, `A post uses a chart that is one day old.`],
-          answer: 0,
-          explanation: `The warning to notice is: ${context.source}`
-        },
-        {
-          type: "practice",
-          style: "Application",
-          prompt: `Which action shows that a learner used the ${context.title} lesson?`,
-          options: [context.move, `Follow a popular opinion without a written reason.`, `Ignore the lesson once a price starts moving.`, `Replace the plan with the latest headline.`],
-          answer: 0,
-          explanation: `Using this lesson means to ${context.move.toLowerCase()}`
-        }
+      const learner = normalizeLessonLearner(learnerProfile);
+      const pages = [
+        buildConceptPractice(profile, knowledge, context, learner),
+        buildNumberPractice(number, lessonNumber, profile, learner),
+        buildScenarioPractice(profile, context, learner),
+        buildEvidencePractice(profile, context, learner),
+        buildProcessPractice(profile, context, learner),
+        buildRiskPractice(profile, knowledge, context, learner),
+        buildJournalPractice(profile, context, learner),
+        buildTransferPractice(profile, context, learner)
       ];
+      return pages.map((page, index) => scrambleQuestion(page, `practice-${number}-${lessonNumber}-${index}-${learner.ageBand}-${learner.level}`));
     }
 
-    function buildLessonPages(number, title, shortName, focus, lessonNumber = 1, lessonTitle = "Core ideas") {
+    function buildLessonPages(number, title, shortName, focus, lessonNumber = 1, lessonTitle = "Core ideas", learnerProfile = {}) {
       const lecturePage = {
         type: "text",
         title: `${lessonTitle}: ${title}`,
-        body: lessonTextForPage(lessonNumber - 1, title, shortName, focus)
+        body: lessonTextForPage(lessonNumber - 1, title, shortName, focus, number, learnerProfile)
       };
-      const practicePages = buildPracticePages(number, title, shortName, focus, lessonNumber, lessonTitle);
-      const scrambledPracticePages = practicePages.map((page, index) => scrambleQuestion(page, `practice-${number}-${lessonNumber}-${index}`));
-      return [lecturePage, ...scrambledPracticePages];
+      const practicePages = buildPracticePages(number, title, shortName, focus, lessonNumber, lessonTitle, learnerProfile);
+      return [lecturePage, ...practicePages];
     }
 
-    function lessonTextForPage(index, title, shortName, focus) {
-      const pages = [
-        `This lesson is about ${focus}. A good learner does not just memorize a word; they connect the word to a decision. Example: if ${shortName} is moving up, the important question is not only "Did it rise?" but "Why did it rise, and does that reason matter?" Mini question: what new fact would make you more careful before a paper trade?`,
-        `${title} choices can look simple, but price moves usually have layers. Example: a stock can rise because sales improved, because investors are excited, or because the whole market moved. Those reasons are not equal. Mini question: which reason sounds strongest: better business results, social-media hype, or a random one-day jump?`,
-        `Before any paper trade, write a short thesis: "I am watching this because..." Then write the risk: "I could be wrong if..." Example: "I am watching an ETF because it spreads risk across many companies. I could be wrong if the whole sector falls." Mini question: can you name both a reason and a risk?`,
-        `${shortName} practice works best when you compare choices. Example: one asset may have slower growth but steadier behavior, while another may move faster but be harder to predict. A stronger learner explains the tradeoff instead of only picking the exciting one. Mini question: what would you give up to choose the riskier asset?`,
-        `If a paper trade goes against you, the lesson is not over. Example: if your plan said "this may drop if news is bad" and bad news arrives, the drop may actually match your risk note. That is different from being surprised by a risk you never considered. Mini question: did the result break your thesis or confirm a known risk?`,
-        `A strong journal note includes the asset, reason, risk, result, and update. Example: "I chose QQQ for tech exposure. Risk: tech stocks can fall together. Result: down 3%. Update: the whole Nasdaq was weak, so this was market risk, not just one company." Mini question: which part of that note helps you learn most?`,
-        `Different markets move for different reasons. Crypto may react to sentiment and regulation, indexes may react to broad economic news, and individual companies may react to earnings or product news. Mini question: if every stock in an index falls together, is that more likely company-specific risk or broad market risk?`,
-        `The safest learning habit is to slow down at the moment you feel most certain. Example: if everyone is excited about a name, that excitement can be information, but it can also be a warning sign. Mini question: what would you check before trusting a popular idea?`,
-        `Watch-only assets can still teach you. Example: a private company may be famous, but if it is not available for normal public trading, you can still study its business, competitors, and news without pressing Buy. Mini question: what can you learn from a company even when you cannot buy it?`,
-        `Portfolio thinking means asking how one choice fits with the rest of your plan. Example: adding another risky asset to a risky portfolio may not add much balance. Adding a steadier index fund might change the risk more. Mini question: does this choice add something new, or more of the same?`,
-        `Good investors are not always right. They are careful about being wrong. Example: a learner can say, "If this drops below my risk line, I will review the thesis instead of pretending nothing changed." Mini question: what rule would help you review instead of panic?`,
-        `The best score is not just XP. It is being able to explain a choice clearly in your own words. Example: "I picked this because of diversification, but I know the whole sector could fall." That is stronger than "I picked it because it was green." Mini question: can your explanation survive a follow-up question?`
+    function lessonTextForPage(index, title, shortName, focus, number = 1, learnerProfile = {}) {
+      const profile = moduleProfile(number, title, shortName, focus);
+      const knowledge = moduleKnowledge(number);
+      const context = lessonQuestionContext(index + 1);
+      const learner = normalizeLessonLearner(learnerProfile);
+      const teachingPoints = [
+        `${knowledge.term} is ${knowledge.definition}. The important part is not memorizing the phrase; it is knowing how the idea changes a decision.`,
+        `A chart tells you what the price did, not why it happened. In this lesson, describe direction, size, and time first, then investigate possible causes.`,
+        `Evidence has a chain: claim, original source, date, measurement, and missing information. Repeated posts may still trace back to one piece of evidence.`,
+        `Downside risk must be specific enough to plan around. Name what could happen, how much it could matter, and what observation would trigger a review.`,
+        `Comparing choices means comparing their jobs in a plan, not merely their latest returns. Price, risk, overlap, and time horizon can point in different directions.`,
+        `News is an event; a lasting business change is a conclusion that needs evidence. A quick reaction can fade once the complete report is understood.`,
+        `A trade plan turns an idea into rules: entry reason, position size, maximum risk, review point, and the evidence that would change the thesis.`,
+        `A journal protects the original decision from hindsight. Record what you knew before the outcome, then compare that record with what actually happened.`,
+        `Portfolio fit asks how holdings behave together. Different ticker names can still carry the same sector, currency, or sentiment risk.`,
+        `Reviewing a thesis is not defending an old answer. It is checking whether the original evidence still holds and changing the plan when it does not.`
       ];
-      return pages[index % pages.length];
+      const workedExamples = [
+        `If 4 units cost $15 each, the position is worth $60. That calculation tells you the size, while the reason and risk tell you whether the size makes sense.`,
+        `A move from $50 to $55 is a $5 increase and a 10% increase. Saying only "up $5" leaves out the starting value needed for comparison.`,
+        `Three articles that repeat one company release are one underlying source, not three independent confirmations. A separate filing or dataset adds new evidence.`,
+        `If 5 units can lose $4 each before review, the planned loss is $20. The number should fit the account before the trade begins.`,
+        `${profile.asset} may offer more upside while ${profile.secondAsset} may add a different role. The stronger choice depends on the goal and existing exposure.`,
+        `A price can jump $10 on a headline and finish only $3 above its starting point. The close shows that $7 of the first reaction reversed.`,
+        `With a $30 risk limit and $5 risk per unit, the plan allows at most 6 whole units. Buying more would break the rule even if enough cash remains.`,
+        `A complete note records entry, size, reason, risk, result, and update. A gain does not prove the original reasoning was sound.`,
+        `If $400 of a $1,000 portfolio shares one sector risk, the overlap is 40%. Counting ticker names would hide that concentration.`,
+        `Suppose the thesis requires a metric above 70 and a new report shows 66. The written trigger calls for review before adding, holding, or selling.`
+      ];
+      const ageApplication = learner.ageBand === "youth"
+        ? `Imagine ${learner.setting} using a $200 practice account to ${learner.goal}. Use concrete dollar amounts and explain every market word in plain language.`
+        : learner.ageBand === "teen"
+          ? `Imagine ${learner.setting} using $800 of simulated savings to ${learner.goal}. Separate what the chart shows from what a headline claims.`
+          : `Imagine ${learner.setting} using $4,000 of paper capital to ${learner.goal}. Consider how this decision affects the rest of the portfolio and its time horizon.`;
+      const levelApplication = learner.level === "Beginner"
+        ? `Use a three-step check: state the fact, explain the lesson idea, and name one risk before choosing an action.`
+        : learner.level === "Intermediate"
+          ? `Compare at least two explanations, identify the missing evidence, and calculate the effect on position or portfolio risk.`
+          : `Test the strongest counterargument, distinguish correlation from cause, and include opportunity cost in the decision rule.`;
+
+      return `${teachingPoints[index % teachingPoints.length]} ${profile.signal} is useful evidence, while ${profile.trap} is a common trap.<br><br><strong>Example:</strong> ${workedExamples[index % workedExamples.length]}<br><br><strong>Apply it:</strong> ${ageApplication} ${levelApplication}<br><br><strong>Checkpoint:</strong> Before moving on, explain why "${context.mistake}" would weaken the decision and name one fact that could change your answer.`;
     }
 
     function buildMultipleChoiceQuestions(number, title, shortName, focus, count) {
@@ -3550,27 +3970,17 @@
     }
 
     function lessonPagesFor(module, progress) {
-      const pages = currentLesson(module, progress).lesson.pages;
-      const level = state.profile.level || "Beginner";
-      const age = Number(state.profile.age);
-      const agePrefix = age > 0 && age < 13
-        ? "Youth learner focus: use a clear example and explain the basic idea. "
-        : age > 0 && age < 18
-          ? "Teen learner focus: connect the idea to a reason and a risk. "
-          : "Adult learner focus: compare evidence, tradeoffs, and consequences. ";
-      return pages.map(page => {
-        if (page.type === "text") return { ...page, body: `${agePrefix}${page.body}` };
-        const prefix = level === "Expert"
-          ? "Expert challenge: compare the evidence, tradeoff, and risk. "
-          : level === "Intermediate"
-            ? "Intermediate challenge: explain the reason and the risk. "
-            : "Beginner challenge: identify the main idea and one example. ";
-        return {
-          ...page,
-          prompt: `${prefix}${page.prompt}`,
-          explanation: `${agePrefix}${prefix}${page.explanation || "Review the lesson idea and connect it to the decision."}`
-        };
-      });
+      const lessonInfo = currentLesson(module, progress).lesson;
+      const lessonTitle = lessonInfo.title.replace(/^Lesson \d+:\s*/, "");
+      return buildLessonPages(
+        module.number,
+        module.shortTitle,
+        module.shortName || module.shortTitle.toLowerCase(),
+        module.focus,
+        lessonInfo.number,
+        lessonTitle,
+        state.profile
+      );
     }
 
     function coursePanelTemplate(item) {
