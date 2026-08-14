@@ -1541,7 +1541,7 @@
             <div>
               <div class="logo">IQ</div>
               <h1 style="margin-top:16px">Invest Quest</h1>
-              <p style="margin-top:8px;color:rgba(255,255,255,.86)">Practice investing, earn XP, and learn what each market is before touching real money.</p>
+              <p style="margin-top:8px;color:rgba(255,255,255,.86)">Practice investing, earn XP, and learn how each market works before using real money.</p>
             </div>
             <div class="mini-chart" aria-hidden="true">
               <span></span><span></span><span></span><span></span><span></span>
@@ -1575,18 +1575,18 @@
 
             <section class="step" data-step="2">
               <div>
-                <h2>Last, First name</h2>
+                <h2>What is your name?</h2>
                 <p class="muted" style="margin-top:8px">Your dashboard will use this name.</p>
               </div>
               <div class="fields">
-                <label class="field">Last name <input id="lastInput" type="text" autocomplete="family-name" placeholder="Last"></label>
-                <label class="field">First name <input id="firstInput" type="text" autocomplete="given-name" placeholder="First"></label>
+                <label class="field">Last name <input id="lastInput" type="text" autocomplete="family-name" placeholder="Enter your last name"></label>
+                <label class="field">First name <input id="firstInput" type="text" autocomplete="given-name" placeholder="Enter your first name"></label>
               </div>
             </section>
 
             <section class="step" data-step="3">
               <div>
-                <h2>How good are you?</h2>
+                <h2>How experienced are you?</h2>
                 <p class="muted" style="margin-top:8px">Pick your starting level.</p>
               </div>
               <div class="choice-grid" data-choice-group="level">
@@ -1631,7 +1631,7 @@
             <button class="tab" data-tab="settings" title="Settings" aria-label="Settings"><span class="tab-icon" aria-hidden="true">⚙</span><span class="tab-label">Settings</span></button>
           </nav>
           <div class="legend">
-            <div class="legend-item"><span class="stripe red"></span><span>Can’t buy, holding economy</span></div>
+            <div class="legend-item"><span class="stripe red"></span><span>Cannot buy (holding economy)</span></div>
             <div class="legend-item"><span class="stripe green"></span><span>Can buy</span></div>
           </div>
         </aside>
@@ -1640,8 +1640,8 @@
           <section data-panel="markets">
             <div class="section-head">
               <div>
-                <h2>Stock markets, crypto, and paper choices</h2>
-                <p class="muted">Buy and sell are practice actions for learning the markets.</p>
+                <h2>Markets and Paper Trading</h2>
+                <p class="muted">Buying and selling are practice activities for learning how markets work.</p>
               </div>
             </div>
             <div class="market-chart" id="marketChart"></div>
@@ -1651,15 +1651,15 @@
           <section data-panel="learn" class="hidden">
             <div class="section-head">
               <div>
-                <h2>Learning course</h2>
-                <p class="muted">Finish lessons, quizzes, and tests to unlock the next step and earn XP automatically.</p>
+                <h2>Learning Course</h2>
+                <p class="muted">Finish lessons, quizzes, and tests to unlock each new step and earn XP automatically.</p>
               </div>
               <button class="btn green" id="dailyBtn">Daily login +10 XP</button>
             </div>
             <div class="learn-grid">
               <div class="grid">
                 <div class="course-summary">
-                  <div class="course-stat"><strong id="courseDone">0/0</strong><span class="muted">Steps done</span></div>
+                  <div class="course-stat"><strong id="courseDone">0/0</strong><span class="muted">Steps completed</span></div>
                   <div class="course-stat"><strong id="coursePercent">0%</strong><span class="muted">Course progress</span></div>
                   <div class="course-stat"><strong id="courseNext">Lesson 1</strong><span class="muted">Next up</span></div>
                 </div>
@@ -1669,17 +1669,17 @@
               <aside class="grid">
                 <div class="card" style="padding:14px">
                   <h3>Automatic XP</h3>
-                  <p class="muted" style="margin-top:6px">Half of lesson, quiz, and test XP comes from accuracy. Half comes from time, with 1 XP removed for each second after 2 minutes.</p>
+                  <p class="muted" style="margin-top:6px">Half of the XP for lessons, quizzes, and tests comes from accuracy, and half comes from speed. One XP is deducted for each second beyond two minutes.</p>
                 </div>
                 <div class="card" style="padding:14px">
                   <h3>Streak rewards</h3>
-                  <p class="muted" style="margin-top:6px">Claim when your learning streak reaches the milestone.</p>
+                  <p class="muted" style="margin-top:6px">Claim each reward when your learning streak reaches its milestone.</p>
                   <div class="streak-grid" id="streakGrid" style="margin-top:12px"></div>
                 </div>
                 <div class="card" style="padding:14px">
                   <h3>Streak Freeze</h3>
                   <p class="muted" style="margin-top:6px">Protect one missed day.</p>
-                  <button class="btn secondary" id="freezeBtn" style="margin-top:12px;width:100%">Buy freeze -250 XP</button>
+                  <button class="btn secondary" id="freezeBtn" style="margin-top:12px;width:100%">Buy Streak Freeze (250 XP)</button>
                 </div>
               </aside>
             </div>
@@ -1688,8 +1688,8 @@
           <section data-panel="tasks" class="hidden">
             <div class="section-head">
               <div>
-                <h2>Bronze, Silver, Gold tasks</h2>
-                <p class="muted" id="taskGuide">Three daily goals: one Bronze, one Silver, and one Gold.</p>
+                <h2>Bronze, Silver, and Gold Tasks</h2>
+                <p class="muted" id="taskGuide">Complete three daily goals: one Bronze, one Silver, and one Gold.</p>
               </div>
             </div>
             <div class="task-grid" id="taskGrid"></div>
@@ -1767,11 +1767,11 @@
         ["DPLS", "can", "High-risk stock", "DPLS"]
       ]},
       { category: "Private stocks", icon: "P", items: [
-        ["Anthropic", "cant", "Private company - Forge", "", "https://forgeglobal.com/anthropic_stock/"],
-        ["OpenAI", "cant", "Private company - Forge", "", "https://forgeglobal.com/openai_stock/"],
-        ["Perplexity", "cant", "Private company - Forge", "", "https://forgeglobal.com/perplexity_stock/"],
-        ["Skild AI", "cant", "Private company - Forge", "", "https://forgeglobal.com/skild-ai_stock/"],
-        ["Discord", "cant", "Private company - Forge", "", "https://forgeglobal.com/discord_stock/"]
+        ["Anthropic", "cant", "Private company on Forge", "", "https://forgeglobal.com/anthropic_stock/"],
+        ["OpenAI", "cant", "Private company on Forge", "", "https://forgeglobal.com/openai_stock/"],
+        ["Perplexity", "cant", "Private company on Forge", "", "https://forgeglobal.com/perplexity_stock/"],
+        ["Skild AI", "cant", "Private company on Forge", "", "https://forgeglobal.com/skild-ai_stock/"],
+        ["Discord", "cant", "Private company on Forge", "", "https://forgeglobal.com/discord_stock/"]
       ]},
       { category: "International", icon: "🌐", items: [
         ["Nikkei 225", "cant", "Index tracker", "^N225"],
@@ -1886,32 +1886,43 @@
       return hash;
     }
 
+    function sentenceCase(value) {
+      const text = String(value || "");
+      return /^[a-z]/.test(text) ? `${text.charAt(0).toUpperCase()}${text.slice(1)}` : text;
+    }
+
     function scrambleQuestion(question, seed) {
-      const balancedOptions = balanceOptionLengths(question, seed);
-      const correctOption = balancedOptions[question.answer];
+      const normalizedQuestion = {
+        ...question,
+        prompt: sentenceCase(question.prompt),
+        options: question.options.map(sentenceCase),
+        explanation: question.explanation ? sentenceCase(question.explanation) : question.explanation
+      };
+      const balancedOptions = balanceOptionLengths(normalizedQuestion, seed);
+      const correctOption = balancedOptions[normalizedQuestion.answer];
       const options = [...balancedOptions].sort((a, b) => hashString(`${seed}-${a}`) - hashString(`${seed}-${b}`));
-      return { ...question, options, answer: options.indexOf(correctOption) };
+      return { ...normalizedQuestion, options, answer: options.indexOf(correctOption) };
     }
 
     function balanceOptionLengths(question, seed) {
       const targetLength = Math.max(...question.options.map(option => option.length));
       const correctAddOns = [
-        "with a clear reason.",
-        "using the stated facts.",
-        "as the lesson explains."
+        "with a clear reason",
+        "using the stated facts",
+        "as the lesson explains"
       ];
       const distractorAddOns = [
-        "but leaves out a detail.",
-        "with incomplete logic.",
-        "without enough support.",
-        "using an unrelated reason."
+        "while omitting a key detail",
+        "using incomplete logic",
+        "without enough support",
+        "for an unrelated reason"
       ];
       return question.options.map((option, index) => {
         let balanced = option;
         const addOns = index === question.answer ? correctAddOns : distractorAddOns;
         let guard = 0;
         while (balanced.length < targetLength - 12 && guard < 6) {
-          balanced = `${balanced} ${addOns[hashString(`${seed}-${index}-${guard}`) % addOns.length]}`;
+          balanced = `${balanced.replace(/[.!?]+$/, "")}, ${addOns[hashString(`${seed}-${index}-${guard}`) % addOns.length]}.`;
           guard += 1;
         }
         return balanced;
@@ -1925,7 +1936,7 @@
           secondAsset: "a single-company stock",
           event: "buyers are active but the price keeps changing quickly",
           risk: "the order could fill at a worse price than expected",
-          signal: "steady demand with a clear reason behind it",
+          signal: "steady demand has a clear reason behind it",
           trap: "treating any green chart as proof that the idea is safe",
           metric: "price, reason for the move, and whether the trade still fits"
         },
@@ -2034,8 +2045,8 @@
 
     function moduleKnowledge(number) {
       const knowledge = [
-        { term: "market price", definition: "the current amount where buyers and sellers agree to trade", example: "a burst of buyers can lift a price when fewer sellers are available", risk: "a fast move can reverse when the news fades", action: "record the price, catalyst, and reason before practicing", falseIdea: "a green price always means the asset is a good buy" },
-        { term: "share of stock", definition: "a small ownership piece of a public company", example: "earnings can change demand for a company's shares", risk: "a strong brand does not remove business risk", action: "connect the price to the company business, not only its name", falseIdea: "one share gives control over every company decision" },
+        { term: "market price", definition: "the current price at which buyers and sellers agree to trade", example: "a burst of buyers can lift a price when fewer sellers are available", risk: "a fast move can reverse when the news fades", action: "record the price, catalyst, and reason before practicing", falseIdea: "a green price always means the asset is a good buy" },
+        { term: "stock share", definition: "a small ownership interest in a public company", example: "earnings can change demand for a company's shares", risk: "a strong brand does not remove business risk", action: "connect the price to the company's business, not only its name", falseIdea: "one share gives control over every company decision" },
         { term: "ETF", definition: "a fund that holds a basket of assets and trades like a stock", example: "QQQ gives exposure to many large Nasdaq companies in one trade", risk: "a basket can still fall when many holdings share the same sector", action: "identify what the fund holds before adding it to a portfolio", falseIdea: "an ETF cannot lose value because it owns many companies" },
         { term: "crypto asset", definition: "a digital asset that can move quickly with demand, news, and regulation", example: "regulation news can change crypto prices within hours", risk: "sharp moves can happen even when the project itself is unchanged", action: "keep position size small enough to handle a large move", falseIdea: "a low-priced coin is automatically less risky than Bitcoin" },
         { term: "risk-reward tradeoff", definition: "the relationship between a possible gain and a possible loss", example: "a large upside can still be a poor trade when the downside is too large", risk: "focusing only on upside can hide a loss that is hard to recover", action: "decide the maximum acceptable loss before entering a paper trade", falseIdea: "the largest possible return is always the best choice" },
@@ -2053,7 +2064,7 @@
     function lessonKnowledge(moduleNumber, lessonNumber) {
       const bank = lessonKnowledge.bank || (lessonKnowledge.bank = [
         [
-          ["market price", "the latest price where a buyer and seller completed a trade", "A new trade can change the displayed price even when earlier trades happened elsewhere.", "one small trade may not represent the price available for a larger order", "check the quote, trade time, and order size before acting"],
+          ["market price", "the latest price at which a buyer and seller completed a trade", "A new trade can change the displayed price even when earlier trades happened elsewhere.", "one small trade may not represent the price available for a larger order", "check the quote, trade time, and order size before acting"],
           ["percentage change", "a price move measured relative to its starting price", "A $5 move is 10% from $50 but only 1% from $500.", "a dollar move can look large or small without the starting value", "record both the dollar move and percentage move"],
           ["trading volume", "the number of shares or units traded during a period", "A price jump with unusually high volume can show broader participation than one tiny trade.", "volume shows activity but does not prove why people traded", "compare current volume with a normal period and verify the cause"],
           ["bid-ask spread", "the gap between the highest bid and lowest asking price", "A $10.00 bid and $10.20 ask create a $0.20 spread before any price move.", "a wide spread can create an immediate paper loss", "include the spread when estimating entry and exit cost"],
@@ -2287,11 +2298,11 @@
         return lessonQuestion(
           "Concept",
           `In ${learner.setting}, which explanation of ${knowledge.term} is precise enough for ${context.title} and a decision about ${profile.asset} without promising an outcome?`,
-          `${knowledge.definition}; it informs a decision but cannot guarantee the result.`,
+          `${sentenceCase(knowledge.term)} is ${knowledge.definition}; it informs a decision but cannot guarantee the result.`,
           [
-            `${knowledge.definition}; therefore the asset should rise whenever demand increases.`,
-            `${knowledge.definition}; therefore the lesson's risk can be ignored after entry.`,
-            `${knowledge.definition}; therefore recent performance predicts the next move.`
+            `${sentenceCase(knowledge.term)} is ${knowledge.definition}; therefore, the asset should rise whenever demand increases.`,
+            `${sentenceCase(knowledge.term)} is ${knowledge.definition}; therefore, the lesson's risk can be ignored after entry.`,
+            `${sentenceCase(knowledge.term)} is ${knowledge.definition}; therefore, recent performance predicts the next move.`
           ],
           `A strong definition explains what ${knowledge.term} is while leaving room for uncertainty, evidence, and ${profile.risk}.`
         );
@@ -2300,11 +2311,11 @@
         return lessonQuestion(
           "Concept",
           `In ${learner.setting}, which statement correctly connects ${knowledge.term} to ${context.title} and a decision about ${profile.asset}?`,
-          `${knowledge.definition}, so the learner should ${knowledge.action}.`,
+          `${sentenceCase(knowledge.term)} is ${knowledge.definition}, so the learner should ${knowledge.action}.`,
           [
-            `${knowledge.definition}, so one green chart is enough evidence to act.`,
-            `${knowledge.definition}, so popularity can replace a written reason.`,
-            `${knowledge.definition}, so downside risk matters only after a loss.`
+            `${sentenceCase(knowledge.term)} is ${knowledge.definition}, so one green chart is enough evidence to act.`,
+            `${sentenceCase(knowledge.term)} is ${knowledge.definition}, so popularity can replace a written reason.`,
+            `${sentenceCase(knowledge.term)} is ${knowledge.definition}, so downside risk matters only after a loss.`
           ],
           `${knowledge.term} matters because it changes what the learner should check before making a decision.`
         );
@@ -2312,11 +2323,11 @@
       return lessonQuestion(
         "Concept",
         `For ${context.title}, a learner in ${learner.setting} asks what ${knowledge.term} means for ${profile.asset}. Which answer is accurate?`,
-        knowledge.definition,
+        `It means ${knowledge.definition}.`,
         [
-          `a promise that ${profile.asset} will rise after any positive news`,
-          `the latest direction shown by ${profile.asset} on a price chart`,
-          `a rule that removes the need to think about possible losses`
+          `It is a promise that ${profile.asset} will rise after any positive news.`,
+          `It is the latest direction shown by ${profile.asset} on a price chart.`,
+          `It is a rule that removes the need to think about possible losses.`
         ],
         `${knowledge.term} means ${knowledge.definition}. The definition does not promise that a price will rise.`
       );
@@ -2346,7 +2357,7 @@
           explanation = `The position costs ${lessonMoney(positionValue)}, so ${lessonMoney(account)} - ${lessonMoney(positionValue)} = ${lessonMoney(account - positionValue)}.`;
         } else {
           const portfolioTotal = positionValue * 4;
-          prompt = `${profile.asset} is worth ${lessonMoney(positionValue)} inside a ${lessonMoney(portfolioTotal)} paper portfolio. What percentage of the portfolio is in that position?`;
+          prompt = `${profile.asset} accounts for ${lessonMoney(positionValue)} in a ${lessonMoney(portfolioTotal)} paper portfolio. What percentage of the portfolio is in that position?`;
           correct = "25% of the portfolio";
           distractors = ["20% of the portfolio", "40% of the portfolio", "75% of the portfolio"];
           explanation = `${lessonMoney(positionValue)} / ${lessonMoney(portfolioTotal)} = 0.25, or 25%.`;
@@ -2404,14 +2415,14 @@
         }
       } else if (lessonNumber === 5) {
         if (learner.level === "Expert") {
-          prompt = `${profile.asset} returns 8% with a 6% drawdown. ${profile.secondAsset} returns 7% with a 3% drawdown. Which has more return per point of drawdown?`;
+          prompt = `${profile.asset} returns 8% with a 6% drawdown. ${sentenceCase(profile.secondAsset)} returns 7% with a 3% drawdown. Which has more return per point of drawdown?`;
           correct = `${profile.secondAsset}, about 2.3 return points per drawdown point`;
           distractors = [`${profile.asset}, about 1.3 return points per drawdown point`, `${profile.asset}, about 2.0 return points per drawdown point`, `${profile.secondAsset}, about 1.2 return points per drawdown point`];
-          explanation = `${profile.asset}: 8 / 6 is about 1.3. ${profile.secondAsset}: 7 / 3 is about 2.3.`;
+          explanation = `${profile.asset}: 8 / 6 is about 1.3. ${sentenceCase(profile.secondAsset)}: 7 / 3 is about 2.3.`;
         } else {
           const firstFee = learner.level === "Beginner" ? 0 : 1;
           const secondFee = learner.level === "Beginner" ? 0 : 0.5;
-          prompt = `${profile.asset} gains 8% with a ${firstFee}% paper fee. ${profile.secondAsset} gains 7% with a ${secondFee}% paper fee. Which has the higher net return?`;
+          prompt = `${profile.asset} gains 8% with a ${firstFee}% paper fee. ${sentenceCase(profile.secondAsset)} gains 7% with a ${secondFee}% paper fee. Which has the higher net return?`;
           correct = `${profile.asset}, with a ${8 - firstFee}% net return`;
           distractors = [`${profile.secondAsset}, with a ${7 - secondFee}% net return`, `Both choices, with the same net return`, `Neither choice, because fees erase both returns`];
           explanation = `After the stated fees, the net returns are ${8 - firstFee}% and ${7 - secondFee}%.`;
@@ -2440,7 +2451,9 @@
         const maxUnits = Math.floor(riskBudget / riskPerUnit);
         prompt = `${learner.setting} limits one idea to ${lessonMoney(riskBudget)} of risk. Entry is ${lessonMoney(entry)}, review is ${lessonMoney(review)}${extraCost ? ", and possible slippage adds $1 per unit" : ""}. What is the largest whole-unit position?`;
         correct = `${maxUnits} units within the risk limit`;
-        distractors = [`${maxUnits + 1} units above the risk limit`, `${Math.max(1, maxUnits - 2)} units using only half the limit`, `${Math.floor(riskBudget / entry)} units based on entry cost alone`];
+        const halfLimitUnits = Math.max(1, maxUnits - 2);
+        const entryBasedUnits = Math.floor(riskBudget / entry);
+        distractors = [`${maxUnits + 1} units above the risk limit`, `${halfLimitUnits} ${halfLimitUnits === 1 ? "unit" : "units"} using only half the limit`, `${entryBasedUnits} ${entryBasedUnits === 1 ? "unit" : "units"} based on entry cost alone`];
         explanation = `Risk per unit is ${lessonMoney(riskPerUnit)}. ${lessonMoney(riskBudget)} / ${lessonMoney(riskPerUnit)} allows ${maxUnits} whole units.`;
       } else if (lessonNumber === 8) {
         const entry = 40 + number;
@@ -2495,8 +2508,15 @@
         }
       }
 
-      if (!prompt.includes(profile.asset)) prompt = `While studying ${profile.asset}: ${prompt}`;
-      if (!prompt.includes(learner.setting)) prompt = `In ${learner.setting}: ${prompt}`;
+      const mentionsAsset = prompt.includes(profile.asset);
+      const mentionsSetting = prompt.includes(learner.setting);
+      if (!mentionsAsset && !mentionsSetting) {
+        prompt = `For ${learner.setting}, consider this problem about ${profile.asset}: ${sentenceCase(prompt)}`;
+      } else if (!mentionsAsset) {
+        prompt = `While studying ${profile.asset}, ${prompt}`;
+      } else if (!mentionsSetting) {
+        prompt = `For ${learner.setting}, consider this problem: ${sentenceCase(prompt)}`;
+      }
       return lessonQuestion("Numbers", prompt, correct, distractors, explanation);
     }
 
@@ -2641,7 +2661,7 @@
           : `${context.journal} Separate the prior belief, new evidence, alternative explanation, and rule used for the next decision.`;
       return lessonQuestion(
         "Journal",
-        `Which journal entry would let ${learner.setting} fairly review a ${profile.asset} decision from the ${context.title} lesson?`,
+        `Which journal entry would let ${learner.setting} fairly review a decision about ${profile.asset} from the ${context.title} lesson?`,
         correct,
         [
           `Record only the final return and describe every profitable decision as well planned.`,
@@ -2740,7 +2760,7 @@
           q("Entry", `Which is the most complete entry rule for a paper trade in ${asset}?`, `A reason, entry condition, position size, risk limit, and review date.`, [`Buy now because the ticker is familiar.`, `Enter first and invent the reason after the result.`, `Use only the last price and ignore the time horizon.`], `A plan must be actionable before the outcome is known.`),
           q("Size", `Why should position size for ${asset} be calculated after setting a maximum loss?`, `The loss limit determines how much exposure the plan can tolerate.`, [`A larger position always improves the evidence.`, `Size is unrelated to risk once the trade is simulated.`, `The entry price alone sets the acceptable loss.`], `Risk-first sizing prevents a strong idea from becoming an oversized position.`),
           q("Order", `A learner wants to limit the worst acceptable entry price for ${asset}. Which order idea matches that goal?`, `A limit-style rule that specifies the highest acceptable purchase price.`, [`A market order with no price boundary.`, `A journal entry placed after the trade.`, `A benchmark that changes the quote.`], `Speed and price control are different objectives.`),
-          q("Review", `Which event should trigger a review of a ${asset} paper plan?`, `The written thesis condition is reached or the evidence that supported it changes.`, [`The price moves one tick in either direction.`, `A friend posts a confident opinion.`, `The trade becomes profitable for one minute.`], `A review trigger should be connected to the reason for the trade.`),
+          q("Review", `Which event should trigger a review of the paper plan for ${asset}?`, `The written thesis condition is reached or the evidence that supported it changes.`, [`The price moves one tick in either direction.`, `A friend posts a confident opinion.`, `The trade becomes profitable for one minute.`], `A review trigger should be connected to the reason for the trade.`),
           q("Scenario", `${asset} is attractive, but the planned loss would exceed the account's risk budget. What is the disciplined choice?`, `Reduce the size, change the plan, or wait; do not ignore the risk budget.`, [`Buy anyway because the idea is attractive.`, `Remove the risk limit because it blocks the trade.`, `Use a larger position to recover faster.`], `A good thesis cannot justify a position that breaks the risk rule.`),
           q("Evidence", `What should be written before entering ${asset} so hindsight can be tested?`, `The evidence, assumptions, expected outcome, invalidation point, and position size.`, [`Only the ticker and the hoped-for return.`, `The final result, written after the price moves.`, `A prediction with no time horizon.`], `Pre-trade notes make the reasoning auditable.`),
           q("Transfer", `How should a trade plan change when moving from ${asset} to ${other}?`, `Recalculate price, liquidity, risk per unit, and the thesis instead of copying the order.`, [`Keep the same units because plans should not change.`, `Use the same risk per unit regardless of price.`, `Drop the review rule because the asset is different.`], `The plan structure transfers, but the inputs must be rebuilt.`)
@@ -2748,7 +2768,7 @@
         [
           q("Outcome", `${asset} rises after a headline, but the original thesis was weak. How should the result be described?`, `A positive outcome does not prove the decision process was sound.`, [`The gain proves every assumption was correct.`, `The result makes evidence unnecessary.`, `A profitable trade cannot have a bad thesis.`], `Judge process and outcome separately.`),
           q("Timeline", `Which journal timeline best preserves a decision about ${asset}?`, `Before: thesis and risk; during: changes; after: result and evidence review.`, [`After: rewrite the original reason to match the result.`, `Before: record only the hoped-for profit.`, `During: delete facts that disagree with the position.`], `A dated sequence protects the record from hindsight.`),
-          q("Counterfactual", `What is a useful counterfactual after a losing ${asset} trade?`, `Would the decision still have been reasonable using only the information available at entry?`, [`Would the price have risen if the learner had bought more?`, `Could the loss be hidden by changing the chart range?`, `Was the loss acceptable because the asset is popular?`], `The counterfactual evaluates the decision with the information known at the time.`),
+          q("Counterfactual", `What is a useful counterfactual after a loss involving ${asset}?`, `Would the decision still have been reasonable using only the information available at entry?`, [`Would the price have risen if the learner had bought more?`, `Could the loss be hidden by changing the chart range?`, `Was the loss acceptable because the asset is popular?`], `The counterfactual evaluates the decision with the information known at the time.`),
           q("Evidence", `A journal says ${asset} was bought because “everyone was bullish.” What is missing?`, `Specific evidence, a falsifiable reason, a risk limit, and a review trigger.`, [`A stronger opinion from an influencer.`, `A longer list of social comments.`, `A guarantee that the crowd was right.`], `A journal should explain a testable decision, not just repeat sentiment.`),
           q("Process", `If ${asset} gained but violated the planned risk rule, what should the review say?`, `The outcome was positive, but the process needs correction before another trade.`, [`The gain cancels the rule violation.`, `The rule was wrong because the trade worked.`, `No review is needed after a gain.`], `A lucky result can still reveal poor process.`),
           q("Revision", `New evidence contradicts the original ${asset} thesis. What belongs in the update?`, `What changed, which assumption failed, and what new rule follows.`, [`Only the new price because causes are unknowable.`, `A defense of the original thesis regardless of evidence.`, `A new prediction with no link to the old plan.`], `A revision should connect evidence to a changed decision.`),
@@ -2765,10 +2785,10 @@
         ],
         [
           q("Trigger", `A thesis for ${asset} says review if a key metric falls below 70. The report shows 66. What follows?`, `Review the thesis before adding, holding, or selling.`, [`Ignore the trigger because the price has not moved.`, `Add units because a lower metric always means a bargain.`, `Delete the trigger because it is inconvenient.`], `A prewritten trigger exists to prevent emotional delay.`),
-          q("Expected value", `A ${asset} plan has a 60% chance to gain $20 and a 40% chance to lose $10. What is its simple expected value?`, `$8 per trial`, [`$10 per trial`, `$12 per trial`, `-$4 per trial`], `0.6 x $20 - 0.4 x $10 = $8.`),
+          q("Expected value", `A plan for ${asset} has a 60% chance to gain $20 and a 40% chance to lose $10. What is its simple expected value?`, `$8 per trial`, [`$10 per trial`, `$12 per trial`, `-$4 per trial`], `0.6 x $20 - 0.4 x $10 = $8.`),
           q("Falsification", `Which evidence would most directly weaken a thesis about ${asset}?`, `A primary report contradicting the key assumption the thesis depends on.`, [`A random comment with no source.`, `A one-day price move with no context.`, `A repeated claim that agrees with the thesis.`], `A thesis should name the evidence that could prove its central reason wrong.`),
           q("Alternative", `Why should an analyst consider an alternative explanation for ${asset}'s move?`, `The first explanation may fit the timing but fail when compared with other evidence.`, [`Every alternative is equally true.`, `Alternatives make decisions impossible.`, `The current price proves the first story.`], `Testing alternatives reduces confirmation bias.`),
-          q("Action", `New evidence weakens ${asset}'s thesis but does not prove a loss. What is disciplined?`, `Resize, pause, or close according to the written rule and updated evidence.`, [`Hold the original size until certainty arrives.`, `Double the position to defend the thesis.`, `Change the rule after the outcome is known.`], `A thesis review changes the plan when its reason no longer holds.`),
+          q("Action", `New evidence weakens ${asset}'s thesis but does not prove a loss. What is the most disciplined response?`, `Resize, pause, or close according to the written rule and updated evidence.`, [`Hold the original size until certainty arrives.`, `Double the position to defend the thesis.`, `Change the rule after the outcome is known.`], `A thesis review changes the plan when its reason no longer holds.`),
           q("Time horizon", `Why can a thesis for ${asset} remain reasonable after one bad day but fail after a changed long-term metric?`, `The time horizon determines which evidence is noise and which evidence changes the core reason.`, [`Daily prices never matter.`, `Long-term evidence is always correct immediately.`, `A thesis cannot contain a review horizon.`], `Evidence must be interpreted against the plan's time horizon.`),
           q("Transfer", `How should the thesis-review method apply to ${other}?`, `Write its key assumption, invalidation evidence, time horizon, and next action separately.`, [`Use ${asset}'s trigger because both are in the same market.`, `Skip review because a new asset has no history.`, `Treat a green chart as confirmation of every thesis.`], `Review rules must match the asset's actual business and evidence.`)
         ]
@@ -2812,7 +2832,7 @@
       const context = lessonQuestionContext(index + 1);
       const learner = normalizeLessonLearner(learnerProfile);
       const teachingPoints = [
-        `${knowledge.term} is ${knowledge.definition}. The important part is not memorizing the phrase; it is knowing how the idea changes a decision.`,
+        `The important part is not memorizing the phrase; it is knowing how the idea changes a decision.`,
         `A chart tells you what the price did, not why it happened. In this lesson, describe direction, size, and time first, then investigate possible causes.`,
         `Evidence has a chain: claim, original source, date, measurement, and missing information. Repeated posts may still trace back to one piece of evidence.`,
         `Downside risk must be specific enough to plan around. Name what could happen, how much it could matter, and what observation would trigger a review.`,
@@ -2847,15 +2867,16 @@
           : `Test the strongest counterargument, distinguish correlation from cause, and include opportunity cost in the decision rule.`;
 
       const topicTitle = `${knowledge.term.charAt(0).toUpperCase()}${knowledge.term.slice(1)}`;
+      const checkpointMistake = context.mistake.replace(/[.!?]+$/, "");
       return `
         <section class="lesson-key">
           <span class="lesson-label">Key idea</span>
           <h4>${topicTitle}</h4>
-          <p>${knowledge.definition}. ${teachingPoints[index % teachingPoints.length]}</p>
+          <p>${topicTitle} is ${knowledge.definition}. ${teachingPoints[index % teachingPoints.length]}</p>
         </section>
         <section>
           <span class="lesson-label">Why it matters</span>
-          <p>${knowledge.example} ${profile.signal} is useful evidence, while ${profile.trap} is a common trap.</p>
+          <p>${knowledge.example} One useful signal is that ${profile.signal}, while a common trap is ${profile.trap}.</p>
         </section>
         <section>
           <span class="lesson-label">Worked example</span>
@@ -2873,7 +2894,7 @@
         </section>
         <section class="lesson-checkpoint">
           <span class="lesson-label">Checkpoint</span>
-          <p>Explain why "${context.mistake}" would weaken the decision. Then name one fact that could change your answer.</p>
+          <p>Explain why "${checkpointMistake}" would weaken the decision. Then name one fact that could change your answer.</p>
         </section>
       `;
     }
@@ -2903,11 +2924,11 @@
       const questions = [
         {
           prompt: `Which statement uses ${knowledge.term} accurately when analyzing ${profile.asset}?`,
-          correct: `${knowledge.definition}; it informs a decision but cannot guarantee an outcome.`,
+          correct: `${sentenceCase(knowledge.term)} is ${knowledge.definition}; it informs a decision but cannot guarantee an outcome.`,
           near: [`It proves ${profile.asset} will rise whenever the chart turns green.`, `It replaces a risk limit once the learner has chosen a familiar asset.`, `It makes the latest price more important than the evidence behind the move.`]
         },
         {
-          prompt: `A paper order buys ${units} units of ${profile.asset} at $${unitPrice} each and charges a $${fee} fee. What total leaves the practice account?`,
+          prompt: `A paper order buys ${units} units of ${profile.asset} at $${unitPrice} each and charges a $${fee} fee. What is the total amount deducted from the practice account?`,
           correct: `$${totalCost}`,
           near: [`$${positionValue}`, `$${totalCost + fee}`, `$${units + unitPrice + fee}`]
         },
@@ -2922,7 +2943,7 @@
           near: [`${independentSources + 1} independent sources`, `All five posts because each uses a different headline`, `One source because every market claim is unreliable`]
         },
         {
-          prompt: `A plan allows $${riskBudget} of risk on ${profile.asset}; each unit could lose $${riskPerUnit}. What is the largest whole-unit position that stays within the limit?`,
+          prompt: `A plan allows a maximum loss of $${riskBudget} on ${profile.asset}; each unit could lose $${riskPerUnit}. What is the largest whole-unit position that stays within the limit?`,
           correct: `${maxUnits} units`,
           near: [`${maxUnits + 1} units`, `${Math.floor(riskBudget / (riskPerUnit + 1))} units because entry price is the risk`, `${Math.ceil(riskBudget / riskPerUnit)} units after rounding up`]
         },
@@ -3035,7 +3056,7 @@
         kind: "course",
         title: "Finish Course",
         xp: 300,
-        body: "You finished all 12 modules and every big test. Collect the course bonus."
+        body: "You finished all 12 modules and all four big tests. Collect your course bonus."
       });
       return items;
     }
@@ -3054,7 +3075,7 @@
         const variants = [
           {
             prompt: `Big Test ${testNumber}: What does "${knowledge.term}" mean?`,
-            correct: knowledge.definition,
+            correct: `It is ${knowledge.definition}.`,
             near: [`A guarantee that an asset will rise after a lesson.`, `A name for any popular market headline.`, `A shortcut that removes the need for a plan.`]
           },
           {
@@ -3063,7 +3084,7 @@
             near: [`$${positionValue + unitPrice}`, `$${positionValue - unitPrice}`, `$${unitPrice + units}`]
           },
           {
-            prompt: `Big Test ${testNumber}: Which risk belongs most closely to ${knowledge.term}?`,
+            prompt: `Big Test ${testNumber}: Which risk is most closely associated with ${knowledge.term}?`,
             correct: knowledge.risk,
             near: [`The lesson card may have a short title.`, `The user may need to scroll to another panel.`, `A chart may have more than one visible range.`]
           },
@@ -3160,7 +3181,7 @@
         { id: "lesson-two", metric: "lessons", amount: 2, rank: 1, text: "Complete 2 lessons, including every practice question." },
         { id: "lesson-three", metric: "lessons", amount: 3, rank: 2, text: "Complete 3 lessons, including every practice question." },
         { id: "lesson-five", metric: "lessons", amount: 5, rank: 3, text: "Complete 5 lessons in the learning course." },
-        { id: "perfect-quiz", metric: "perfectQuizzes", amount: 1, rank: 4, text: "Earn 100% on 1 module quiz." }
+        { id: "perfect-quiz", metric: "perfectQuizzes", amount: 1, rank: 4, text: "Earn 100% on one module quiz." }
       ],
       Gold: [
         { id: "lesson-three", metric: "lessons", amount: 3, rank: 1, text: "Complete 3 lessons in the learning course." },
@@ -3282,7 +3303,7 @@
       const applied = state.xp - before;
       saveState();
       renderStats();
-      showToast(`${applied > 0 ? "+" : ""}${applied} XP ${label ? "for " + label : ""}`);
+      showToast(`${applied > 0 ? "+" : ""}${applied} XP${label ? ": " + label : ""}`);
     }
 
     function findMarketAsset(name, symbol) {
@@ -3472,8 +3493,8 @@
         panel.innerHTML = `
           <div class="market-chart-head">
             <div>
-              <h3>Yahoo Finance chart</h3>
-              <p class="muted">Pick a row below or enter a Yahoo symbol to load its graph.</p>
+              <h3>Yahoo Finance Chart</h3>
+              <p class="muted">Select a market below or enter an exact ticker to load its chart.</p>
             </div>
           </div>
           ${marketRangeButtons()}
@@ -3589,8 +3610,8 @@
           <div class="market-info-grid">
             <div class="market-info-item"><span>Position value</span><strong>${escapeHtml(positionLabel)}</strong></div>
             <div class="market-info-item"><span>Units</span><strong>${escapeHtml(unitsLabel)}</strong></div>
-            <div class="market-info-item"><span>Net trade dollars</span><strong>${escapeHtml(netDollarsLabel)}</strong></div>
-            <div class="market-info-item"><span>Trade mode</span><strong>Paper only</strong></div>
+            <div class="market-info-item"><span>Net dollars invested</span><strong>${escapeHtml(netDollarsLabel)}</strong></div>
+            <div class="market-info-item"><span>Trade mode</span><strong>Paper trading only</strong></div>
           </div>
         </section>
       `;
@@ -3617,7 +3638,7 @@
       return `
         <form class="symbol-search" id="symbolSearch">
           <input id="symbolInput" type="text" value="${escapeAttr(value)}" placeholder="Complete company name or exact ticker" aria-label="Company name or market ticker">
-          <button class="btn green" type="submit">Search market</button>
+          <button class="btn green" type="submit">Search Markets</button>
         </form>
       `;
     }
@@ -3739,7 +3760,7 @@
       const lastTime = formatChartEdgeTime(points[points.length - 1].time);
       const ticks = [displayMax, displayMin + spread * 0.67, displayMin + spread * 0.33, displayMin];
       return `
-        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Intraday price chart">
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Price chart">
           <defs>
             <clipPath id="marketChartPlotClip">
               <rect x="${lineLeft}" y="${plotTop}" width="${lineWidth}" height="${height - plotTop - plotBottom}" />
@@ -3951,7 +3972,7 @@
 
     function renderStats() {
       document.getElementById("xpTotal").textContent = state.xp;
-      document.getElementById("streakTotal").textContent = `${state.streak} days`;
+      document.getElementById("streakTotal").textContent = `${state.streak} ${state.streak === 1 ? "day" : "days"}`;
       document.getElementById("levelName").textContent = state.profile.level || "Beginner";
       const first = state.profile.first || "Investor";
       const last = state.profile.last ? `${state.profile.last}, ` : "";
@@ -4045,8 +4066,8 @@
       if (!panel || !tradeState) return;
       panel.classList.remove("hidden");
       const { asset, side, method, amount } = tradeState;
-      const title = `${side === "buy" ? "Buying" : "Selling"} by ${method}`;
-      const unitLabel = method === "money" ? "dollars" : "units";
+      const title = `${side === "buy" ? "Buying" : "Selling"} by ${method === "money" ? "Dollar Amount" : "Units"}`;
+      const unitLabel = method === "money" ? "a dollar amount" : "the number of units";
       const tradePrice = getTradePrice(asset);
       const xpBalance = Math.max(0, Math.floor(Number(state.xp) || 0));
       const holding = getPortfolioHolding(asset.symbol);
@@ -4069,7 +4090,7 @@
           <div class="trade-mode-grid" aria-label="Trade type">
             ${["buy-money", "buy-units", "sell-money", "sell-units"].map(key => {
               const [modeSide, modeMethod] = key.split("-");
-              const label = `${modeSide === "buy" ? "Buying" : "Selling"} by ${modeMethod}`;
+              const label = `${modeSide === "buy" ? "Buying" : "Selling"} by ${modeMethod === "money" ? "Dollar Amount" : "Units"}`;
               return `<button class="trade-mode ${side === modeSide && method === modeMethod ? "active" : ""}" data-trade-mode="${key}" type="button">${label}</button>`;
             }).join("")}
           </div>
@@ -4078,9 +4099,9 @@
           <p class="muted" style="margin-top:10px">${tradePrice ? `Current price: ${escapeHtml(formatMarketPrice(tradePrice, "USD"))}` : "Loading the current price for this trade..."}</p>
           <div class="trade-balance">
             <div><span>XP balance</span><strong>${xpBalance.toLocaleString()} XP</strong></div>
-            <div><span>${side === "buy" ? "Maximum buy" : "Available to sell"}</span><strong>${escapeHtml(availableLabel)}</strong></div>
+            <div><span>${side === "buy" ? "Maximum purchase" : "Available to sell"}</span><strong>${escapeHtml(availableLabel)}</strong></div>
           </div>
-          <p class="muted" style="margin-top:10px">Exchange rate: USD 1 = ${XP_PER_TRADE_DOLLAR} XP.</p>
+          <p class="muted" style="margin-top:10px">Exchange rate: 1 USD = ${XP_PER_TRADE_DOLLAR} XP.</p>
           <div class="trade-estimate" id="tradeEstimate" aria-live="polite"></div>
           <p class="muted" style="margin-top:12px">This is a paper trade. It changes your practice position and XP only; no real money is used.</p>
           <div class="trade-confirm">
@@ -4144,7 +4165,7 @@
         return {
           valid: false,
           kind: "xp",
-          reason: `This buy needs ${xpAmount.toLocaleString()} XP, but you have ${xpBalance.toLocaleString()} XP.`,
+          reason: `This purchase requires ${xpAmount.toLocaleString()} XP, but you have ${xpBalance.toLocaleString()} XP.`,
           amount,
           price,
           units,
@@ -4179,7 +4200,7 @@
       confirm.disabled = !trade.valid;
       estimate.className = `trade-estimate ${trade.valid ? "good" : trade.kind === "empty" || trade.kind === "price" ? "" : "bad"}`;
       if (!trade.valid) {
-        const maximum = trade.kind === "xp" ? ` Maximum buy: ${formatMarketPrice(trade.xpBalance / XP_PER_TRADE_DOLLAR, "USD")}.` : "";
+        const maximum = trade.kind === "xp" ? ` Maximum purchase: ${formatMarketPrice(trade.xpBalance / XP_PER_TRADE_DOLLAR, "USD")}.` : "";
         estimate.textContent = `${trade.reason}${maximum}`;
         return;
       }
@@ -4203,10 +4224,10 @@
       holding.units = Math.max(0, holding.units + (tradeState.side === "buy" ? trade.units : -trade.units));
       holding.netDollars = Math.max(0, holding.netDollars + (tradeState.side === "buy" ? trade.dollars : -trade.dollars));
       state.portfolio.holdings[tradeState.asset.symbol] = holding;
-      const label = `${tradeState.side === "buy" ? "Buy" : "Sell"} ${tradeState.asset.name}`;
+      const label = `${tradeState.side === "buy" ? "Bought" : "Sold"} ${tradeState.asset.name}`;
       state.claimed.trade = true;
       const tradeXp = trade.xpAmount * (tradeState.side === "buy" ? -1 : 1);
-      addXp(tradeXp, `${label} at ${formatMarketPrice(trade.dollars, "USD")}`);
+      addXp(tradeXp, `${label} for ${formatMarketPrice(trade.dollars, "USD")}`);
       closeTradePage();
     }
 
@@ -4420,7 +4441,7 @@
             <span class="node-icon">${icon}</span>
             <span>
               <strong>${item.title}</strong>
-              <span class="muted" style="display:block">${courseTypeLabel(item)}${done ? " - done" : unlocked ? " - unlocked" : " - locked"}</span>
+              <span class="muted" style="display:block">${courseTypeLabel(item)}: ${done ? "Done" : unlocked ? "Unlocked" : "Locked"}</span>
             </span>
             <span class="xp">Up to +${courseXpTotal(item)} XP</span>
           </button>
@@ -4478,7 +4499,7 @@
     function courseTypeLabel(item) {
       if (item.kind === "bigTest") return "30-question big test";
       if (item.kind === "course") return "Course bonus";
-      return "10 lessons, each with 1 lecture + 8 questions";
+      return "10 lessons, each with one lecture and eight questions";
     }
 
     function courseXpTotal(item) {
@@ -4572,7 +4593,7 @@
         <div class="section-head" style="margin-bottom:0">
           <div>
             <h3>${module.title}</h3>
-            <p class="muted">${progress.skipped ? "Module skip challenge passed." : "All 10 lessons complete. Quiz complete. Module bonus collected."}</p>
+            <p class="muted">${progress.skipped ? "The module skip challenge has been passed." : "All 10 lessons and the quiz are complete. The module bonus has been collected."}</p>
           </div>
           <span class="xp">Done</span>
         </div>
@@ -4588,7 +4609,6 @@
       const retryQueue = getLessonRetryQueue(progress);
       const pageIndex = queue[0] ?? retryQueue[0] ?? pages.length - 1;
       const page = pages[pageIndex];
-      const stepText = `${Math.min(progress.lessonPage + 1, pages.length)}/${pages.length}`;
       const practiceTotal = lessonPracticeTotal(module, progress);
       const missPanel = progress.lastMiss ? missedQuestionTemplate(progress.lastMiss) : "";
       if (page.type === "practice") return practiceSetTemplate(module, progress, queue, practiceTotal, missPanel);
@@ -4596,7 +4616,7 @@
         <div class="section-head" style="margin-bottom:0">
           <div>
             <h3>${module.title}</h3>
-            <p class="muted">${lessonInfo.lesson.title} - lecture page - page ${stepText}</p>
+            <p class="muted">${lessonInfo.lesson.title} - Lecture - Page ${Math.min(progress.lessonPage + 1, pages.length)} of ${pages.length}</p>
           </div>
           <span class="xp">Up to +${module.lessonXp} XP</span>
         </div>
@@ -4607,15 +4627,15 @@
             <strong>${page.title}</strong>
             <div class="lesson-path">
               <span class="mini-pill">${page.topic}</span>
-              <span class="mini-pill">${state.profile.level || "Beginner"} - age ${state.profile.age || "not set"}</span>
+              <span class="mini-pill">${state.profile.level || "Beginner"} - Age: ${state.profile.age || "not set"}</span>
             </div>
           </div>
           <div class="lesson-reading">${page.body}</div>
         </div>
         <div class="actions">
-          <button class="btn green" data-next-lesson="${module.id}">Start 8 questions</button>
-          ${canSkipModule(progress) ? `<button class="btn secondary" data-start-module-skip="${module.id}">Skip module: 30-question challenge</button>` : ""}
-          <button class="btn secondary" data-quit-lesson="${module.id}">Quit lesson</button>
+          <button class="btn green" data-next-lesson="${module.id}">Start 8 Questions</button>
+          ${canSkipModule(progress) ? `<button class="btn secondary" data-start-module-skip="${module.id}">Skip Module with a 30-Question Challenge</button>` : ""}
+          <button class="btn secondary" data-quit-lesson="${module.id}">Quit Lesson</button>
         </div>
       `;
     }
@@ -4629,12 +4649,12 @@
       const retryCount = getLessonRetryQueue(progress).length;
       return `
         <div class="module-status">
-          <span class="mini-pill ${progress.lessonDone ? "done" : ""}">Lessons ${completedLessons}/${lessonInfo.total}</span>
-          <span class="mini-pill ${progress.lessonDone ? "done" : ""}">Current lesson ${progress.lessonDone ? lessonInfo.total : lessonInfo.index + 1}/${lessonInfo.total}</span>
-          <span class="mini-pill ${correctThisLesson === practiceTotal ? "done" : ""}">Questions ${correctThisLesson}/${practiceTotal}</span>
-          <span class="mini-pill ${retryCount ? "" : "done"}">Waiting to retry ${retryCount}</span>
-          <span class="mini-pill ${progress.quizDone ? "done" : ""}">Quiz ${Math.min(progress.quizIndex, module.quizQuestions.length)}/${module.quizQuestions.length}</span>
-          <span class="mini-pill ${state.completed[module.id] ? "done" : ""}">Module +${module.moduleXp} XP</span>
+          <span class="mini-pill ${progress.lessonDone ? "done" : ""}">Lessons: ${completedLessons}/${lessonInfo.total}</span>
+          <span class="mini-pill ${progress.lessonDone ? "done" : ""}">Current lesson: ${progress.lessonDone ? lessonInfo.total : lessonInfo.index + 1}/${lessonInfo.total}</span>
+          <span class="mini-pill ${correctThisLesson === practiceTotal ? "done" : ""}">Questions: ${correctThisLesson}/${practiceTotal}</span>
+          <span class="mini-pill ${retryCount ? "" : "done"}">Questions to retry: ${retryCount}</span>
+          <span class="mini-pill ${progress.quizDone ? "done" : ""}">Quiz: ${Math.min(progress.quizIndex, module.quizQuestions.length)}/${module.quizQuestions.length}</span>
+          <span class="mini-pill ${state.completed[module.id] ? "done" : ""}">Module bonus: +${module.moduleXp} XP</span>
         </div>
       `;
     }
@@ -4652,7 +4672,7 @@
         <div class="section-head" style="margin-bottom:0">
           <div>
             <h3>${module.title}</h3>
-            <p class="muted">${lessonInfo.lesson.title} - ${isRetryRound ? "retry round" : `question ${questionNumber} of ${practiceTotal}`}</p>
+            <p class="muted">${lessonInfo.lesson.title} - ${isRetryRound ? "Retry Round" : `Question ${questionNumber} of ${practiceTotal}`}</p>
           </div>
           <span class="xp">Up to +${module.lessonXp} XP</span>
         </div>
@@ -4660,20 +4680,20 @@
         ${missPanel}
         <div class="lesson-step">
           <div class="question-meta">
-            <strong>${isRetryRound ? "Retry" : "Question"} ${questionNumber}/${practiceTotal}</strong>
-            <span class="mini-pill">${pendingPractice.length} new left</span>
-            <span class="mini-pill">${retryPractice.length} to retry</span>
+            <strong>${isRetryRound ? "Retry" : "Question"} ${questionNumber} of ${practiceTotal}</strong>
+            <span class="mini-pill">${pendingPractice.length} new ${pendingPractice.length === 1 ? "question" : "questions"} left</span>
+            <span class="mini-pill">${retryPractice.length} ${retryPractice.length === 1 ? "question" : "questions"} to retry</span>
             <span class="mini-pill">${practice.style}</span>
           </div>
-          <div class="question-focus"><strong>${practice.topic}</strong> - ${practice.objective}</div>
+          <div class="question-focus"><strong>${practice.topic}</strong>: ${sentenceCase(practice.objective)}</div>
           <p class="lesson-body">${practice.prompt}</p>
           <div class="quiz-options">
             ${practice.options.map((option, index) => `<button class="quiz-option" data-module="${module.id}" data-page="${pageIndex}" data-lesson-answer="${index}"><span class="option-letter">${String.fromCharCode(65 + index)}</span><span>${option}</span></button>`).join("")}
           </div>
         </div>
         <div class="actions">
-          ${canSkipModule(progress) ? `<button class="btn secondary" data-start-module-skip="${module.id}">Skip module: 30-question challenge</button>` : ""}
-          <button class="btn secondary" data-quit-lesson="${module.id}">Quit lesson</button>
+          ${canSkipModule(progress) ? `<button class="btn secondary" data-start-module-skip="${module.id}">Skip Module with a 30-Question Challenge</button>` : ""}
+          <button class="btn secondary" data-quit-lesson="${module.id}">Quit Lesson</button>
         </div>
       `;
     }
@@ -4689,15 +4709,15 @@
       return `
         <div class="section-head" style="margin-bottom:0">
           <div>
-            <h3>${module.title} skip challenge</h3>
-            <p class="muted">30 mixed questions from this module's 10 lessons. Wrong answers do not return.</p>
+            <h3>${module.title} Skip Challenge</h3>
+            <p class="muted">Answer 30 mixed questions from this module's 10 lessons. Missed questions do not return.</p>
           </div>
           <span class="xp">+${SKIP_REWARD_XP} XP</span>
         </div>
         <div class="module-status">
-          <span class="mini-pill">Question ${progress.skipIndex + 1}/${SKIP_QUESTION_COUNT}</span>
-          <span class="mini-pill">Correct ${progress.skipCorrect}</span>
-          <span class="mini-pill ${progress.skipMisses ? "" : "done"}">Misses ${progress.skipMisses}/${SKIP_MISS_LIMIT}</span>
+          <span class="mini-pill">Question ${progress.skipIndex + 1} of ${SKIP_QUESTION_COUNT}</span>
+          <span class="mini-pill">Correct answers: ${progress.skipCorrect}</span>
+          <span class="mini-pill ${progress.skipMisses ? "" : "done"}">Misses: ${progress.skipMisses}/${SKIP_MISS_LIMIT}</span>
           <span class="mini-pill" data-skip-time>${formatCountdown(remaining)}</span>
         </div>
         <div class="lesson-step">
@@ -4717,10 +4737,10 @@
     function missedQuestionTemplate(miss) {
       return `
         <div class="miss-panel">
-          <strong>Question ${miss.questionNumber} moved to the retry round.</strong>
-          <p class="muted">The remaining new questions come first. This question returns afterward.</p>
+          <strong>Question ${miss.questionNumber} will return in the retry round.</strong>
+          <p class="muted">Answer the remaining new questions first. This question will return afterward.</p>
           <details>
-            <summary>Show answer and explanation</summary>
+            <summary>Show the answer and explanation</summary>
             <p class="lesson-body"><strong>Answer:</strong> ${miss.answer}</p>
             <p class="lesson-body">${miss.explanation}</p>
           </details>
@@ -4788,7 +4808,7 @@
         <div class="section-head" style="margin-bottom:0">
           <div>
             <h3>${item.title}</h3>
-            <p class="muted">${mode === "quiz" ? "Quiz" : "Big test"} - ${mcCount} multiple choice, ${simCount} simulation</p>
+            <p class="muted">${mode === "quiz" ? "Quiz" : "Big test"} - ${mcCount} multiple-choice questions and ${simCount} simulation questions</p>
           </div>
           <span class="xp">Score ${correct}/${questions.length}</span>
         </div>
@@ -4840,9 +4860,9 @@
       const totalSeconds = Math.max(1, Math.round(durationMs / 1000));
       const minutes = Math.floor(totalSeconds / 60);
       const seconds = totalSeconds % 60;
-      if (!minutes) return `${seconds} sec`;
-      if (!seconds) return `${minutes} min`;
-      return `${minutes} min ${seconds} sec`;
+      if (!minutes) return `${seconds} ${seconds === 1 ? "second" : "seconds"}`;
+      if (!seconds) return `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+      return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ${seconds} ${seconds === 1 ? "second" : "seconds"}`;
     }
 
     function formatCountdown(durationMs) {
@@ -4881,13 +4901,13 @@
 
     function activityResultTemplate(item, result) {
       const skipAction = item.kind === "module" && canSkipModule(getProgress(item.id))
-        ? `<button class="btn secondary" data-start-module-skip="${item.id}">Skip module: 30-question challenge</button>`
+        ? `<button class="btn secondary" data-start-module-skip="${item.id}">Skip Module with a 30-Question Challenge</button>`
         : "";
       return `
         <div class="section-head" style="margin-bottom:0">
           <div>
             <h3>${result.title}</h3>
-            <p class="muted">${result.failed ? "The module was not skipped. You can return to its lessons or try the challenge again." : "Finished. Here is your complete result."}</p>
+            <p class="muted">${result.failed ? "The module was not skipped. You can return to its lessons or try the challenge again." : "Finished. Here are your results."}</p>
           </div>
           <span class="xp">${result.totalXp ? `+${result.totalXp}` : "0"} XP earned</span>
         </div>
@@ -4902,7 +4922,7 @@
               <strong>${result.correct}/${result.total}</strong>
             </div>
             <div class="result-stat">
-              <span>Time used</span>
+              <span>Time spent</span>
               <strong>${formatDuration(result.durationMs)}</strong>
             </div>
             <div class="result-stat">
@@ -4944,7 +4964,7 @@
       if (!module || state.completed[module.id]) return;
       const progress = getProgress(module.id);
       if (!canSkipModule(progress)) {
-        showToast("Finish a lesson, then choose the skip challenge from its results screen.");
+        showToast("Finish a lesson, then select the skip challenge on the results screen.");
         return;
       }
       courseOverviewMode = false;
@@ -4973,7 +4993,7 @@
       courseOverviewMode = true;
       saveState();
       renderCourse();
-      showToast("Lesson quit. No XP was awarded.");
+      showToast("You left the lesson. No XP was awarded.");
     }
 
     function markSkipAnswerButtons(answerIndex, correctIndex) {
@@ -5032,27 +5052,27 @@
         addXp(SKIP_REWARD_XP, `${module.shortTitle} skip challenge`);
         progress.activityResult = {
           kind: "moduleSkip",
-          title: `${module.shortTitle} skip challenge passed`,
+          title: `${module.shortTitle} Skip Challenge Passed`,
           correct: progress.skipCorrect,
           total: SKIP_QUESTION_COUNT,
           accuracy,
           durationMs,
           totalXp: SKIP_REWARD_XP,
-          xpNote: `You finished all ${SKIP_QUESTION_COUNT} mixed questions with ${progress.skipMisses}/${SKIP_MISS_LIMIT} misses. This module is now marked as skipped.`,
+          xpNote: `You finished all ${SKIP_QUESTION_COUNT} mixed questions with ${progress.skipMisses} of ${SKIP_MISS_LIMIT} allowed misses. This module is now marked as skipped.`,
           nextLabel: "Continue course"
         };
       } else {
         const reason = outcome === "time" ? "The five-minute timer ended." : `You reached ${SKIP_MISS_LIMIT} misses.`;
         progress.activityResult = {
           kind: "skipFailed",
-          title: `${module.shortTitle} skip challenge ended`,
+          title: `${module.shortTitle} Skip Challenge Ended`,
           correct: progress.skipCorrect,
           total: answered,
           accuracy,
           durationMs,
           totalXp: 0,
           failed: true,
-          xpNote: `${reason} Wrong questions do not return, and no XP was awarded.`,
+          xpNote: `${reason} Missed questions do not return, and no XP was awarded.`,
           nextLabel: "Back to module"
         };
       }
@@ -5113,13 +5133,13 @@
       state.streak += 1;
       progress.activityResult = {
         kind: "lesson",
-        title: `${lessonInfo.lesson.title} results`,
+        title: `${lessonInfo.lesson.title} Results`,
         correct,
         total,
         accuracy,
         durationMs,
         totalXp: reward.totalXp,
-        xpNote: `${formatXpPart(reward.accuracyXp)} accuracy XP + ${formatXpPart(reward.speedXp)} speed XP. ${reward.overtimeSeconds ? `${reward.overtimeSeconds} XP was removed for time after 2 minutes.` : "Finished within 2 minutes, so no speed XP was removed."} Missed questions count as extra attempts.`,
+        xpNote: `${formatXpPart(reward.accuracyXp)} accuracy XP + ${formatXpPart(reward.speedXp)} speed XP. ${reward.overtimeSeconds ? `${reward.overtimeSeconds} XP was removed because the lesson took longer than 2 minutes.` : "You finished within 2 minutes, so no speed XP was removed."} Missed questions count as extra attempts.`,
         nextLabel: lessonInfo.index + 1 < lessonInfo.total ? "Continue to next lesson" : "Continue to module quiz"
       };
       progress.skipEligible = true;
@@ -5166,13 +5186,13 @@
         state.completed[item.id] = true;
         progress.activityResult = {
           kind: "quiz",
-          title: `${item.shortTitle} quiz results`,
+          title: `${item.shortTitle} Quiz Results`,
           correct: progress.quizCorrect,
           total,
           accuracy,
           durationMs,
           totalXp: reward.totalXp + perfectXp + item.moduleXp,
-          xpNote: `${formatXpPart(reward.accuracyXp)} accuracy XP + ${formatXpPart(reward.speedXp)} speed XP, plus ${item.moduleXp} module XP${perfectXp ? ` and ${perfectXp} perfect-score XP` : ""}. ${reward.overtimeSeconds ? `${reward.overtimeSeconds} XP was removed for time after 2 minutes.` : "No speed XP was removed."}`,
+          xpNote: `${formatXpPart(reward.accuracyXp)} accuracy XP + ${formatXpPart(reward.speedXp)} speed XP, plus ${item.moduleXp} module XP${perfectXp ? ` and ${perfectXp} perfect-score XP` : ""}. ${reward.overtimeSeconds ? `${reward.overtimeSeconds} XP was removed because the quiz took longer than 2 minutes.` : "No speed XP was removed."}`,
           nextLabel: "Continue course"
         };
       } else {
@@ -5188,13 +5208,13 @@
         state.completed[item.id] = true;
         progress.activityResult = {
           kind: "bigTest",
-          title: `${item.title} results`,
+          title: `${item.title} Results`,
           correct: progress.testCorrect,
           total,
           accuracy,
           durationMs,
           totalXp: reward.totalXp + perfectXp,
-          xpNote: `${formatXpPart(reward.accuracyXp)} accuracy XP + ${formatXpPart(reward.speedXp)} speed XP${perfectXp ? `, plus ${perfectXp} perfect-score XP` : ""}. ${reward.overtimeSeconds ? `${reward.overtimeSeconds} XP was removed for time after 2 minutes.` : "No speed XP was removed."}`,
+          xpNote: `${formatXpPart(reward.accuracyXp)} accuracy XP + ${formatXpPart(reward.speedXp)} speed XP${perfectXp ? `, plus ${perfectXp} perfect-score XP` : ""}. ${reward.overtimeSeconds ? `${reward.overtimeSeconds} XP was removed because the test took longer than 2 minutes.` : "No speed XP was removed."}`,
           nextLabel: "Continue course"
         };
       }
@@ -5299,9 +5319,9 @@
 
     function learnerAgeProfile() {
       const age = Number(state.profile.age);
-      if (age > 0 && age < 13) return { id: "youth", scale: 0.5, guide: "Shorter practice goals with clear examples" };
-      if (age > 0 && age < 18) return { id: "teen", scale: 1, guide: "Practical practice goals with real-world examples" };
-      return { id: "adult", scale: 1.25, guide: "Full practice goals with deeper applications" };
+      if (age > 0 && age < 13) return { id: "youth", scale: 0.5, guide: "shorter practice goals with clear examples" };
+      if (age > 0 && age < 18) return { id: "teen", scale: 1, guide: "practical goals with real-world examples" };
+      return { id: "adult", scale: 1.25, guide: "full practice goals with deeper applications" };
     }
 
     function currentTaskProfile(daysAway = taskDaysAway(state.taskLastSeenDay || state.taskDay || state.claimed.daily), taskStreak = nextTaskStreak(daysAway)) {
@@ -5314,8 +5334,9 @@
       const age = Number(state.profile.age);
       const rank = Math.max(profile.rank, levelRank);
       const ageProfile = learnerAgeProfile();
-      const learnerLabel = `${state.profile.level || "Beginner"} reasoning for age ${age || "learner"}`;
-      return { ...profile, rank, guide: `${profile.guide} ${ageProfile.guide}. ${learnerLabel}.` };
+      const level = state.profile.level || "Beginner";
+      const learnerLabel = age > 0 ? `a learner aged ${age}` : "this learner";
+      return { ...profile, rank, guide: `${profile.guide} These tasks use ${ageProfile.guide} at the ${level.toLowerCase()} level for ${learnerLabel}.` };
     }
 
     function taskProfileFromState() {
@@ -5340,6 +5361,20 @@
       return shuffleTasks(exactRank.length ? exactRank : fallback)[0];
     }
 
+    function taskGoalText(template, amount) {
+      const plural = amount === 1 ? "" : "s";
+      if (template.metric === "lessons") {
+        const practiceClause = /including every practice question/i.test(template.text)
+          ? ", including every practice question."
+          : " in the Learning Course.";
+        return `Complete ${amount} lesson${plural}${practiceClause}`;
+      }
+      if (template.metric === "perfectQuizzes") return `Earn 100% on ${amount} module ${amount === 1 ? "quiz" : "quizzes"}.`;
+      if (template.metric === "quizzes") return `Complete ${amount} module ${amount === 1 ? "quiz" : "quizzes"}.`;
+      if (template.metric === "finalTests") return `Complete ${amount} final test${plural}.`;
+      return template.text;
+    }
+
     function generateTasks() {
       const today = new Date().toDateString();
       const daysAway = taskDaysAway(state.taskLastSeenDay || state.taskDay || state.claimed.daily);
@@ -5353,7 +5388,7 @@
         return {
           id: `${template.id}-${level}-${today}`,
           level,
-          text: `${ageProfile.guide}: ${template.text}`,
+          text: taskGoalText(template, targetAmount),
           metric: template.metric,
           target: start + targetAmount,
           xp: taskXp[level],
@@ -5374,8 +5409,9 @@
       const grid = document.getElementById("taskGrid");
       const profile = taskProfileFromState();
       const completed = state.tasks.filter(task => task.done).length;
-      const streakLabel = `${state.taskStreak || 1}-day daily task streak`;
-      document.getElementById("taskGuide").textContent = `${profile.guide} ${streakLabel}. ${completed}/3 complete today.`;
+      const streakDays = state.taskStreak || 1;
+      const streakLabel = `Current daily task streak: ${streakDays} ${streakDays === 1 ? "day" : "days"}`;
+      document.getElementById("taskGuide").textContent = `${profile.guide} ${streakLabel}. ${completed} of 3 tasks completed today.`;
       grid.innerHTML = state.tasks.map(task => `
         <article class="card task ${task.level.toLowerCase()}">
           <div>
@@ -5510,7 +5546,7 @@
 
     function taskProofIsValid(task, proof) {
       if (task.metric) {
-        return taskCheck(taskMetricValue(task.metric) >= Number(task.target), "Finish the listed learning activity after today's task board opened, then check progress again.");
+        return taskCheck(taskMetricValue(task.metric) >= Number(task.target), "Complete the listed learning activity after opening today's task board, then check your progress again.");
       }
       const rule = task.rule;
       if (rule === "paper-trade") return taskCheck(Boolean(state.claimed.trade), "Make a paper trade first, then check progress again.");
@@ -5518,7 +5554,7 @@
       if (rule === "lesson-two") return taskCheck(taskCompletedLessons() >= 2, "Finish two lessons first, then check progress again.");
       if (rule === "quiz-one") return taskCheck(taskCompletedQuizzes() >= 1, "Finish one quiz first, then check progress again.");
       if (rule === "quiz-two") return taskCheck(taskCompletedQuizzes() >= 2, "Finish two quizzes first, then check progress again.");
-      if (rule === "perfect-quiz-one") return taskCheck(taskPerfectQuizzes() >= 1, "Finish a quiz with every answer correct first.");
+      if (rule === "perfect-quiz-one") return taskCheck(taskPerfectQuizzes() >= 1, "Earn a perfect score on one quiz first, then check your progress again.");
       if (rule === "perfect-quiz-two") return taskCheck(taskPerfectQuizzes() >= 2, "Finish two perfect quizzes first, then check progress again.");
       if (rule === "final-test-one") return taskCheck(taskCompletedFinalTests() >= 1, "Finish one final test first, then check progress again.");
       if (rule === "final-test-two") return taskCheck(taskCompletedFinalTests() >= 2, "Finish two final tests first, then check progress again.");
@@ -5544,7 +5580,7 @@
       if (rule === "tesla-toyota") return taskCheck(/tesla/i.test(proof) && /toyota/i.test(proof) && taskHasTwoNotes(proof) && /risk|difference|compare|similar|company|stock|ev|hybrid|both|while|whereas|more|less|unlike/i.test(proof), "Please check the task wording and write one note for each company plus a comparison or risk detail.");
       if (rule === "crypto-compare") return taskCheck(taskCryptoMentionCount(proof) >= 2 && taskHasTwoNotes(proof) && /risk|difference|compare|similar|both|while|whereas|more|less|unlike/i.test(proof), "Please check the crypto list and compare two coins in separate notes.");
       if (rule === "penny-risk") return taskCheck(taskMarketMentionCount(proof, "Penny markets", "can") >= 2 && /risk|liquid|hype|volatil|loss|spread/i.test(proof) && taskHasTwoNotes(proof), "Please check the penny-market list and add a separate risk note for each selected market.");
-      if (rule === "holding-economy") return taskCheck(/vix/i.test(proof) && /private|openai|anthropic|perplexity|skild|discord/i.test(proof) && /holding|hold|cant|can't|not public|watch/i.test(proof), "Please check the market key and explain why these are holding-economy items.");
+      if (rule === "holding-economy") return taskCheck(/vix/i.test(proof) && /private|openai|anthropic|perplexity|skild|discord/i.test(proof) && /holding|hold|cant|can't|not public|watch/i.test(proof), "Please check the market key and explain why these assets are part of the holding economy.");
       return taskCheck(Boolean(proof.trim()), "Add an answer before submitting.");
     }
 
@@ -5564,7 +5600,7 @@
       document.getElementById("dailyBtn").addEventListener("click", () => {
         const today = new Date().toDateString();
         if (state.claimed.daily === today) {
-          showToast("Daily login already claimed today.");
+          showToast("Today's daily login reward has already been claimed.");
           return;
         }
         state.claimed.daily = today;
@@ -5587,7 +5623,7 @@
         const age = Number(document.getElementById("settingsAge").value);
         const level = document.getElementById("settingsLevel").value;
         if (!first || !last || !Number.isInteger(age) || age < 1 || age > 120) {
-          showToast("Enter a first name, last name, and age from 1 to 120.");
+          showToast("Enter a first name, a last name, and an age from 1 to 120.");
           return;
         }
         state.profile.first = first;
