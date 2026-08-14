@@ -4105,8 +4105,8 @@
           <div class="trade-estimate" id="tradeEstimate" aria-live="polite"></div>
           <p class="muted" style="margin-top:12px">This is a paper trade. It changes your practice position and XP only; no real money is used.</p>
           <div class="trade-confirm">
-            <button class="btn green" id="confirmTradeBtn" type="button" disabled>Yes</button>
-            <button class="btn secondary" id="cancelTradeBtn" type="button">No</button>
+            <button class="btn green" id="confirmTradeBtn" type="button" disabled>Confirm Trade</button>
+            <button class="btn secondary" id="cancelTradeBtn" type="button">Cancel Trade</button>
           </div>
         </div>
       `;
@@ -5417,6 +5417,7 @@
           <div>
             <span class="difficulty">${task.level} Task</span>
             <h3 style="margin-top:12px">${task.text}</h3>
+            ${taskProgressText(task) ? `<p class="muted" style="margin-top:8px">${taskProgressText(task)}</p>` : ""}
           </div>
           ${task.done
             ? `<div class="task-done">Completed today</div>`
@@ -5451,6 +5452,20 @@
           renderTasks();
         });
       });
+    }
+
+    function taskProgressText(task) {
+      if (!task.metric) return "";
+      const target = Math.max(0, Number(task.target) || 0);
+      const current = Math.min(target, Math.max(0, taskMetricValue(task.metric)));
+      const singular = target === 1;
+      const units = {
+        lessons: singular ? "lesson" : "lessons",
+        quizzes: singular ? "module quiz" : "module quizzes",
+        perfectQuizzes: singular ? "perfect quiz" : "perfect quizzes",
+        finalTests: singular ? "final test" : "final tests"
+      }[task.metric] || "activities";
+      return `Course progress: ${current} of ${target} ${units} completed.`;
     }
 
     function taskActivityType(task) {
