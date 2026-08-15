@@ -1507,7 +1507,7 @@
 
     .mini-game-result-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 10px;
     }
 
@@ -3392,55 +3392,123 @@
     const taskXp = { Bronze: 35, Silver: 60, Gold: 110 };
     const MINI_GAME_ENTRY_FEE = 200;
     const MINI_GAME_DURATION_MS = 60 * 1000;
-    const MINI_GAME_MAX_REWARD_XP = 500;
+    const MINI_GAME_POINT_CAP = 100;
+    const MINI_GAME_CORRECT_POINTS = 2;
+    const MINI_GAME_WRONG_POINTS = -1;
+    const MINI_GAME_XP_PER_POINT = 10;
+    const MINI_GAME_QUESTION_COUNT = 50;
+
+    function miniQuestion(prompt, correct, distractors) {
+      return { prompt, options: [String(correct), ...distractors.map(String)], answer: 0 };
+    }
+
+    function buildPricePulseQuestions() {
+      return Array.from({ length: MINI_GAME_QUESTION_COUNT }, (_, index) => {
+        const base = 40 + (index % 10) * 10;
+        const rate = 5 + (index % 6) * 5;
+        const gain = base * rate / 100;
+        if (index % 4 === 0) {
+          return miniQuestion(`A price moves from $${base} to $${base + gain}. What is the percentage gain?`, `${rate}%`, [`${rate - 2}%`, `${rate + 2}%`, `$${gain}`]);
+        }
+        if (index % 4 === 1) {
+          return miniQuestion(`An asset priced at $${base} rises ${rate}%. What is its new price?`, `$${base + gain}`, [`$${base + gain - 5}`, `$${base + gain + 7}`, `$${base + gain + 13}`]);
+        }
+        if (index % 4 === 2) {
+          const dropRate = 10 + (index % 5) * 5;
+          const ending = base * (1 - dropRate / 100);
+          return miniQuestion(`A price of $${base} falls ${dropRate}%. What is the ending price?`, `$${ending}`, [`$${ending + 5}`, `$${ending - 5}`, `$${base - dropRate / 2}`]);
+        }
+        const secondBase = 60 + (index % 7) * 10;
+        const secondRate = 4 + (index % 5) * 4;
+        return miniQuestion(`Which asset has the larger percentage gain: Asset A rises from $${base} to $${base + gain}, or Asset B rises from $${secondBase} to $${secondBase + secondBase * secondRate / 100}?`, rate > secondRate ? "Asset A" : rate < secondRate ? "Asset B" : "They are equal", [rate > secondRate ? "Asset B" : "Asset A", "The prices are equal", "There is not enough information"]);
+      });
+    }
+
+    function buildRiskRadarQuestions() {
+      return Array.from({ length: MINI_GAME_QUESTION_COUNT }, (_, index) => {
+        const share = 12 + (index % 6) * 3;
+        if (index % 5 === 0) {
+          return miniQuestion(`One position makes up ${share}% of a portfolio. What is the clearest concern?`, "Concentration risk", ["Guaranteed diversification", "A shorter settlement time", "A fixed return"]);
+        }
+        if (index % 5 === 1) {
+          const loss = 10 + (index % 4) * 5;
+          const recovery = Math.round((loss / (100 - loss)) * 1000) / 10;
+          return miniQuestion(`An asset falls ${loss}%. About what gain is needed to return to its starting price?`, `${recovery}%`, [`${loss}%`, `${100 - loss}%`, `${recovery + 10}%`]);
+        }
+        if (index % 5 === 2) {
+          return miniQuestion(`A bid-ask spread widens while trading volume falls. What does that most directly suggest?`, "Higher trading friction and lower liquidity", ["A guaranteed price increase", "A completed dividend payment", "A risk-free market"]);
+        }
+        if (index % 5 === 3) {
+          return miniQuestion(`A private company appears in the holding economy. What is the appropriate app action?`, "View its private-market source instead of buying it", ["Buy it through the index list", "Assume its price is zero", "Treat it as a public ETF"]);
+        }
+        return miniQuestion(`Two assets have the same average return, but Asset A has larger price swings. Which statement is strongest?`, "Asset A has higher volatility risk", ["Asset A has guaranteed profit", "Asset A is automatically diversified", "Asset A has no downside"]) ;
+      });
+    }
+
+    function buildMarketMatchQuestions() {
+      const assets = [
+        ["Bitcoin", "crypto"], ["Ethereum", "crypto"], ["Dogecoin", "crypto"], ["QQQ", "ETF"], ["Gold", "commodity"],
+        ["Nikkei 225", "index"], ["S&P 500", "index"], ["KOSPI", "index"], ["Toyota Motor Corporation", "public company"],
+        ["Tesla, Inc.", "public company"], ["Berkshire Hathaway", "public company"], ["OpenAI", "private company"]
+      ];
+      const categories = ["crypto", "ETF", "commodity", "index", "public company", "private company"];
+      return Array.from({ length: MINI_GAME_QUESTION_COUNT }, (_, index) => {
+        const [name, category] = assets[index % assets.length];
+        const distractors = categories.filter(item => item !== category).slice((index + 1) % 3, (index + 1) % 3 + 3);
+        if (index % 2 === 0) {
+          return miniQuestion(`Which category best describes ${name} in the app?`, category, distractors);
+        }
+        const alternatives = assets.filter(([assetName]) => assetName !== name).map(([assetName]) => assetName);
+        const choiceDistractors = [0, 1, 2].map(offset => alternatives[(index * 5 + 3 + offset) % alternatives.length]);
+        return miniQuestion(`Which item is the better match for the category ${category}?`, name, choiceDistractors);
+      });
+    }
+
+    function buildTradeMathQuestions() {
+      return Array.from({ length: MINI_GAME_QUESTION_COUNT }, (_, index) => {
+        const price = 8 + (index % 8) * 3;
+        const units = 3 + (index % 7);
+        if (index % 4 === 0) {
+          const total = price * units;
+          return miniQuestion(`You buy ${units} units at $${price} each. What is the purchase value?`, `$${total}`, [`$${total + price}`, `$${total - price}`, `$${price + units}`]);
+        }
+        if (index % 4 === 1) {
+          const dollars = price * units;
+          return miniQuestion(`You spend $${dollars} on ${units} units. What is the price per unit?`, `$${price}`, [`$${price + 2}`, `$${price - 2}`, `$${dollars}`]);
+        }
+        if (index % 4 === 2) {
+          const dollars = price * (units + 2);
+          return miniQuestion(`At $${price} per unit, how many units can $${dollars} buy?`, `${units + 2} units`, [`${units + 1} units`, `${units + 3} units`, `${dollars} units`]);
+        }
+        const xpDollars = 20 + (index % 6) * 10;
+        return miniQuestion(`At 7 XP per dollar, how many XP does a $${xpDollars} trade use?`, `${xpDollars * 7} XP`, [`${xpDollars * 6} XP`, `${xpDollars + 7} XP`, `${xpDollars * 8} XP`]);
+      });
+    }
+
     const miniGameBank = [
       {
         id: "price-pulse",
         title: "Price Pulse",
         description: "Read quick price moves and calculate what the chart is showing.",
-        questions: [
-          { prompt: "A price moves from $40 to $44. What is the percentage gain?", options: ["10%", "4%", "40%", "14%"], answer: 0 },
-          { prompt: "Which move is the largest percentage change?", options: ["$5 to $6", "$20 to $22", "$100 to $105", "$8 to $8.40"], answer: 0 },
-          { prompt: "A stock falls from $50 to $45. What is the percentage loss?", options: ["5%", "10%", "9%", "45%"], answer: 1 },
-          { prompt: "What does a green price line usually show?", options: ["The plotted price rose over that interval", "The company paid a fixed dividend", "The market cannot be traded", "The chart uses no real data"], answer: 0 },
-          { prompt: "If a price is $12 and rises by $3, what is the new price?", options: ["$15", "$9", "$36", "$12.25"], answer: 0 }
-        ]
+        questionFactory: buildPricePulseQuestions
       },
       {
         id: "risk-radar",
         title: "Risk Radar",
         description: "Spot concentration, volatility, liquidity, and evidence risks in short scenarios.",
-        questions: [
-          { prompt: "Which choice spreads exposure across several companies?", options: ["A single stock", "An index fund", "A cash withdrawal", "A price alert"], answer: 1 },
-          { prompt: "Which choice is a risk signal rather than a guarantee?", options: ["A wider range of possible prices", "A promise of a fixed return", "A completed account reset", "A shorter company name"], answer: 0 },
-          { prompt: "Why can a penny stock need extra caution?", options: ["It always tracks an index", "It cannot have a price", "It may be less liquid and more volatile", "It is guaranteed to lose money"], answer: 2 },
-          { prompt: "Why is a private company marked as part of the holding economy?", options: ["Its shares are not publicly traded in the app", "Its chart updates every second", "Its price is always below two dollars", "Its market is an index"], answer: 0 },
-          { prompt: "What is a reasonable paper-trade habit?", options: ["Follow the first exciting headline", "Compare evidence and downside before deciding", "Ignore the price range", "Assume a gain is guaranteed"], answer: 1 }
-        ]
+        questionFactory: buildRiskRadarQuestions
       },
       {
         id: "market-match",
         title: "Market Match",
         description: "Classify assets by the market list and identify what each label means.",
-        questions: [
-          { prompt: "Which item belongs to the crypto market list?", options: ["VIX", "QQQ", "Bitcoin", "Nikkei 225"], answer: 2 },
-          { prompt: "Which item is an ETF in the market list?", options: ["Toyota Motor Corporation", "QQQ", "OpenAI", "Dogecoin"], answer: 1 },
-          { prompt: "Which item is a market index?", options: ["Nikkei 225", "Tesla, Inc.", "Ethereum", "Anthropic"], answer: 0 },
-          { prompt: "Which item is a publicly traded company rather than an index?", options: ["Russell 2000", "S&P 500", "KOSPI", "Toyota Motor Corporation"], answer: 3 },
-          { prompt: "Which item is a private company in the app?", options: ["Berkshire Hathaway", "OpenAI", "Nasdaq", "Gold"], answer: 1 }
-        ]
+        questionFactory: buildMarketMatchQuestions
       },
       {
         id: "trade-math-sprint",
         title: "Trade Math Sprint",
         description: "Solve fast paper-trade calculations using prices, units, dollars, and XP.",
-        questions: [
-          { prompt: "You buy 3 units at $12 each. What is the purchase value?", options: ["$15", "$36", "$9", "$48"], answer: 1 },
-          { prompt: "You spend $100 on 4 units. What is the price per unit?", options: ["$25", "$104", "$96", "$400"], answer: 0 },
-          { prompt: "You buy $50 worth of an asset priced at $10. How many units do you receive?", options: ["40 units", "60 units", "5 units", "500 units"], answer: 2 },
-          { prompt: "If the price is $8, what is the value of 6 units?", options: ["$14", "$48", "$2", "$64"], answer: 1 },
-          { prompt: "A $120 purchase uses the rate of 7 XP per dollar. How many XP does it cost?", options: ["$840", "840 XP", "127 XP", "120 XP"], answer: 1 }
-        ]
+        questionFactory: buildTradeMathQuestions
       }
     ];
     const chartRanges = {
@@ -5930,7 +5998,8 @@
     }
 
     function prepareMiniGameQuestions(game) {
-      return game.questions.map(question => {
+      const sourceQuestions = game.questionFactory ? game.questionFactory() : game.questions || [];
+      return sourceQuestions.map(question => {
         const correct = question.options[question.answer];
         const options = shuffleTasks(question.options);
         return { ...question, options, answer: options.indexOf(correct) };
@@ -5957,6 +6026,7 @@
         index: 0,
         selected: null,
         answers: [],
+        points: 0,
         startedAt: Date.now(),
         result: null
       };
@@ -5991,7 +6061,10 @@
         return;
       }
       const question = session.questions[session.index];
-      session.answers.push({ correct: session.selected === question.answer });
+      const correct = session.selected === question.answer;
+      const delta = correct ? MINI_GAME_CORRECT_POINTS : MINI_GAME_WRONG_POINTS;
+      session.points = Math.min(MINI_GAME_POINT_CAP, session.points + delta);
+      session.answers.push({ correct, delta });
       if (session.index === session.questions.length - 1) {
         finishMiniGame("complete");
         return;
@@ -6010,9 +6083,9 @@
       const correct = session.answers.filter(answer => answer.correct).length;
       const total = session.questions.length;
       const accuracy = Math.round((correct / total) * 100);
-      const reward = Math.round((accuracy / 100) * MINI_GAME_MAX_REWARD_XP);
-      session.result = { correct, total, accuracy, reward, elapsedMs, reason };
-      addXp(reward, `${session.game.title} accuracy reward`);
+      const reward = Math.max(0, session.points * MINI_GAME_XP_PER_POINT);
+      session.result = { correct, total, accuracy, points: session.points, reward, elapsedMs, reason };
+      addXp(reward, `${session.game.title} point reward`);
       renderMiniGames();
     }
 
@@ -6027,7 +6100,7 @@
         miniGameSession = null;
       }
       const games = miniGamesForMonth();
-      guide.textContent = `Two mini-games rotate each month. Each round lasts 1 minute and costs ${MINI_GAME_ENTRY_FEE} XP to enter. Accuracy can earn up to ${MINI_GAME_MAX_REWARD_XP} XP.`;
+      guide.textContent = `Two mini-games rotate each month. Each round lasts 1 minute and costs ${MINI_GAME_ENTRY_FEE} XP to enter. Correct answers add 2 points, wrong answers subtract 1, and each point is worth ${MINI_GAME_XP_PER_POINT} XP.`;
 
       if (miniGameSession?.result) {
         const result = miniGameSession.result;
@@ -6041,12 +6114,13 @@
               <span class="xp">+${result.reward} XP reward</span>
             </div>
             <div class="mini-game-result-grid">
+              <div class="mini-game-result-stat"><strong>${result.points}/${MINI_GAME_POINT_CAP}</strong><span>Points</span></div>
               <div class="mini-game-result-stat"><strong>${result.accuracy}%</strong><span>Accuracy</span></div>
               <div class="mini-game-result-stat"><strong>${result.correct}/${result.total}</strong><span>Correct answers</span></div>
               <div class="mini-game-result-stat"><strong>${formatDuration(result.elapsedMs)}</strong><span>Time used</span></div>
               <div class="mini-game-result-stat"><strong>+${result.reward}</strong><span>XP earned</span></div>
             </div>
-            <p class="muted">Your reward is based on accuracy: ${result.accuracy}% of the ${MINI_GAME_MAX_REWARD_XP} XP reward pool.</p>
+            <p class="muted">Your reward is based on points: ${result.points} points x ${MINI_GAME_XP_PER_POINT} XP = ${result.reward} XP. The score cannot exceed ${MINI_GAME_POINT_CAP} points, and XP cannot go below 0.</p>
             <div class="actions">
               <button class="btn green" data-replay-mini-game="${miniGameSession.game.id}">Play again for ${MINI_GAME_ENTRY_FEE} XP</button>
               <button class="btn secondary" data-back-mini-games>Back to mini-games</button>
@@ -6068,7 +6142,7 @@
             <div class="mini-game-head">
               <div>
                 <h3>${escapeHtml(miniGameSession.game.title)}</h3>
-                <p class="muted" style="margin-top:6px">Question ${miniGameSession.index + 1} of ${miniGameSession.questions.length}</p>
+                <p class="muted" style="margin-top:6px">Question ${miniGameSession.index + 1} of ${miniGameSession.questions.length} • Points: ${miniGameSession.points}/${MINI_GAME_POINT_CAP}</p>
               </div>
               <span class="mini-game-timer" id="miniGameTimer">${formatMiniGameTime(MINI_GAME_DURATION_MS - (Date.now() - miniGameSession.startedAt))}</span>
             </div>
@@ -6094,7 +6168,7 @@
                 <p class="muted" style="margin-top:8px">${escapeHtml(game.description)}</p>
               </div>
               <div>
-                <div class="mini-game-meta"><span>5 questions</span><span>1 minute</span><span>${MINI_GAME_ENTRY_FEE} XP entry</span></div>
+                <div class="mini-game-meta"><span>${MINI_GAME_QUESTION_COUNT} questions</span><span>1 minute</span><span>${MINI_GAME_ENTRY_FEE} XP entry</span></div>
                 <button class="btn green" data-start-mini-game="${game.id}" style="margin-top:14px;width:100%" ${state.xp < MINI_GAME_ENTRY_FEE ? "disabled" : ""}>${state.xp < MINI_GAME_ENTRY_FEE ? `Need ${MINI_GAME_ENTRY_FEE} XP to play` : `Start for ${MINI_GAME_ENTRY_FEE} XP`}</button>
               </div>
             </article>
