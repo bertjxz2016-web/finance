@@ -1346,6 +1346,49 @@
     .task.silver { border-top: 5px solid #8b98a5; }
     .task.gold { border-top: 5px solid var(--gold); }
 
+    .task.monthly-task {
+      grid-column: 1 / -1;
+      min-height: 260px;
+      padding: 20px;
+      border-top: 6px solid var(--green);
+      background: #f4fbf7;
+    }
+
+    .monthly-task h3 {
+      font-size: 22px;
+    }
+
+    .monthly-progress {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .monthly-progress-item {
+      border: 1px solid rgba(22, 138, 88, .22);
+      border-radius: 8px;
+      background: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .monthly-progress-item strong,
+    .monthly-progress-item span {
+      display: block;
+    }
+
+    .monthly-progress-item strong {
+      color: var(--ink);
+      font-size: 20px;
+    }
+
+    .monthly-progress-item span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      margin-top: 3px;
+    }
+
     .task h3 {
       font-size: 18px;
     }
@@ -1509,6 +1552,10 @@
       .settings-grid,
       .result-grid,
       .market-info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .monthly-progress {
         grid-template-columns: 1fr;
       }
 
@@ -1695,8 +1742,8 @@
           <section data-panel="tasks" class="hidden">
             <div class="section-head">
               <div>
-                <h2>Bronze, Silver, and Gold Tasks</h2>
-                <p class="muted" id="taskGuide">Complete three daily goals: one Bronze, one Silver, and one Gold.</p>
+                <h2>Daily and Monthly Tasks</h2>
+                <p class="muted" id="taskGuide">Complete three daily goals and one large monthly goal.</p>
               </div>
             </div>
             <div class="task-grid" id="taskGrid"></div>
@@ -3256,6 +3303,7 @@
         taskStreak: 0,
         taskProfile: "",
         taskVersion: TASK_VERSION,
+        monthlyTask: null,
         completed: {},
         courseProgress: {},
         activeCourseId: "",
@@ -5382,6 +5430,39 @@
       return template.text;
     }
 
+    function taskMonthKey(date = new Date()) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    function createMonthlyTask() {
+      const month = taskMonthKey();
+      return {
+        id: `monthly-course-challenge-${month}`,
+        monthly: true,
+        month,
+        level: "Monthly",
+        text: "Complete 10 lessons, 3 module quizzes, and 1 final test before the month ends.",
+        requirements: { lessons: 10, quizzes: 3, finalTests: 1 },
+        start: {
+          lessons: taskCompletedLessons(),
+          quizzes: taskCompletedQuizzes(),
+          finalTests: taskCompletedFinalTests()
+        },
+        xp: 200,
+        done: false,
+        proof: ""
+      };
+    }
+
+    function ensureMonthlyTask() {
+      const month = taskMonthKey();
+      const task = state.monthlyTask;
+      const valid = task && task.month === month && task.monthly === true && Number(task.xp) === 200 && task.requirements && task.start;
+      if (valid) return;
+      state.monthlyTask = createMonthlyTask();
+      saveState();
+    }
+
     function generateTasks() {
       const today = new Date().toDateString();
       const daysAway = taskDaysAway(state.taskLastSeenDay || state.taskDay || state.claimed.daily);
@@ -5411,23 +5492,46 @@
       saveState();
     }
 
-    function renderTasks() {
-      ensureDailyTasks();
-      const grid = document.getElementById("taskGrid");
-      const profile = taskProfileFromState();
-      const completed = state.tasks.filter(task => task.done).length;
-      const streakDays = state.taskStreak || 1;
-      const streakLabel = `Current daily task streak: ${streakDays} ${streakDays === 1 ? "day" : "days"}`;
-      document.getElementById("taskGuide").textContent = `${profile.guide} ${streakLabel}. ${completed} of 3 tasks completed today.`;
-      grid.innerHTML = state.tasks.map(task => `
-        <article class="card task ${task.level.toLowerCase()}">
+    function monthlyTaskProgress(task) {
+      const requirements = task.requirements || {};
+      const start = task.start || {};
+      const completed = metric => Math.max(0, taskMetricValue(metric) - (Number(start[metric]) || 0));
+      return {
+        lessons: Math.min(Number(requirements.lessons) || 0, completed("lessons")),
+        quizzes: Math.min(Number(requirements.quizzes) || 0, completed("quizzes")),
+        finalTests: Math.min(Number(requirements.finalTests) || 0, completed("finalTests"))
+      };
+    }
+
+    function monthlyTaskProgressMarkup(task) {
+      const requirements = task.requirements || {};
+      const progress = monthlyTaskProgress(task);
+      return `
+        <div class="monthly-progress" aria-label="Monthly task progress">
+          <div class="monthly-progress-item"><strong>${progress.lessons}/${requirements.lessons}</strong><span>Lessons</span></div>
+          <div class="monthly-progress-item"><strong>${progress.quizzes}/${requirements.quizzes}</strong><span>Module quizzes</span></div>
+          <div class="monthly-progress-item"><strong>${progress.finalTests}/${requirements.finalTests}</strong><span>Final tests</span></div>
+        </div>
+      `;
+    }
+
+    function taskCardMarkup(task) {
+      const isMonthly = Boolean(task.monthly);
+      const taskClass = isMonthly ? "monthly-task" : task.level.toLowerCase();
+      const taskLabel = isMonthly ? "Monthly Task" : `${task.level} Task`;
+      const statusLabel = isMonthly ? "Completed this month" : "Completed today";
+      const progressMarkup = isMonthly
+        ? `<p class="muted" style="margin-top:8px">This large goal stays active all month and renews only when the next month begins.</p>${monthlyTaskProgressMarkup(task)}`
+        : (taskProgressText(task) ? `<p class="muted" style="margin-top:8px">${taskProgressText(task)}</p>` : "");
+      return `
+        <article class="card task ${taskClass}">
           <div>
-            <span class="difficulty">${task.level} Task</span>
+            <span class="difficulty">${taskLabel}</span>
             <h3 style="margin-top:12px">${task.text}</h3>
-            ${taskProgressText(task) ? `<p class="muted" style="margin-top:8px">${taskProgressText(task)}</p>` : ""}
+            ${progressMarkup}
           </div>
           ${task.done
-            ? `<div class="task-done">Completed today</div>`
+            ? `<div class="task-done">${statusLabel}</div>`
             : taskActivityType(task)
               ? `<div class="task-complete">
                   <p class="muted">Complete the related activity in the app, then check your progress here.</p>
@@ -5438,10 +5542,23 @@
                   <button class="btn green" data-task="${task.id}">Submit work +${task.xp} XP</button>
                 </div>`}
         </article>
-      `).join("");
+      `;
+    }
+
+    function renderTasks() {
+      ensureDailyTasks();
+      ensureMonthlyTask();
+      const grid = document.getElementById("taskGrid");
+      const profile = taskProfileFromState();
+      const completed = state.tasks.filter(task => task.done).length;
+      const streakDays = state.taskStreak || 1;
+      const streakLabel = `Current daily task streak: ${streakDays} ${streakDays === 1 ? "day" : "days"}`;
+      const monthlyStatus = state.monthlyTask.done ? "Monthly goal completed" : "Monthly goal in progress";
+      document.getElementById("taskGuide").textContent = `${profile.guide} ${streakLabel}. ${completed} of 3 daily tasks completed today. ${monthlyStatus}.`;
+      grid.innerHTML = `${state.tasks.map(taskCardMarkup).join("")}${taskCardMarkup(state.monthlyTask)}`;
       grid.querySelectorAll("[data-task]").forEach(button => {
         button.addEventListener("click", () => {
-          const task = state.tasks.find(item => item.id === button.dataset.task);
+          const task = state.tasks.find(item => item.id === button.dataset.task) || (state.monthlyTask?.id === button.dataset.task ? state.monthlyTask : null);
           if (!task) return;
           const proofInput = [...grid.querySelectorAll("[data-task-proof]")].find(input => input.dataset.taskProof === task.id);
           const proof = proofInput ? proofInput.value.trim() : "";
@@ -5454,7 +5571,7 @@
           task.done = true;
           task.proof = proof;
           task.completedAt = Date.now();
-          addXp(task.xp, `${task.level} task`);
+          addXp(task.xp, `${task.monthly ? "monthly" : task.level} task`);
           saveState();
           renderTasks();
         });
@@ -5476,7 +5593,7 @@
     }
 
     function taskActivityType(task) {
-      return task.metric || "";
+      return task.monthly ? "monthly" : task.metric || "";
     }
 
     function ensureDailyTasks() {
@@ -5567,6 +5684,14 @@
     }
 
     function taskProofIsValid(task, proof) {
+      if (task.monthly) {
+        const progress = monthlyTaskProgress(task);
+        const requirements = task.requirements || {};
+        return taskCheck(
+          progress.lessons >= Number(requirements.lessons) && progress.quizzes >= Number(requirements.quizzes) && progress.finalTests >= Number(requirements.finalTests),
+          "Complete the remaining monthly goal activities, then check your progress again."
+        );
+      }
       if (task.metric) {
         return taskCheck(taskMetricValue(task.metric) >= Number(task.target), "Complete the listed learning activity after opening today's task board, then check your progress again.");
       }
