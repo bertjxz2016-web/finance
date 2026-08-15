@@ -1415,6 +1415,127 @@
       font-weight: 900;
     }
 
+    .mini-game-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .mini-game-card {
+      min-height: 240px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+      border-top: 5px solid var(--teal);
+    }
+
+    .mini-game-card h3 {
+      font-size: 20px;
+    }
+
+    .mini-game-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .mini-game-meta span {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      padding: 6px 9px;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .mini-game-session,
+    .mini-game-result {
+      border: 1px solid rgba(17, 124, 134, .3);
+      border-radius: 8px;
+      background: #f1faf9;
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .mini-game-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .mini-game-timer {
+      color: var(--teal);
+      font-size: 24px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .mini-game-question {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.3;
+    }
+
+    .mini-game-options {
+      display: grid;
+      gap: 9px;
+    }
+
+    .mini-game-option {
+      width: 100%;
+      min-height: 48px;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      padding: 10px 12px;
+      font: inherit;
+      font-weight: 800;
+    }
+
+    .mini-game-option.selected {
+      border-color: var(--teal);
+      background: #dff4f2;
+      box-shadow: 0 0 0 2px rgba(17, 124, 134, .12);
+    }
+
+    .mini-game-result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .mini-game-result-stat {
+      min-width: 0;
+      border: 1px solid rgba(17, 124, 134, .24);
+      border-radius: 8px;
+      background: #fff;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .mini-game-result-stat strong,
+    .mini-game-result-stat span {
+      display: block;
+    }
+
+    .mini-game-result-stat strong {
+      font-size: 22px;
+    }
+
+    .mini-game-result-stat span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      margin-top: 4px;
+    }
+
     .difficulty {
       display: inline-flex;
       width: fit-content;
@@ -1485,7 +1606,7 @@
       }
 
       .tabbar {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
       }
 
       .tab {
@@ -1502,7 +1623,7 @@
       }
 
       #dashboard.lesson-focus .side .tabbar {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
       }
 
       #dashboard.lesson-focus .side .tab {
@@ -1547,6 +1668,7 @@
       .market-grid,
       .course-summary,
       .task-grid,
+      .mini-game-grid,
       .streak-grid,
       .settings-layout,
       .settings-grid,
@@ -1556,6 +1678,10 @@
       }
 
       .monthly-progress {
+        grid-template-columns: 1fr;
+      }
+
+      .mini-game-result-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1682,6 +1808,7 @@
             <button class="tab active" data-tab="markets" title="Markets" aria-label="Markets"><span class="tab-icon" aria-hidden="true">📈</span><span class="tab-label">Markets</span></button>
             <button class="tab" data-tab="learn" title="Learn" aria-label="Learn"><span class="tab-icon" aria-hidden="true">📚</span><span class="tab-label">Learn</span></button>
             <button class="tab" data-tab="tasks" title="Tasks" aria-label="Tasks"><span class="tab-icon" aria-hidden="true">🏆</span><span class="tab-label">Tasks</span></button>
+            <button class="tab" data-tab="minigames" title="Mini-Games" aria-label="Mini-Games"><span class="tab-icon" aria-hidden="true">🎮</span><span class="tab-label">Mini-Games</span></button>
             <button class="tab" data-tab="settings" title="Settings" aria-label="Settings"><span class="tab-icon" aria-hidden="true">⚙</span><span class="tab-label">Settings</span></button>
           </nav>
           <div class="legend">
@@ -1747,6 +1874,16 @@
               </div>
             </div>
             <div class="task-grid" id="taskGrid"></div>
+          </section>
+
+          <section data-panel="minigames" class="hidden">
+            <div class="section-head">
+              <div>
+                <h2>Mini-Games</h2>
+                <p class="muted" id="miniGameGuide">Play one-minute finance games to practice quick decisions.</p>
+              </div>
+            </div>
+            <div id="miniGamePanel"></div>
           </section>
 
           <section data-panel="settings" class="hidden">
@@ -3253,6 +3390,59 @@
     };
 
     const taskXp = { Bronze: 35, Silver: 60, Gold: 110 };
+    const MINI_GAME_ENTRY_FEE = 200;
+    const MINI_GAME_DURATION_MS = 60 * 1000;
+    const MINI_GAME_MAX_REWARD_XP = 500;
+    const miniGameBank = [
+      {
+        id: "price-pulse",
+        title: "Price Pulse",
+        description: "Read quick price moves and calculate what the chart is showing.",
+        questions: [
+          { prompt: "A price moves from $40 to $44. What is the percentage gain?", options: ["10%", "4%", "40%", "14%"], answer: 0 },
+          { prompt: "Which move is the largest percentage change?", options: ["$5 to $6", "$20 to $22", "$100 to $105", "$8 to $8.40"], answer: 0 },
+          { prompt: "A stock falls from $50 to $45. What is the percentage loss?", options: ["5%", "10%", "9%", "45%"], answer: 1 },
+          { prompt: "What does a green price line usually show?", options: ["The plotted price rose over that interval", "The company paid a fixed dividend", "The market cannot be traded", "The chart uses no real data"], answer: 0 },
+          { prompt: "If a price is $12 and rises by $3, what is the new price?", options: ["$15", "$9", "$36", "$12.25"], answer: 0 }
+        ]
+      },
+      {
+        id: "risk-radar",
+        title: "Risk Radar",
+        description: "Spot concentration, volatility, liquidity, and evidence risks in short scenarios.",
+        questions: [
+          { prompt: "Which choice spreads exposure across several companies?", options: ["A single stock", "An index fund", "A cash withdrawal", "A price alert"], answer: 1 },
+          { prompt: "Which choice is a risk signal rather than a guarantee?", options: ["A wider range of possible prices", "A promise of a fixed return", "A completed account reset", "A shorter company name"], answer: 0 },
+          { prompt: "Why can a penny stock need extra caution?", options: ["It always tracks an index", "It cannot have a price", "It may be less liquid and more volatile", "It is guaranteed to lose money"], answer: 2 },
+          { prompt: "Why is a private company marked as part of the holding economy?", options: ["Its shares are not publicly traded in the app", "Its chart updates every second", "Its price is always below two dollars", "Its market is an index"], answer: 0 },
+          { prompt: "What is a reasonable paper-trade habit?", options: ["Follow the first exciting headline", "Compare evidence and downside before deciding", "Ignore the price range", "Assume a gain is guaranteed"], answer: 1 }
+        ]
+      },
+      {
+        id: "market-match",
+        title: "Market Match",
+        description: "Classify assets by the market list and identify what each label means.",
+        questions: [
+          { prompt: "Which item belongs to the crypto market list?", options: ["VIX", "QQQ", "Bitcoin", "Nikkei 225"], answer: 2 },
+          { prompt: "Which item is an ETF in the market list?", options: ["Toyota Motor Corporation", "QQQ", "OpenAI", "Dogecoin"], answer: 1 },
+          { prompt: "Which item is a market index?", options: ["Nikkei 225", "Tesla, Inc.", "Ethereum", "Anthropic"], answer: 0 },
+          { prompt: "Which item is a publicly traded company rather than an index?", options: ["Russell 2000", "S&P 500", "KOSPI", "Toyota Motor Corporation"], answer: 3 },
+          { prompt: "Which item is a private company in the app?", options: ["Berkshire Hathaway", "OpenAI", "Nasdaq", "Gold"], answer: 1 }
+        ]
+      },
+      {
+        id: "trade-math-sprint",
+        title: "Trade Math Sprint",
+        description: "Solve fast paper-trade calculations using prices, units, dollars, and XP.",
+        questions: [
+          { prompt: "You buy 3 units at $12 each. What is the purchase value?", options: ["$15", "$36", "$9", "$48"], answer: 1 },
+          { prompt: "You spend $100 on 4 units. What is the price per unit?", options: ["$25", "$104", "$96", "$400"], answer: 0 },
+          { prompt: "You buy $50 worth of an asset priced at $10. How many units do you receive?", options: ["40 units", "60 units", "5 units", "500 units"], answer: 2 },
+          { prompt: "If the price is $8, what is the value of 6 units?", options: ["$14", "$48", "$2", "$64"], answer: 1 },
+          { prompt: "A $120 purchase uses the rate of 7 XP per dollar. How many XP does it cost?", options: ["$840", "840 XP", "127 XP", "120 XP"], answer: 1 }
+        ]
+      }
+    ];
     const chartRanges = {
       "1D": { range: "1d", interval: "1m", title: "1 day" },
       "1W": { range: "5d", interval: "15m", title: "1 week" },
@@ -3287,6 +3477,8 @@
     let marketChartRequest = 0;
     let tradeState = null;
     let skipChallengeTimer = 0;
+    let miniGameSession = null;
+    let miniGameTimer = 0;
     let courseOverviewMode = false;
 
     function defaultState() {
@@ -5731,6 +5923,187 @@
       return taskCheck(Boolean(proof.trim()), "Add an answer before submitting.");
     }
 
+    function miniGamesForMonth() {
+      const [year, month] = taskMonthKey().split("-").map(Number);
+      const start = (year * 12 + month - 1) % miniGameBank.length;
+      return [miniGameBank[start], miniGameBank[(start + 1) % miniGameBank.length]];
+    }
+
+    function prepareMiniGameQuestions(game) {
+      return game.questions.map(question => {
+        const correct = question.options[question.answer];
+        const options = shuffleTasks(question.options);
+        return { ...question, options, answer: options.indexOf(correct) };
+      });
+    }
+
+    function formatMiniGameTime(remainingMs) {
+      return `${Math.max(0, Math.ceil(remainingMs / 1000))}s left`;
+    }
+
+    function startMiniGame(gameId) {
+      if (miniGameSession && !miniGameSession.result) return;
+      const game = miniGamesForMonth().find(item => item.id === gameId);
+      if (!game) return;
+      if (state.xp < MINI_GAME_ENTRY_FEE) {
+        showToast(`You need ${MINI_GAME_ENTRY_FEE} XP to enter a mini-game.`);
+        return;
+      }
+      addXp(-MINI_GAME_ENTRY_FEE, `${game.title} entry fee`);
+      miniGameSession = {
+        game,
+        month: taskMonthKey(),
+        questions: prepareMiniGameQuestions(game),
+        index: 0,
+        selected: null,
+        answers: [],
+        startedAt: Date.now(),
+        result: null
+      };
+      renderMiniGames();
+      miniGameTimer = window.setInterval(updateMiniGameClock, 250);
+      updateMiniGameClock();
+    }
+
+    function updateMiniGameClock() {
+      if (!miniGameSession || miniGameSession.result) {
+        window.clearInterval(miniGameTimer);
+        miniGameTimer = 0;
+        return;
+      }
+      const remaining = MINI_GAME_DURATION_MS - (Date.now() - miniGameSession.startedAt);
+      const timer = document.getElementById("miniGameTimer");
+      if (timer) timer.textContent = formatMiniGameTime(remaining);
+      if (remaining <= 0) finishMiniGame("time");
+    }
+
+    function chooseMiniGameAnswer(index) {
+      if (!miniGameSession || miniGameSession.result) return;
+      miniGameSession.selected = Number(index);
+      renderMiniGames();
+    }
+
+    function submitMiniGameAnswer() {
+      const session = miniGameSession;
+      if (!session || session.result) return;
+      if (session.selected === null) {
+        showToast("Choose an answer before submitting.");
+        return;
+      }
+      const question = session.questions[session.index];
+      session.answers.push({ correct: session.selected === question.answer });
+      if (session.index === session.questions.length - 1) {
+        finishMiniGame("complete");
+        return;
+      }
+      session.index += 1;
+      session.selected = null;
+      renderMiniGames();
+    }
+
+    function finishMiniGame(reason) {
+      const session = miniGameSession;
+      if (!session || session.result) return;
+      window.clearInterval(miniGameTimer);
+      miniGameTimer = 0;
+      const elapsedMs = Math.min(MINI_GAME_DURATION_MS, Date.now() - session.startedAt);
+      const correct = session.answers.filter(answer => answer.correct).length;
+      const total = session.questions.length;
+      const accuracy = Math.round((correct / total) * 100);
+      const reward = Math.round((accuracy / 100) * MINI_GAME_MAX_REWARD_XP);
+      session.result = { correct, total, accuracy, reward, elapsedMs, reason };
+      addXp(reward, `${session.game.title} accuracy reward`);
+      renderMiniGames();
+    }
+
+    function renderMiniGames() {
+      const panel = document.getElementById("miniGamePanel");
+      const guide = document.getElementById("miniGameGuide");
+      if (!panel || !guide) return;
+      const month = taskMonthKey();
+      if (miniGameSession && miniGameSession.month !== month) {
+        window.clearInterval(miniGameTimer);
+        miniGameTimer = 0;
+        miniGameSession = null;
+      }
+      const games = miniGamesForMonth();
+      guide.textContent = `Two mini-games rotate each month. Each round lasts 1 minute and costs ${MINI_GAME_ENTRY_FEE} XP to enter. Accuracy can earn up to ${MINI_GAME_MAX_REWARD_XP} XP.`;
+
+      if (miniGameSession?.result) {
+        const result = miniGameSession.result;
+        panel.innerHTML = `
+          <div class="mini-game-result">
+            <div class="mini-game-head">
+              <div>
+                <h3>${escapeHtml(miniGameSession.game.title)} Results</h3>
+                <p class="muted" style="margin-top:6px">Your ${result.reason === "time" ? "minute ended" : "round is complete"}. The entry fee was 200 XP.</p>
+              </div>
+              <span class="xp">+${result.reward} XP reward</span>
+            </div>
+            <div class="mini-game-result-grid">
+              <div class="mini-game-result-stat"><strong>${result.accuracy}%</strong><span>Accuracy</span></div>
+              <div class="mini-game-result-stat"><strong>${result.correct}/${result.total}</strong><span>Correct answers</span></div>
+              <div class="mini-game-result-stat"><strong>${formatDuration(result.elapsedMs)}</strong><span>Time used</span></div>
+              <div class="mini-game-result-stat"><strong>+${result.reward}</strong><span>XP earned</span></div>
+            </div>
+            <p class="muted">Your reward is based on accuracy: ${result.accuracy}% of the ${MINI_GAME_MAX_REWARD_XP} XP reward pool.</p>
+            <div class="actions">
+              <button class="btn green" data-replay-mini-game="${miniGameSession.game.id}">Play again for ${MINI_GAME_ENTRY_FEE} XP</button>
+              <button class="btn secondary" data-back-mini-games>Back to mini-games</button>
+            </div>
+          </div>
+        `;
+        panel.querySelector("[data-replay-mini-game]")?.addEventListener("click", event => startMiniGame(event.currentTarget.dataset.replayMiniGame));
+        panel.querySelector("[data-back-mini-games]")?.addEventListener("click", () => {
+          miniGameSession = null;
+          renderMiniGames();
+        });
+        return;
+      }
+
+      if (miniGameSession) {
+        const question = miniGameSession.questions[miniGameSession.index];
+        panel.innerHTML = `
+          <div class="mini-game-session">
+            <div class="mini-game-head">
+              <div>
+                <h3>${escapeHtml(miniGameSession.game.title)}</h3>
+                <p class="muted" style="margin-top:6px">Question ${miniGameSession.index + 1} of ${miniGameSession.questions.length}</p>
+              </div>
+              <span class="mini-game-timer" id="miniGameTimer">${formatMiniGameTime(MINI_GAME_DURATION_MS - (Date.now() - miniGameSession.startedAt))}</span>
+            </div>
+            <p class="mini-game-question">${escapeHtml(question.prompt)}</p>
+            <div class="mini-game-options">
+              ${question.options.map((option, index) => `<button class="mini-game-option ${miniGameSession.selected === index ? "selected" : ""}" data-mini-choice="${index}" type="button">${escapeHtml(option)}</button>`).join("")}
+            </div>
+            <button class="btn green" id="submitMiniGameAnswer" type="button" ${miniGameSession.selected === null ? "disabled" : ""}>Submit answer</button>
+          </div>
+        `;
+        panel.querySelectorAll("[data-mini-choice]").forEach(button => button.addEventListener("click", () => chooseMiniGameAnswer(button.dataset.miniChoice)));
+        panel.querySelector("#submitMiniGameAnswer")?.addEventListener("click", submitMiniGameAnswer);
+        return;
+      }
+
+      panel.innerHTML = `
+        <div class="mini-game-grid">
+          ${games.map(game => `
+            <article class="card mini-game-card">
+              <div>
+                <span class="difficulty">Available this month</span>
+                <h3 style="margin-top:12px">${escapeHtml(game.title)}</h3>
+                <p class="muted" style="margin-top:8px">${escapeHtml(game.description)}</p>
+              </div>
+              <div>
+                <div class="mini-game-meta"><span>5 questions</span><span>1 minute</span><span>${MINI_GAME_ENTRY_FEE} XP entry</span></div>
+                <button class="btn green" data-start-mini-game="${game.id}" style="margin-top:14px;width:100%" ${state.xp < MINI_GAME_ENTRY_FEE ? "disabled" : ""}>${state.xp < MINI_GAME_ENTRY_FEE ? `Need ${MINI_GAME_ENTRY_FEE} XP to play` : `Start for ${MINI_GAME_ENTRY_FEE} XP`}</button>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      `;
+      panel.querySelectorAll("[data-start-mini-game]").forEach(button => button.addEventListener("click", () => startMiniGame(button.dataset.startMiniGame)));
+    }
+
     function wireDashboard() {
       document.querySelectorAll("[data-tab]").forEach(tab => {
         tab.addEventListener("click", () => {
@@ -5738,6 +6111,8 @@
           document.querySelectorAll("[data-panel]").forEach(panel => panel.classList.toggle("hidden", panel.dataset.panel !== tab.dataset.tab));
           if (tab.dataset.tab === "learn") {
             renderCourse();
+          } else if (tab.dataset.tab === "minigames") {
+            renderMiniGames();
           } else {
             document.getElementById("dashboard").classList.remove("lesson-focus");
             if (tab.dataset.tab === "settings") renderSettings();
@@ -5799,6 +6174,7 @@
       renderMarkets();
       renderCourse();
       renderTasks();
+      renderMiniGames();
       renderSettings();
     }
 
