@@ -3402,6 +3402,13 @@
       return { prompt, options: [String(correct), ...distractors.map(String)], answer: 0 };
     }
 
+    function miniGamePointRules(game) {
+      return {
+        correct: game.correctPoints ?? MINI_GAME_CORRECT_POINTS,
+        wrong: game.wrongPoints ?? MINI_GAME_WRONG_POINTS
+      };
+    }
+
     function miniGameDifficultyProfile() {
       const age = Math.max(1, Number(state.profile.age) || 10);
       const level = state.profile.level || "Beginner";
@@ -3628,6 +3635,8 @@
         id: "price-pulse",
         title: "Price Pulse",
         description: "Solve multi-step price puzzles using percentages, averages, and position values.",
+        correctPoints: 4,
+        wrongPoints: -1,
         questionFactory: buildPricePulseQuestions
       },
       {
@@ -6200,7 +6209,8 @@
       }
       const question = session.questions[session.index];
       const correct = session.selected === question.answer;
-      const delta = correct ? MINI_GAME_CORRECT_POINTS : MINI_GAME_WRONG_POINTS;
+      const points = miniGamePointRules(session.game);
+      const delta = correct ? points.correct : points.wrong;
       session.points = Math.min(MINI_GAME_POINT_CAP, session.points + delta);
       session.answers.push({ correct, delta });
       if (session.index === session.questions.length - 1) {
@@ -6239,7 +6249,7 @@
       }
       const games = miniGamesForMonth();
       const difficulty = miniGameDifficultyProfile();
-      guide.textContent = `Two mini-games rotate each month. Each round lasts 1 minute and costs ${MINI_GAME_ENTRY_FEE} XP to enter. Correct answers add 2 points, wrong answers subtract 1, and each point is worth ${MINI_GAME_XP_PER_POINT} XP. Your questions use the ${difficulty.label} range for ${difficulty.level}, age ${difficulty.age}.`;
+      guide.textContent = `Two mini-games rotate each month. Each round lasts 1 minute and costs ${MINI_GAME_ENTRY_FEE} XP to enter. Each game shows its own point rules, and every point is worth ${MINI_GAME_XP_PER_POINT} XP. Your questions use the ${difficulty.label} range for ${difficulty.level}, age ${difficulty.age}.`;
 
       if (miniGameSession?.result) {
         const result = miniGameSession.result;
@@ -6259,7 +6269,7 @@
               <div class="mini-game-result-stat"><strong>${formatDuration(result.elapsedMs)}</strong><span>Time used</span></div>
               <div class="mini-game-result-stat"><strong>+${result.reward}</strong><span>XP earned</span></div>
             </div>
-            <p class="muted">Your reward is based on points: ${result.points} points x ${MINI_GAME_XP_PER_POINT} XP = ${result.reward} XP. The score cannot exceed ${MINI_GAME_POINT_CAP} points, and XP cannot go below 0.</p>
+            <p class="muted">Your reward is based on points: ${result.points} points x ${MINI_GAME_XP_PER_POINT} XP = ${result.reward} XP. This game awards +${miniGamePointRules(miniGameSession.game).correct} for a correct answer and ${miniGamePointRules(miniGameSession.game).wrong} for a wrong answer. The score cannot exceed ${MINI_GAME_POINT_CAP} points, and XP cannot go below 0.</p>
             <div class="actions">
               <button class="btn green" data-replay-mini-game="${miniGameSession.game.id}">Play again for ${MINI_GAME_ENTRY_FEE} XP</button>
               <button class="btn secondary" data-back-mini-games>Back to mini-games</button>
@@ -6281,7 +6291,7 @@
             <div class="mini-game-head">
               <div>
                 <h3>${escapeHtml(miniGameSession.game.title)}</h3>
-                <p class="muted" style="margin-top:6px">Question ${miniGameSession.index + 1} of ${miniGameSession.questions.length} • Points: ${miniGameSession.points}/${MINI_GAME_POINT_CAP}</p>
+                <p class="muted" style="margin-top:6px">Question ${miniGameSession.index + 1} of ${miniGameSession.questions.length} • Points: ${miniGameSession.points}/${MINI_GAME_POINT_CAP} • Correct +${miniGamePointRules(miniGameSession.game).correct}, wrong ${miniGamePointRules(miniGameSession.game).wrong}</p>
               </div>
               <span class="mini-game-timer" id="miniGameTimer">${formatMiniGameTime(MINI_GAME_DURATION_MS - (Date.now() - miniGameSession.startedAt))}</span>
             </div>
@@ -6307,7 +6317,7 @@
                 <p class="muted" style="margin-top:8px">${escapeHtml(game.description)}</p>
               </div>
               <div>
-                <div class="mini-game-meta"><span>${MINI_GAME_QUESTION_COUNT} questions</span><span>1 minute</span><span>${MINI_GAME_ENTRY_FEE} XP entry</span></div>
+                <div class="mini-game-meta"><span>${MINI_GAME_QUESTION_COUNT} questions</span><span>1 minute</span><span>+${miniGamePointRules(game).correct} / ${miniGamePointRules(game).wrong} points</span><span>${MINI_GAME_ENTRY_FEE} XP entry</span></div>
                 <button class="btn green" data-start-mini-game="${game.id}" style="margin-top:14px;width:100%" ${state.xp < MINI_GAME_ENTRY_FEE ? "disabled" : ""}>${state.xp < MINI_GAME_ENTRY_FEE ? `Need ${MINI_GAME_ENTRY_FEE} XP to play` : `Start for ${MINI_GAME_ENTRY_FEE} XP`}</button>
               </div>
             </article>
