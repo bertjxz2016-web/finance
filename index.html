@@ -3430,6 +3430,7 @@
     const MINI_GAME_WRONG_POINTS = -1;
     const MINI_GAME_XP_PER_POINT = 10;
     const MINI_GAME_QUESTION_COUNT = 100;
+    const MINI_GAME_TIER_CORRECT_POINTS = { Easy: 2, Medium: 4, Hard: 8 };
 
     function miniQuestion(prompt, correct, distractors) {
       return { prompt, options: [String(correct), ...distractors.map(String)], answer: 0 };
@@ -3437,7 +3438,7 @@
 
     function miniGamePointRules(game) {
       return {
-        correct: game.correctPoints ?? MINI_GAME_CORRECT_POINTS,
+        correct: game.correctPoints ?? MINI_GAME_TIER_CORRECT_POINTS[game.tier] ?? MINI_GAME_CORRECT_POINTS,
         wrong: game.wrongPoints ?? MINI_GAME_WRONG_POINTS
       };
     }
@@ -3668,8 +3669,8 @@
         id: "price-pulse",
         title: "Price Pulse",
         description: "Solve multi-step price puzzles using percentages, averages, and position values.",
-        tier: "Hard",
-        correctPoints: 4,
+        tier: "Easy",
+        correctPoints: 2,
         wrongPoints: -1,
         questionFactory: buildPricePulseQuestions
       },
@@ -3678,7 +3679,7 @@
         title: "Risk Radar",
         description: "Solve risk scenarios involving concentration, recovery, diversification, and evidence.",
         tier: "Medium",
-        correctPoints: 3,
+        correctPoints: 4,
         wrongPoints: -1,
         questionFactory: buildRiskRadarQuestions
       },
@@ -3696,7 +3697,7 @@
         title: "Trade Math Sprint",
         description: "Work through varied trading math puzzles with units, XP, fees, returns, and averages.",
         tier: "Medium",
-        correctPoints: 3,
+        correctPoints: 4,
         wrongPoints: -1,
         questionFactory: buildTradeMathQuestions
       }
