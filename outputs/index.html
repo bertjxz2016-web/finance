@@ -3562,9 +3562,8 @@
     }
 
     function buildMarketMatchQuestions() {
-      const { rank } = miniGameDifficultyProfile();
       const assets = [
-        ["Bitcoin", "crypto"], ["Ethereum", "crypto"], ["Dogecoin", "crypto"], ["QQQ", "ETF"], ["Gold", "commodity"],
+        ["Bitcoin", "crypto"], ["Ethereum", "crypto"], ["Dogecoin", "crypto"], ["QQQ", "ETF"], ["VOO", "ETF"], ["Gold", "commodity"], ["Silver", "commodity"],
         ["Nikkei 225", "index"], ["S&P 500", "index"], ["KOSPI", "index"], ["Toyota Motor Corporation", "public company"],
         ["Tesla, Inc.", "public company"], ["Berkshire Hathaway", "public company"], ["OpenAI", "private company"],
         ["Nasdaq", "index"], ["Dow 30", "index"], ["Russell 2000", "index"], ["VIX", "index"],
@@ -3574,33 +3573,59 @@
         ["Hermes", "public company"], ["Novo Nordisk", "public company"], ["Anthropic", "private company"], ["Perplexity", "private company"]
       ];
       const categories = ["crypto", "ETF", "commodity", "index", "public company", "private company"];
+      const assetNames = [...new Set(assets.map(([assetName]) => assetName))];
+      const privateNames = [...new Set(assets.filter(([, category]) => category === "private company").map(([assetName]) => assetName))];
+      const publicMarketNames = assetNames.filter(assetName => !privateNames.includes(assetName));
+      const indexNames = [...new Set(assets.filter(([, category]) => category === "index").map(([assetName]) => assetName))];
+      const nonIndexNames = assetNames.filter(assetName => !indexNames.includes(assetName));
       return Array.from({ length: MINI_GAME_QUESTION_COUNT }, (_, index) => {
         const [name, category] = assets[index * 7 % assets.length];
         const distractors = categories.filter(item => item !== category).slice((index + 1) % 3, (index + 1) % 3 + 3);
-        const template = index % (rank >= 3 ? 5 : 3);
+        const template = index % 8;
         if (template === 0) {
           return miniQuestion(`Which category best describes ${name} in the app?`, category, distractors);
         }
         if (template === 1) {
-          const alternatives = assets.filter(([assetName]) => assetName !== name).map(([assetName]) => assetName);
-          const choiceDistractors = [0, 1, 2].map(offset => alternatives[(index * 5 + 3 + offset) % alternatives.length]);
-          return miniQuestion(`A watchlist already includes ${name}. Which item is another ${category}?`, name, choiceDistractors);
+          const matchingNames = [...new Set(assets.filter(([assetName, assetCategory]) => assetCategory === category && assetName !== name).map(([assetName]) => assetName))];
+          const correctName = matchingNames[index % matchingNames.length];
+          const otherNames = assetNames.filter(assetName => assetName !== name && assetName !== correctName && !assets.some(([listedName, listedCategory]) => listedName === assetName && listedCategory === category));
+          const choiceDistractors = [0, 1, 2].map(offset => otherNames[(index * 5 + 3 + offset) % otherNames.length]);
+          return miniQuestion(`A watchlist already includes ${name}. Which item is another ${category}?`, correctName, choiceDistractors);
         }
         if (template === 2) {
           const action = category === "index" ? "View the market chart without placing a trade" : category === "private company" ? "Use View Forge to research it" : "Open the buy or sell paper-trade screen";
           return miniQuestion(`What is the correct app action for ${name}?`, action, ["Treat it as a private company", "Place an index trade", "Assume it has no market data"]);
         }
         if (template === 3) {
-          return miniQuestion(`Which pair belongs to the same category as ${name}?`, category === "crypto" ? "Bitcoin and Ethereum" : category === "index" ? "S&P 500 and Nikkei 225" : category === "private company" ? "OpenAI and Anthropic" : "Tesla, Inc. and Toyota Motor Corporation", ["Bitcoin and Gold", "QQQ and OpenAI", "Gold and KOSPI"]);
+          const matchingPair = category === "crypto" ? "Bitcoin and Ethereum" : category === "ETF" ? "QQQ and VOO" : category === "commodity" ? "Gold and Silver" : category === "index" ? "S&P 500 and Nikkei 225" : category === "private company" ? "OpenAI and Anthropic" : "Tesla, Inc. and Toyota Motor Corporation";
+          return miniQuestion(`Which pair belongs to the same category as ${name}?`, matchingPair, ["Bitcoin and Gold", "QQQ and OpenAI", "Gold and KOSPI"]);
         }
-        return miniQuestion(`Instead of choosing ${name}, a learner wants a fund that follows a group of companies. Which label best fits that goal?`, "ETF", ["Private company", "Crypto", "Commodity"]);
+        if (template === 4) {
+          return miniQuestion(`Instead of choosing ${name}, a learner wants a fund that follows a group of companies. Which label best fits that goal?`, "ETF", ["Private company", "Crypto", "Commodity"]);
+        }
+        if (template === 5) {
+          const answer = category === "index" ? "No, view the chart only" : category === "private company" ? "No, use View Forge instead" : "Yes, use a paper trade";
+          return miniQuestion(`Can ${name} be bought in the paper-trading screen?`, answer, ["Yes, use a paper trade", "No, view the chart only", "No, use View Forge instead", "Only after a price alert"].filter(option => option !== answer).slice(0, 3));
+        }
+        if (template === 6) {
+          const privateName = privateNames[Math.floor(index / 8) % privateNames.length];
+          const first = publicMarketNames[(index * 3 + 1) % publicMarketNames.length];
+          const second = publicMarketNames[(index * 3 + 8) % publicMarketNames.length];
+          const third = publicMarketNames[(index * 3 + 15) % publicMarketNames.length];
+          return miniQuestion(`A watchlist contains ${privateName}, ${first}, ${second}, and ${third}. Which market should open View Forge instead of a paper-trade screen?`, privateName, [first, second, third]);
+        }
+        const indexName = indexNames[Math.floor(index / 8) % indexNames.length];
+        const first = nonIndexNames[(index * 2 + 1) % nonIndexNames.length];
+        const second = nonIndexNames[(index * 2 + 7) % nonIndexNames.length];
+        const third = nonIndexNames[(index * 2 + 13) % nonIndexNames.length];
+        return miniQuestion(`A market card lists ${indexName}, ${first}, ${second}, and ${third}. Which item is an index that can be charted but not paper traded?`, indexName, [first, second, third]);
       });
     }
 
     function buildTradeMathQuestions() {
       const { rank } = miniGameDifficultyProfile();
       return Array.from({ length: MINI_GAME_QUESTION_COUNT }, (_, index) => {
-        const templateCount = rank === 1 ? 5 : rank === 2 ? 7 : 10;
+        const templateCount = rank === 1 ? 7 : rank === 2 ? 8 : 10;
         const template = index % templateCount;
         const price = 6 + rank * 4 + index * 3;
         const units = 2 + rank + (index % 8);
@@ -6190,7 +6215,7 @@
 
     function prepareMiniGameQuestions(game) {
       const sourceQuestions = game.questionFactory ? game.questionFactory() : game.questions || [];
-      return sourceQuestions.map(question => {
+      return shuffleTasks(sourceQuestions).map(question => {
         const correct = question.options[question.answer];
         const options = shuffleTasks(question.options);
         return { ...question, options, answer: options.indexOf(correct) };
