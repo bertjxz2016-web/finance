@@ -1431,6 +1431,39 @@
       border-top: 5px solid var(--teal);
     }
 
+    .mini-game-card.tier-easy {
+      border-top-color: #1d9c6a;
+    }
+
+    .mini-game-card.tier-medium {
+      border-top-color: #c78516;
+    }
+
+    .mini-game-card.tier-hard {
+      border-top-color: #c24848;
+    }
+
+    .mini-game-tier {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+    }
+
+    .mini-game-tier.tier-easy {
+      background: #e3f5ea;
+      color: #13744e;
+    }
+
+    .mini-game-tier.tier-medium {
+      background: #fff0cc;
+      color: #946000;
+    }
+
+    .mini-game-tier.tier-hard {
+      background: #fde7e7;
+      color: #a13434;
+    }
+
     .mini-game-card h3 {
       font-size: 20px;
     }
@@ -3635,6 +3668,7 @@
         id: "price-pulse",
         title: "Price Pulse",
         description: "Solve multi-step price puzzles using percentages, averages, and position values.",
+        tier: "Hard",
         correctPoints: 4,
         wrongPoints: -1,
         questionFactory: buildPricePulseQuestions
@@ -3643,18 +3677,21 @@
         id: "risk-radar",
         title: "Risk Radar",
         description: "Solve risk scenarios involving concentration, recovery, diversification, and evidence.",
+        tier: "Medium",
         questionFactory: buildRiskRadarQuestions
       },
       {
         id: "market-match",
         title: "Market Match",
         description: "Use clues to classify assets and choose the correct app action for each market type.",
+        tier: "Easy",
         questionFactory: buildMarketMatchQuestions
       },
       {
         id: "trade-math-sprint",
         title: "Trade Math Sprint",
         description: "Work through varied trading math puzzles with units, XP, fees, returns, and averages.",
+        tier: "Hard",
         questionFactory: buildTradeMathQuestions
       }
     ];
@@ -6247,7 +6284,8 @@
         miniGameTimer = 0;
         miniGameSession = null;
       }
-      const games = miniGamesForMonth();
+      const tierRank = { Easy: 1, Medium: 2, Hard: 3 };
+      const games = miniGamesForMonth().slice().sort((first, second) => tierRank[first.tier] - tierRank[second.tier]);
       const difficulty = miniGameDifficultyProfile();
       guide.textContent = `Two mini-games rotate each month. Each round lasts 1 minute and costs ${MINI_GAME_ENTRY_FEE} XP to enter. Each game shows its own point rules, and every point is worth ${MINI_GAME_XP_PER_POINT} XP. Your questions use the ${difficulty.label} range for ${difficulty.level}, age ${difficulty.age}.`;
 
@@ -6310,9 +6348,9 @@
       panel.innerHTML = `
         <div class="mini-game-grid">
           ${games.map(game => `
-            <article class="card mini-game-card">
+            <article class="card mini-game-card tier-${game.tier.toLowerCase()}">
               <div>
-                <span class="difficulty">Available this month</span>
+                <span class="difficulty mini-game-tier tier-${game.tier.toLowerCase()}">${escapeHtml(game.tier)} · Available this month</span>
                 <h3 style="margin-top:12px">${escapeHtml(game.title)}</h3>
                 <p class="muted" style="margin-top:8px">${escapeHtml(game.description)}</p>
               </div>
