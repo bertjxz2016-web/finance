@@ -6273,10 +6273,11 @@
       miniGameTimer = 0;
       const elapsedMs = Math.min(MINI_GAME_DURATION_MS, Date.now() - session.startedAt);
       const correct = session.answers.filter(answer => answer.correct).length;
+      const answered = session.answers.length;
       const total = session.questions.length;
-      const accuracy = Math.round((correct / total) * 100);
+      const accuracy = answered ? Math.round((correct / answered) * 100) : 0;
       const reward = Math.max(0, session.points * MINI_GAME_XP_PER_POINT);
-      session.result = { correct, total, accuracy, points: session.points, reward, elapsedMs, reason };
+      session.result = { correct, answered, total, accuracy, points: session.points, reward, elapsedMs, reason };
       addXp(reward, `${session.game.title} point reward`);
       renderMiniGames();
     }
@@ -6310,11 +6311,11 @@
             <div class="mini-game-result-grid">
               <div class="mini-game-result-stat"><strong>${result.points}/${MINI_GAME_POINT_CAP}</strong><span>Points</span></div>
               <div class="mini-game-result-stat"><strong>${result.accuracy}%</strong><span>Accuracy</span></div>
-              <div class="mini-game-result-stat"><strong>${result.correct}/${result.total}</strong><span>Correct answers</span></div>
+              <div class="mini-game-result-stat"><strong>${result.correct}/${result.answered}</strong><span>Correct of answered</span></div>
               <div class="mini-game-result-stat"><strong>${formatDuration(result.elapsedMs)}</strong><span>Time used</span></div>
               <div class="mini-game-result-stat"><strong>+${result.reward}</strong><span>XP earned</span></div>
             </div>
-            <p class="muted">Your reward is based on points: ${result.points} points x ${MINI_GAME_XP_PER_POINT} XP = ${result.reward} XP. This game awards +${miniGamePointRules(miniGameSession.game).correct} for a correct answer and ${miniGamePointRules(miniGameSession.game).wrong} for a wrong answer. The score cannot exceed ${MINI_GAME_POINT_CAP} points, and XP cannot go below 0.</p>
+            <p class="muted">You answered ${result.answered} of ${result.total} questions. Your reward is based on points: ${result.points} points x ${MINI_GAME_XP_PER_POINT} XP = ${result.reward} XP. This game awards +${miniGamePointRules(miniGameSession.game).correct} for a correct answer and ${miniGamePointRules(miniGameSession.game).wrong} for a wrong answer. The score cannot exceed ${MINI_GAME_POINT_CAP} points, and XP cannot go below 0.</p>
             <div class="actions">
               <button class="btn green" data-replay-mini-game="${miniGameSession.game.id}">Play again for ${MINI_GAME_ENTRY_FEE} XP</button>
               <button class="btn secondary" data-back-mini-games>Back to mini-games</button>
