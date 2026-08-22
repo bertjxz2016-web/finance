@@ -1216,7 +1216,7 @@
 
     .result-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 10px;
     }
 
@@ -1248,6 +1248,11 @@
       line-height: 1.1;
       overflow-wrap: break-word;
       white-space: normal;
+    }
+
+    .result-stat.result-time-stat strong {
+      font-size: 22px;
+      white-space: nowrap;
     }
 
     .miss-panel {
@@ -5452,7 +5457,7 @@
               <span>Correct answers</span>
               <strong>${result.correct}/${result.total}</strong>
             </div>
-            <div class="result-stat">
+            <div class="result-stat result-time-stat">
               <span>Time spent</span>
               <strong>${formatDuration(result.durationMs)}</strong>
             </div>
